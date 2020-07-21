@@ -74,12 +74,11 @@ def get_optimization(s: openfermioncirq.VariationalStudy) -> openfermioncirq.opt
 
 
 def get_resolved_circuit(s: openfermioncirq.VariationalStudy, r: openfermioncirq.optimization.OptimizationTrialResult) -> cirq.circuits.circuit:
-    resolver = cirq.ParamResolver({'theta': r.optimal_parameters})
+    resolver = cirq.ParamResolver({'theta': r.optimal_parameters[0]})
     return cirq.resolve_parameters(s.circuit, resolver)
 
 
 if __name__ == '__main__':
-    print(np.random.randint(2**31))
 
     hamiltonian = get_hamiltonian()
     ansatz = get_ansatz()
