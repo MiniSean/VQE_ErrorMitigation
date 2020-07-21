@@ -1,23 +1,22 @@
 import cirq
-from src.data_containers.qubit_grid import define_square_grid
-from src.data_containers.qubit_circuit import define_circuit, gate_on_qubits, gates_on_qubits, sub_circuit_column, measure_column
+from src.data_containers.model_hydrogen import HydrogenAnsatz
+from src.processors.processor_quantum import QPU
+from src.processors.processor_classic import CPU
+from src.data_containers.helper_interfaces.i_hamiltonian import IHamiltonian
 
 
 if __name__ == '__main__':
-    # Define qubits and circuit
-    circuit = define_circuit()
-    qubits = define_square_grid(2)
-    # Define gates
-    gate_x = cirq.XPowGate(exponent=.5)
-    gate_y = cirq.YPowGate(exponent=.5)
-    # Create operation layers
-    operations_x = gate_on_qubits(gate_x, qubits[0:2])
-    operations_y = gate_on_qubits(gate_y, qubits[2:4])
-    moment_identity = sub_circuit_column([operations_x, operations_y])
-    circuit.append(moment_identity)
-    circuit.append(measure_column(qubits, basis='x'))
 
+    ansatz = HydrogenAnsatz()
+    parameters = ansatz.parameters
+
+    # Get resolved circuit
+    circuit = ansatz.circuit
+    circuit.append(cirq.measure(*ansatz.qubits, key='x'))  # Temporary forced measurement on x axis
+    resolved_circuit = QPU.get_resolved_circuit(circuit, parameters)
     print(circuit)
 
-    results = cirq.Simulator().run(circuit, repetitions=10)
-    print(results.histogram(key='x'))
+    # Get variational study
+    study = IHamiltonian.get_variational_study(w=ansatz, name='HydrogenStudy')
+    result = QPU.get_optimization_result(s=study, max_iter=10)
+    print(f'Operator expectation value: {result.optimal_value}, with parameters: {result.optimal_parameters}')
