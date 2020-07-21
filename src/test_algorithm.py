@@ -5,7 +5,7 @@ from src.data_containers.qubit_circuit import *
 from src.data_containers.helper_interfaces.i_hamiltonian import IHamiltonian, T
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
 from src.data_containers.helper_interfaces.i_parameter import IParameter
-from src.data_containers.ising_model import IsingModel
+from src.data_containers.model_ising import IsingModel
 # ISettingsML
 # IExpectationValue(IOperator_i -> IValue)
 import cirq
@@ -39,14 +39,14 @@ class QPU:
 
     # def get_expectation_values(self, h: IHamiltonian, p: IParameter) -> [float]:
     #     sweep = QPU.get_parameter_sweep(p)  # Parameter resolver
-    #     resolved_circuit = QPU.get_resolved_circuit(h, p)  # Resolve symbol parameters in circuit
+    #     resolved_circuit = QPU.get_resolved_circuit(h, p)  # Resolve symbol molecule in circuit
     #     print(resolved_circuit)
     #     trial_results = self.get_simulation_trial_results(resolved_circuit, sweep, self._iter)  # Probabilistic results
     #     return [IHamiltonian.expectation_value(result, h.energy_func()) for result in trial_results]  # Statistic result
 
     def get_expectation_value(self, p: IParameter) -> float:
         sweep = QPU.get_parameter_sweep(p)  # Parameter resolver
-        resolved_circuit = QPU.get_resolved_circuit(self._circuit, p)  # Resolve symbol parameters in circuit
+        resolved_circuit = QPU.get_resolved_circuit(self._circuit, p)  # Resolve symbol molecule in circuit
         # print(resolved_circuit)
         trial_result = self._sim.run(resolved_circuit, sweep, self._iter)  # Probabilistic result
         return IHamiltonian.expectation_value(trial_result, self._energy_function)  # Statistic result
@@ -124,7 +124,7 @@ class Model(IHamiltonian):
 
     def __init__(self, grid_size: int):
         qubits = cirq.GridQubit.square(grid_size)  # Determine qubits to be used to represent Hamiltonian
-        parameters = IParameter({'alpha': 1})  # Determine tweakable parameters
+        parameters = IParameter({'alpha': 1})  # Determine tweakable molecule
         super().__init__(qubits, parameters)
 
     def observable(self, w: IWaveFunction) -> [cirq.ops.moment]:
@@ -154,7 +154,7 @@ if __name__ == '__main__':
     # values = Processor.get_expectation_value(H, P)
     # print(values)
     #
-    # # Change parameters and update circuit?
+    # # Change molecule and update circuit?
     # P.dict['alpha'] = .1
     # P.dict['beta'] = .2
     # P.dict['gamma'] = .3

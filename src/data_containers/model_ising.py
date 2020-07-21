@@ -13,7 +13,7 @@ class IsingModel(IHamiltonian):
 
     def __init__(self, grid_size: int):
         qubits = cirq.GridQubit.square(grid_size)  # Determine qubits to be used to represent Hamiltonian
-        parameters = IParameter({'alpha': 1, 'beta': 1, 'gamma': 1})  # Determine tweakable parameters
+        parameters = IParameter({'alpha': 1, 'beta': 1, 'gamma': 1})  # Determine tweakable molecule
         super().__init__(qubits, parameters)
         self._name = 'Randomized Ising-model Hamiltonian'
 
