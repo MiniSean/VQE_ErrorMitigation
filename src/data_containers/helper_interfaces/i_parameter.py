@@ -16,7 +16,10 @@ class IParameter:
         self._p = parameters
 
     def __iter__(self):
-        return self.get_dict().__iter__()
+        return self.dict.__iter__()
 
     def __str__(self):
-        return self.get_dict().__str__()
+        return self.dict.__str__()
+
+    def __getitem__(self, item: int):
+        return list(self.dict.keys())[item]
