@@ -17,6 +17,5 @@ if __name__ == '__main__':
     print(circuit)
 
     # Get variational study
-    study = IHamiltonian.get_variational_study(w=ansatz, name='HydrogenStudy')
-    result = QPU.get_optimization_result(s=study, max_iter=10)
+    result = CPU.get_optimized_state(w=ansatz, max_iter=10)
     print(f'Operator expectation value: {result.optimal_value}, with parameters: {result.optimal_parameters}')
