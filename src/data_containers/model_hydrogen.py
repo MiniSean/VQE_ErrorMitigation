@@ -9,6 +9,11 @@ from src.data_containers.helper_interfaces.i_parameter import IParameter
 
 class HydrogenAnsatz(IWaveFunction):
 
+    def __init__(self):
+        self._params_operator = IParameter({'alpha': .5})
+        # self._params_molecule = IParameter({'r0': .747})
+        super().__init__()
+
     # VariationalAnsatz
     def _generate_qubits(self) -> Sequence[cirq.Qid]:
         """Produce qubits that can be used by the ansatz circuit"""
@@ -17,7 +22,7 @@ class HydrogenAnsatz(IWaveFunction):
     # IWaveFunction
     def _generate_parameters(self) -> IParameter:
         """Produce parameters used to define the operations in the ansatz circuit."""
-        return IParameter({'alpha': 1})
+        return self._params_operator  # + self._params_molecule
 
     # IWaveFunction
     def _generate_molecule(self) -> MolecularData:
