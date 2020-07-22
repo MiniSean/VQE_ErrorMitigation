@@ -26,7 +26,7 @@ class QPU:
         return cirq.resolve_parameters(c, p.get_resolved())
 
     @staticmethod
-    def get_optimization_result(s: openfermioncirq.VariationalStudy, max_iter: int) -> OptimizationTrialResult:
+    def get_optimized_state(s: openfermioncirq.VariationalStudy, max_iter: int) -> OptimizationTrialResult:
         algorithm = ScipyOptimizationAlgorithm(kwargs={'method': 'COBYLA'}, options={'maxiter': max_iter}, uses_bounds=False)
         optimization_params = OptimizationParams(algorithm=algorithm)
         seed_array = [np.random.randint(2 ** 31) for i in optimization_params.initial_guess] if optimization_params.initial_guess is not None else [np.random.randint(2 ** 31)]
