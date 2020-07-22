@@ -21,5 +21,8 @@ class IParameter:
     def __str__(self):
         return self.dict.__str__()
 
-    def __getitem__(self, item: int):
-        return list(self.dict.keys())[item]
+    def __getitem__(self, item: str):
+        return self.dict.__getitem__(item)
+
+    def __add__(self, other):
+        return IParameter({**self.dict, **other.dict})
