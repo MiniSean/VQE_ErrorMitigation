@@ -16,5 +16,6 @@ class CPU:
 
     @staticmethod
     def get_optimized_state(w: IWaveFunction, max_iter: int) -> OptimizationTrialResult:
-        study = IHamiltonian.get_variational_study(w=w, name='HydrogenStudy')
+        initial_state_circuit = QPU.get_initial_state_circuit(w=w)
+        study = IHamiltonian.get_variational_study(w=w, p_c=initial_state_circuit, name='HydrogenStudy')
         return QPU.get_optimized_state(s=study, max_iter=max_iter)

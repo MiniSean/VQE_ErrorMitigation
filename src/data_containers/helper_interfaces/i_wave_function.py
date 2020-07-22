@@ -44,6 +44,14 @@ class IWaveFunction(VariationalAnsatz):
         """
         raise NotImplemented
 
+    @abstractmethod
+    def initial_state(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
+        """Produce the initial state of the ansatz circuit before operation.
+        The operations should use Symbols produced by the `params` method
+        of the ansatz.
+        """
+        raise NotImplemented
+
 
 
 

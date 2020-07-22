@@ -50,3 +50,14 @@ class HydrogenAnsatz(IWaveFunction):
                cirq.ry(-np.pi / 2).on(qubits[1]),
                cirq.ry(-np.pi / 2).on(qubits[2]),
                cirq.ry(-np.pi / 2).on(qubits[3])]
+
+    # IWaveFunction
+    def initial_state(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
+        """Produce the initial state of the ansatz circuit before operation.
+        The operations should use Symbols produced by the `params` method
+        of the ansatz.
+        """
+        yield [cirq.rz(np.pi).on(qubits[0]),
+               cirq.rz(np.pi).on(qubits[1]),
+               cirq.rz(np.pi).on(qubits[2]),
+               cirq.rz(np.pi).on(qubits[3])]

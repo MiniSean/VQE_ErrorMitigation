@@ -22,6 +22,12 @@ class QPU:
         return simulator.run(r_c, r, max_iter)  # Probabilistic result
 
     @staticmethod
+    def get_initial_state_circuit(w: IWaveFunction) -> cirq.circuits.circuit:
+        circuit = cirq.Circuit()
+        circuit.append(w.initial_state(qubits=w.qubits))
+        return circuit
+
+    @staticmethod
     def get_resolved_circuit(c: cirq.circuits.circuit, p: IParameter) -> cirq.circuits.circuit:
         return cirq.resolve_parameters(c, p.get_resolved())
 

@@ -1,3 +1,4 @@
+import cirq
 import openfermioncirq
 from openfermion import jordan_wigner, QubitOperator
 
@@ -13,7 +14,7 @@ class IHamiltonian:
         return jordan_wigner(molecule.get_molecular_hamiltonian())
 
     @staticmethod
-    def get_variational_study(w: IWaveFunction, name: str) -> openfermioncirq.VariationalStudy:
+    def get_variational_study(w: IWaveFunction, p_c: cirq.Circuit, name: str) -> openfermioncirq.VariationalStudy:
         qubit_operator = IHamiltonian.get_qubit_operator(w)
         objective = openfermioncirq.HamiltonianObjective(qubit_operator)
-        return openfermioncirq.VariationalStudy(name=name, ansatz=w, objective=objective)
+        return openfermioncirq.VariationalStudy(name=name, ansatz=w, objective=objective, preparation_circuit=p_c)
