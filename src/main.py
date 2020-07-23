@@ -7,7 +7,7 @@ from src.processors.processor_classic import CPU
 if __name__ == '__main__':
 
     ansatz = HydrogenAnsatz()
-    parameters = ansatz.parameters
+    parameters = ansatz.operator_parameters
 
     # Get resolved circuit
     circuit = ansatz.circuit

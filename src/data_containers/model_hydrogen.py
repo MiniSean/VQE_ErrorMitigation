@@ -10,9 +10,9 @@ from src.data_containers.helper_interfaces.i_parameter import IParameter
 class HydrogenAnsatz(IWaveFunction):
 
     def __init__(self):
-        self._params_operator = IParameter({'alpha': .5})
-        # self._params_molecule = IParameter({'r0': .747})
-        super().__init__()
+        operator = IParameter({'alpha': .5})
+        molecule = IParameter({'r0': 1.00})  # .7414
+        super().__init__(operator, molecule)
 
     # VariationalAnsatz
     def _generate_qubits(self) -> Sequence[cirq.Qid]:
@@ -20,16 +20,11 @@ class HydrogenAnsatz(IWaveFunction):
         return [cirq.GridQubit(i, j) for i in range(2) for j in range(2)]
 
     # IWaveFunction
-    def _generate_parameters(self) -> IParameter:
-        """Produce parameters used to define the operations in the ansatz circuit."""
-        return self._params_operator  # + self._params_molecule
-
-    # IWaveFunction
-    def _generate_molecule(self) -> MolecularData:
+    def generate_molecule(self, p: IParameter) -> MolecularData:
         """Produce molecule that can be used by the hamiltonian."""
-        r = .7414
+        r = p['r0']
         geometry = [('H', (0., 0., 0.)), ('H', (0., 0., r))]
-        return MolecularData(geometry=geometry, basis='sto-3g', multiplicity=1, description=format(r))
+        return MolecularData(geometry=geometry, basis='sto-3g', multiplicity=1, charge=0, description=str(round(r, 2)))
 
     # VariationalAnsatz
     def operations(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
