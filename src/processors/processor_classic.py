@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import optimize
 import cirq
 import openfermioncirq
 from openfermioncirq.optimization import OptimizationTrialResult

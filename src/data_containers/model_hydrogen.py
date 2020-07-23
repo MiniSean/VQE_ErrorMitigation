@@ -10,8 +10,8 @@ from src.data_containers.helper_interfaces.i_parameter import IParameter
 class HydrogenAnsatz(IWaveFunction):
 
     def __init__(self):
-        operator = IParameter({'alpha': .5})
-        molecule = IParameter({'r0': 1.00})  # .7414
+        operator = IParameter({'alpha': 1.})
+        molecule = IParameter({'r0': .7414})  # .7414
         super().__init__(operator, molecule)
 
     # VariationalAnsatz
@@ -24,7 +24,7 @@ class HydrogenAnsatz(IWaveFunction):
         """Produce molecule that can be used by the hamiltonian."""
         r = p['r0']
         geometry = [('H', (0., 0., 0.)), ('H', (0., 0., r))]
-        return MolecularData(geometry=geometry, basis='sto-3g', multiplicity=1, charge=0, description=str(round(r, 2)))
+        return MolecularData(geometry=geometry, basis='sto-3g', multiplicity=1, charge=0, description=format(r))
 
     # VariationalAnsatz
     def operations(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:

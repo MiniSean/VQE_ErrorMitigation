@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from typing import Iterable, Sequence
+import os
 import cirq
 import sympy
 from openfermioncirq import VariationalAnsatz
@@ -30,11 +31,11 @@ class IMolecule:
         """Updates molecule parameters and overrides the local data"""
         self._params_molecule = p
         self.molecule = self._generate_molecule(p=p)
-        if os.path.exists(self.molecule.filename + '.hdf5'):
-            self.molecule.load()
-        else:
-            self.molecule = run_psi4(self.molecule, run_scf=1, run_mp2=0, run_cisd=0, run_ccsd=0, run_fci=0, verbose=1, tolerate_error=1)
-        self.molecule.save()
+        # if os.path.exists(self.molecule.filename + '.hdf5'):
+        #     self.molecule.load()
+        # else:
+        #     self.molecule = run_psi4(self.molecule, run_scf=1, run_mp2=0, run_cisd=0, run_ccsd=0, run_fci=0, verbose=1, tolerate_error=1)
+        # self.molecule.save()
         return self.molecule
 
 
