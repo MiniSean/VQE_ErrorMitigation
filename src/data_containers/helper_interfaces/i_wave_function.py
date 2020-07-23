@@ -19,17 +19,17 @@ class IMolecule:
 
     def __init__(self, molecule_params: IParameter):
         self._params_molecule = molecule_params
-        self.molecule = self.generate_molecule(p=molecule_params)
+        self.molecule = self._generate_molecule(p=molecule_params)
 
     @abstractmethod
-    def generate_molecule(self, p: IParameter) -> MolecularData:
+    def _generate_molecule(self, p: IParameter) -> MolecularData:
         """Produce molecule that can be used by the hamiltonian."""
         raise NotImplemented
 
     def update_molecule(self, p: IParameter) -> MolecularData:
         """Updates molecule parameters and overrides the local data"""
         self._params_molecule = p
-        self.molecule = self.generate_molecule(p=p)
+        self.molecule = self._generate_molecule(p=p)
         if os.path.exists(self.molecule.filename + '.hdf5'):
             self.molecule.load()
         else:

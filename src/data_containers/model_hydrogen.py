@@ -20,7 +20,7 @@ class HydrogenAnsatz(IWaveFunction):
         return [cirq.GridQubit(i, j) for i in range(2) for j in range(2)]
 
     # IWaveFunction
-    def generate_molecule(self, p: IParameter) -> MolecularData:
+    def _generate_molecule(self, p: IParameter) -> MolecularData:
         """Produce molecule that can be used by the hamiltonian."""
         r = p['r0']
         geometry = [('H', (0., 0., 0.)), ('H', (0., 0., r))]
