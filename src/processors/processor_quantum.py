@@ -23,8 +23,7 @@ class QPU:
 
     @staticmethod
     def get_initial_state_circuit(w: IWaveFunction) -> cirq.circuits.circuit:
-        circuit = cirq.Circuit()
-        circuit.append(w.initial_state(qubits=w.qubits))
+        circuit = cirq.Circuit(w.initial_state(qubits=w.qubits), strategy=cirq.InsertStrategy.EARLIEST)
         return circuit
 
     @staticmethod
