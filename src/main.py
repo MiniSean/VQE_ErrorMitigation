@@ -12,7 +12,6 @@ if __name__ == '__main__':
 
     # Get resolved circuit
     circuit = ansatz.circuit
-    circuit.append(cirq.measure(*ansatz.qubits, key='x'))  # Temporary forced measurement on x axis
     print(circuit)
 
     # Get variational study
