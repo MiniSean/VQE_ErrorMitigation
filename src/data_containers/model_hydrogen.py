@@ -21,7 +21,10 @@ class HydrogenAnsatz(IWaveFunction):
 
     # IWaveFunction
     def _generate_molecule(self, p: IParameter) -> MolecularData:
-        """Produce molecule that can be used by the hamiltonian."""
+        """Produce molecule that can be used by the hamiltonian.
+        Using a singlet state with S = 0 to specify we are looking for the lowest singlet energy state.
+        multiplicity = 2S + 1
+        """
         r = p['r0']
         geometry = [('H', (0., 0., 0.)), ('H', (0., 0., r))]
         return MolecularData(geometry=geometry, basis='sto-3g', multiplicity=1, charge=0, description=format(r))
