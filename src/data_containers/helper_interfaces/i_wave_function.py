@@ -7,6 +7,7 @@ import numpy as np
 from openfermioncirq import VariationalAnsatz
 import openfermion as of
 from openfermionpsi4 import run_psi4
+# from openfermionpyscf import run_pyscf
 
 from src.data_containers.helper_interfaces.i_parameter import IParameter
 
@@ -22,6 +23,8 @@ class IMolecule:
     def __init__(self, molecule_params: IParameter):
         self._params_molecule = molecule_params
         self.molecule = self._generate_molecule(p=molecule_params)
+        # self.molecule = run_pyscf(self.molecule, run_mp2=True, run_cisd=True, run_ccsd=True, run_fci=True)
+        # two_electron_integral = self.molecule.two_body_integrals
 
     @abstractmethod
     def _generate_molecule(self, p: IParameter) -> of.MolecularData:
@@ -35,7 +38,8 @@ class IMolecule:
         # if os.path.exists(self.molecule.filename + '.hdf5'):
         #     self.molecule.load()
         # else:
-        #     self.molecule = run_psi4(self.molecule, run_scf=1, run_mp2=0, run_cisd=0, run_ccsd=0, run_fci=0, verbose=1, tolerate_error=1)
+        # self.molecule = run_psi4(self.molecule, run_mp2=True, run_cisd=True, run_ccsd=True, run_fci=True)
+        # two_electron_integral = self.molecule.two_body_integrals
         # self.molecule.save()
         return self.molecule
 
