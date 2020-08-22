@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Iterable, Sequence
+from typing import Iterable, Sequence, Dict, Callable
 import os
 import cirq
 import sympy
@@ -86,6 +86,10 @@ class IWaveFunction(VariationalAnsatz, IMolecule):
 
 
 class IGeneralizedUCCSD(IWaveFunction):
+    """
+    "For experimental addressability, the qubits must, in general, be distinguishable. However, the electrons of the molecular system are indistinguishable.
+    The Jordan-Wigner transform is used to circumvent this issue" - Whitfield paper
+    """
 
     def _get_hamiltonian(self) -> of.InteractionOperator:
         """Returns second-quantization Hamiltonian"""
@@ -113,56 +117,69 @@ class IGeneralizedUCCSD(IWaveFunction):
         _double_amp = self.molecule.ccsd_double_amps
         # Creation/Annihilation operators
         _ucc_operator = of.normal_ordered(of.uccsd_generator(_single_amp, _double_amp))
-        # for key in _ucc_operator.terms.keys():
-        #     _ucc_operator.terms[key] *= _symbols[0]  # sympy.Expr(_parameters[0])
         # Pauli string operators
-        _qubit_operator = of.transforms.jordan_wigner(_ucc_operator)
-        _gate_operators = list()
-        # for key in _qubit_operator.terms.keys():
-        #     # Tuple of (qubit ID, rotation ID)
-        #     for i, (q_ID, r_ID) in enumerate(key):
-        #         if r_ID == 'X':
-        #             _gate_operators.append(cirq.rx(_symbols[0]).on(qubits[q_ID]))  # * _qubit_operator.terms[key]
-        #         if r_ID == 'Y':
-        #             _gate_operators.append(cirq.ry(_symbols[0]).on(qubits[q_ID]))
-        #         if r_ID == 'Z':
-        #             _gate_operators.append(cirq.rz(_symbols[0]).on(qubits[q_ID]))
-        IGeneralizedUCCSD.qubit_to_gate_operators(qubit_operators=[_qubit_operator], qubits=qubits)
-        # yield [cirq.rx(np.pi / 2).on(qubits[0]),
-        #        cirq.ry(np.pi / 2).on(qubits[1]),
-        #        cirq.ry(np.pi / 2).on(qubits[2]),
-        #        cirq.ry(np.pi / 2).on(qubits[3])]
-        # yield [cirq.CNOT(qubits[0], qubits[1]),
-        #        cirq.CNOT(qubits[1], qubits[2]),
-        #        cirq.CNOT(qubits[2], qubits[3])]
-        yield _gate_operators
-        # yield [cirq.CNOT(qubits[2], qubits[3]),
-        #        cirq.CNOT(qubits[1], qubits[2]),
-        #        cirq.CNOT(qubits[0], qubits[1])]
-        # yield [cirq.rx(-np.pi / 2).on(qubits[0]),
-        #        cirq.ry(-np.pi / 2).on(qubits[1]),
-        #        cirq.ry(-np.pi / 2).on(qubits[2]),
-        #        cirq.ry(-np.pi / 2).on(qubits[3])]
+        _qubit_operators = list(of.jordan_wigner(_ucc_operator))
+        yield IGeneralizedUCCSD.qubit_to_gate_operators(qubit_operators=_qubit_operators, qubits=qubits, par=_symbols[0])
 
     @staticmethod
-    def qubit_to_gate_operators(qubit_operators: [of.QubitOperator], qubits: Sequence[cirq.Qid]) -> [cirq.GateOperation]:
-        # dictionary for converting x and y rotations to z
-        rot_dic = {'X': lambda q, inv: cirq.H.on(q),
-                   'Y': lambda q, inv: cirq.rx(-inv * np.pi / 2).on(q),
-                   'Z': lambda q, inv: cirq.I.on(q)}
+    def pauli_basis_map() -> Dict[str, Callable[[int, int], cirq.GateOperation]]:
+        """
+        Transformation basis to move from exponential Pauli matrix tensor to the appropriate unitary basis transformation.
+        Recap (Pauli matrices basis/eigenvector):
+        Z-basis: |0>, |1>, X-basis: ~(|0> + |1>), ~(|0> - |1>), Y-basis: ~(|0> + i|1>), ~(|0> - i|1>)
+        (Where ~ represents the normalization factor). Mapping information:
+        Hadamard maps between basis X and Z.
+        Y ( R_x(-pi/2) ) = exp(i X pi/4) ) maps between basis Y and X. (With potential global phase)
+        (Where Z is taken as conventional basis, therefor I maps arbitrarily between basis Z and Z.)
+        :return:
+        """
+        return {'X': lambda q, inv: cirq.H.on(q),
+                'Y': lambda q, inv: cirq.rx(-inv * np.pi / 2).on(q),
+                'Z': lambda q, inv: cirq.I.on(q)}
 
-        # list of parameters
-        parameters = [sympy.Symbol('alpha%d' % i) for i in range(int(.5 * len(qubit_operators)))]
+    @staticmethod
+    def qubit_to_gate_operators(qubit_operators: [of.QubitOperator], qubits: Sequence[cirq.Qid], par: sympy.Symbol) -> [cirq.GateOperation]:
+        # dictionary for converting x and y rotations to z
+        map = IGeneralizedUCCSD.pauli_basis_map()
 
         for q_op in qubit_operators:
-            for key, value in q_op.terms:
-                # Tuple of (qubit ID, rotation ID)
-                # pauli_strings = key
-                # Get sign of Pauli string
-                sign = np.sign(value)
-                for qbt, pau in key:
-                    yield rot_dic[pau](qubit_list[qbt], 1)
-        pass
+            # Single user pauli string
+            # pauli_op = list(q_op.terms.keys())[0]
+            # sign = np.sign(list(q_op.terms.values())[0])
+            #
+            # for qbt, pau in pauli_op:  # Tuple of (qubit ID, rotation ID)
+            #     yield map[pau](qubits[qbt], 1)
+            #
+            # for j in range(len(pauli_op) - 1):
+            #     yield cirq.CNOT(qubits[pauli_op[j][0]], qubits[pauli_op[j + 1][0]])
+            #
+            # # Last operator in Pauli string specifies the R_z qubit focus
+            # yield cirq.rz(2 * sign * par).on(qubits[pauli_op[-1][0]])
+            #
+            # for j in range(len(pauli_op) - 1, 0, -1):
+            #     yield cirq.CNOT(qubits[pauli_op[j - 1][0]], qubits[pauli_op[j][0]])
+            #
+            # for qbt, pau in pauli_op:
+            #     yield map[pau](qubits[qbt], -1)
+
+            # Multi user pauli string
+            for pauli_op, coefficient in q_op.terms.items():  # Tuple of (Pauli operator string, exponent coefficient)
+                # convert Pauli string into rz and CNOT gates
+                sign = np.sign(coefficient)
+                for qbt, pau in pauli_op:  # Tuple of (qubit ID, rotation ID)
+                    yield map[pau](qubits[qbt], 1)
+
+                for j in range(len(pauli_op) - 1):
+                    yield cirq.CNOT(qubits[pauli_op[j][0]], qubits[pauli_op[j + 1][0]])
+
+                # Last operator in Pauli string specifies the R_z qubit focus
+                yield cirq.rz(2 * sign * par).on(qubits[pauli_op[-1][0]])
+
+                for j in range(len(pauli_op) - 1, 0, -1):
+                    yield cirq.CNOT(qubits[pauli_op[j - 1][0]], qubits[pauli_op[j][0]])
+
+                for qbt, pau in pauli_op:
+                    yield map[pau](qubits[qbt], -1)
 
     def initial_state(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
         """Returns initial state representation of the Hartree Fock ansatz"""
