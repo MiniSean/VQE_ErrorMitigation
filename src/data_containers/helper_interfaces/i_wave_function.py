@@ -95,7 +95,26 @@ class IGeneralizedUCCSD(IWaveFunction):
         """Returns second-quantization Hamiltonian"""
         return self.molecule.get_molecular_hamiltonian()
 
+    def _get_fermionic_operators(self) -> [of.FermionOperator]:
+        """Returns second-quantization Hamiltonian in fermionic operator form"""
+        # UCC-Single amplitudes
+        _single_amp = self.molecule.ccsd_single_amps
+        # UCC-Double amplitudes
+        _double_amp = self.molecule.ccsd_double_amps
+        # Creation/Annihilation operators
+        _ucc_operator = of.normal_ordered(of.uccsd_generator(_single_amp, _double_amp))
+        # check that _ucc_operator is either a FermionOperator or a list of FermionOperators
+        if isinstance(_ucc_operator, of.FermionOperator):
+            _ucc_operator = list(_ucc_operator)
+        return _ucc_operator
+
     # hamiltonian = property(_get_hamiltonian)
+
+    def __init__(self, molecule_params: IParameter):
+        IMolecule.__init__(self, molecule_params)
+        parameter_count = int(.5 * len(self._get_fermionic_operators()))
+        self._params_operator = IParameter({f'alpha{i}': 0.0 for i in range(parameter_count)})
+        VariationalAnsatz.__init__(self)
 
     @abstractmethod
     def _generate_molecule(self, p: IParameter) -> of.MolecularData:
@@ -111,15 +130,12 @@ class IGeneralizedUCCSD(IWaveFunction):
     def operations(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
         """Returns qubit operators based on STO-3G and UCCSD ansatz"""
         _symbols = list(self.params())
-        # UCC-Single amplitudes
-        _single_amp = self.molecule.ccsd_single_amps
-        # UCC-Double amplitudes
-        _double_amp = self.molecule.ccsd_double_amps
-        # Creation/Annihilation operators
-        _ucc_operator = of.normal_ordered(of.uccsd_generator(_single_amp, _double_amp))
-        # Pauli string operators
-        _qubit_operators = list(of.jordan_wigner(_ucc_operator))
-        yield IGeneralizedUCCSD.qubit_to_gate_operators(qubit_operators=_qubit_operators, qubits=qubits, par=_symbols[0])
+        _ucc_operator = self._get_fermionic_operators()
+
+        for i, fo in enumerate(_ucc_operator[::2]):
+            # Jordan-Wigner transform each fermionic operator + its Hermitian conjugate
+            qo_list = list(of.jordan_wigner(fo + of.hermitian_conjugated(fo)))
+            yield IGeneralizedUCCSD.qubit_to_gate_operators(qubit_operators=qo_list, qubits=qubits, par=_symbols[i])
 
     @staticmethod
     def pauli_basis_map() -> Dict[str, Callable[[int, int], cirq.GateOperation]]:
@@ -144,42 +160,42 @@ class IGeneralizedUCCSD(IWaveFunction):
 
         for q_op in qubit_operators:
             # Single user pauli string
-            # pauli_op = list(q_op.terms.keys())[0]
-            # sign = np.sign(list(q_op.terms.values())[0])
-            #
-            # for qbt, pau in pauli_op:  # Tuple of (qubit ID, rotation ID)
-            #     yield map[pau](qubits[qbt], 1)
-            #
-            # for j in range(len(pauli_op) - 1):
-            #     yield cirq.CNOT(qubits[pauli_op[j][0]], qubits[pauli_op[j + 1][0]])
-            #
-            # # Last operator in Pauli string specifies the R_z qubit focus
-            # yield cirq.rz(2 * sign * par).on(qubits[pauli_op[-1][0]])
-            #
-            # for j in range(len(pauli_op) - 1, 0, -1):
-            #     yield cirq.CNOT(qubits[pauli_op[j - 1][0]], qubits[pauli_op[j][0]])
-            #
-            # for qbt, pau in pauli_op:
-            #     yield map[pau](qubits[qbt], -1)
+            # Get tuple of tuples containing which Pauli on which qubit appears in the Pauli string
+            pauli_op = list(q_op.terms.keys())[0]
+            sign = np.sign(list(q_op.terms.values())[0])
 
-            # Multi user pauli string
-            for pauli_op, coefficient in q_op.terms.items():  # Tuple of (Pauli operator string, exponent coefficient)
-                # convert Pauli string into rz and CNOT gates
-                sign = np.sign(coefficient)
-                for qbt, pau in pauli_op:  # Tuple of (qubit ID, rotation ID)
-                    yield map[pau](qubits[qbt], 1)
+            for qbt, pau in pauli_op:  # Tuple of (qubit ID, rotation ID)
+                yield map[pau](qubits[qbt], 1)
 
-                for j in range(len(pauli_op) - 1):
-                    yield cirq.CNOT(qubits[pauli_op[j][0]], qubits[pauli_op[j + 1][0]])
+            for j in range(len(pauli_op) - 1):
+                yield cirq.CNOT(qubits[pauli_op[j][0]], qubits[pauli_op[j + 1][0]])
 
-                # Last operator in Pauli string specifies the R_z qubit focus
-                yield cirq.rz(2 * sign * par).on(qubits[pauli_op[-1][0]])
+            # Last operator in Pauli string specifies the R_z qubit focus
+            yield cirq.rz(2 * sign * par).on(qubits[pauli_op[-1][0]])
 
-                for j in range(len(pauli_op) - 1, 0, -1):
-                    yield cirq.CNOT(qubits[pauli_op[j - 1][0]], qubits[pauli_op[j][0]])
+            for j in range(len(pauli_op) - 1, 0, -1):
+                yield cirq.CNOT(qubits[pauli_op[j - 1][0]], qubits[pauli_op[j][0]])
 
-                for qbt, pau in pauli_op:
-                    yield map[pau](qubits[qbt], -1)
+            for qbt, pau in pauli_op:
+                yield map[pau](qubits[qbt], -1)
+            # # Multi user pauli string
+            # for pauli_op, coefficient in q_op.terms.items():  # Tuple of (Pauli operator string, exponent coefficient)
+            #     # convert Pauli string into rz and CNOT gates
+            #     sign = np.sign(coefficient)
+            #     for qbt, pau in pauli_op:  # Tuple of (qubit ID, rotation ID)
+            #         yield map[pau](qubits[qbt], 1)
+            #
+            #     for j in range(len(pauli_op) - 1):
+            #         yield cirq.CNOT(qubits[pauli_op[j][0]], qubits[pauli_op[j + 1][0]])
+            #
+            #     # Last operator in Pauli string specifies the R_z qubit focus
+            #     yield cirq.rz(2 * sign * par).on(qubits[pauli_op[-1][0]])
+            #
+            #     for j in range(len(pauli_op) - 1, 0, -1):
+            #         yield cirq.CNOT(qubits[pauli_op[j - 1][0]], qubits[pauli_op[j][0]])
+            #
+            #     for qbt, pau in pauli_op:
+            #         yield map[pau](qubits[qbt], -1)
 
     def initial_state(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
         """Returns initial state representation of the Hartree Fock ansatz"""
