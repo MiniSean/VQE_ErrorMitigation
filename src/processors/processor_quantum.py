@@ -12,7 +12,7 @@ class QPU:
 
     @staticmethod
     def get_expectation_value(t_r: cirq.TrialResult, w: IWaveFunction):
-        qubit_operator = QPU.get_qubit_operator(w)
+        qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
         objective = openfermioncirq.HamiltonianObjective(qubit_operator)
         return objective.value(t_r.measurements['x'])
 
@@ -38,15 +38,15 @@ class QPU:
         return s.optimize(optimization_params, seeds=seed_array)
 
     @staticmethod
-    def get_qubit_operator(w: IWaveFunction) -> QubitOperator:
+    def get_hamiltonian_evaluation_operator(w: IWaveFunction) -> QubitOperator:
         molecule = w.molecule
         molecule.load()
         return jordan_wigner(molecule.get_molecular_hamiltonian())
 
     @staticmethod
     def get_variational_study(w: IWaveFunction, p_c: cirq.Circuit, name: str) -> openfermioncirq.VariationalStudy:
-        qubit_operator = QPU.get_qubit_operator(w)
-        objective = openfermioncirq.HamiltonianObjective(qubit_operator)
+        evaluator = QPU.get_hamiltonian_evaluation_operator(w)
+        objective = openfermioncirq.HamiltonianObjective(evaluator)
         return openfermioncirq.VariationalStudy(name=name, ansatz=w, objective=objective, preparation_circuit=p_c)
 
 
