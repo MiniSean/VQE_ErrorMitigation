@@ -205,64 +205,20 @@ class IGeneralizedUCCSD(IWaveFunction):
             #         yield map[pau](qubits[qbt], -1)
 
     def initial_state(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
-        """Returns initial state representation of the Hartree Fock ansatz"""
-        yield [cirq.rz(np.pi).on(qubits[i]) for i in range(len(qubits))]
+        """
+        Initial state representation of the Hartree Fock ansatz.
+        |Phi> = |0011> + |1100> + |1001> + |0110> (disregarding normalization)
+        Start with |0000>. Example,
+        Apply two Hadamard (on q1 and q2) to get a 4 state superposition.
+        Apply two X (on q0 and q3).
+        Apply two CNOT (q1 to q3 and q2 to q0).
+        :param qubits: Circuit qubits, (0, 1, 2, 3)
+        :return:  X_0 H_1 H_2 X_3 CNOT_13 CNOT_20
+        """
 
-    # def FOtoCIRQ(fo_list, qubit_list):
-    #     '''
-    #     Function to convert a list of FermionicOperators to a cirq.Circuit()
-    #
-    #     Input:
-    #     fo_list [list or FermionicOperator] : FermionicOperator or list of FermionicOperators
-    #     qubit_list [list]                   : list of cirq.LineQubits
-    #
-    #     '''
-    #
-    #     # check that fo_list is either a FermionOperator or a list of FermionOperators
-    #     if not isinstance(fo_list, (list, openfermion.FermionOperator)):
-    #         raise TypeError('Input must be a list or QubitOperator')
-    #     if isinstance(fo_list, openfermion.FermionOperator):
-    #         fo_list = list(fo_list)
-    #
-    #     # dictionary for converting x and y rotations to z
-    #     rot_dic = {'X': lambda q, inv: cirq.H.on(q),
-    #                'Y': lambda q, inv: cirq.rx(-inv * numpy.pi / 2).on(q),
-    #                'Z': lambda q, inv: cirq.I.on(q)}
-    #
-    #     # list of parameters
-    #     parameters = [Symbol('theta%d' % i) for i in range(int(.5 * len(fo_list)))]
-    #
-    #     for i, fo in enumerate(fo_list[::2]):
-    #         # Jordan-Wigner transform each fermionic operator + its Hermitian conjugate
-    #         qo_list = list(openfermion.jordan_wigner(fo + openfermion.hermitian_conjugated(fo)))
-    #
-    #         for qo in qo_list:
-    #             # get tuple of tuples containing which Pauli on which qubit appears in the Pauli string
-    #             # ex. [X0 Y1] -> ((0, X), (1, Y))
-    #             paulis = list(qo.terms.keys())[0]
-    #
-    #             # get sign of Pauli string
-    #             sign = numpy.sign(list(qo.terms.values())[0])
-    #
-    #             # convert Pauli string into rz and CNOT gates
-    #             # see Whitfield paper for details
-    #             for qbt, pau in paulis:
-    #                 yield rot_dic[pau](qubit_list[qbt], 1)
-    #
-    #             if len(paulis) > 1:
-    #                 for j in range(len(paulis) - 1):
-    #                     yield cirq.CNOT(qubit_list[paulis[j][0]],
-    #                                     qubit_list[paulis[j + 1][0]])
-    #
-    #             # the factor of 2 is mostly for convention, since we're optimizing the parameters
-    #             # see Whitfield paper for details
-    #             yield cirq.rz(2 * sign * parameters[i]).on(qubit_list[paulis[-1][0]])
-    #
-    #             if len(paulis) > 1:
-    #                 for j in range(len(paulis) - 1, 0, -1):
-    #                     yield cirq.CNOT(qubit_list[paulis[j - 1][0]],
-    #                                     qubit_list[paulis[j][0]])
-    #
-    #             for qbt, pau in paulis:
-    #                 yield rot_dic[pau](qubit_list[qbt], -1)
-
+        yield [cirq.rx(np.pi / 2).on(qubits[0]),
+               cirq.H.on(qubits[1]),
+               cirq.H.on(qubits[2]),
+               cirq.rx(np.pi / 2).on(qubits[3])]
+        yield [cirq.CNOT(qubits[1], qubits[3]),
+               cirq.CNOT(qubits[2], qubits[0])]
