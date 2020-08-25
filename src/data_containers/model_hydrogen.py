@@ -2,23 +2,16 @@ from typing import Sequence
 import cirq
 import numpy as np
 from openfermion import MolecularData
-from openfermioncirq import simulate_trotter, trotter
 
-from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
+from src.data_containers.helper_interfaces.i_wave_function import IGeneralizedUCCSD
 from src.data_containers.helper_interfaces.i_parameter import IParameter
 
 
-class HydrogenAnsatz(IWaveFunction):
+class HydrogenAnsatz(IGeneralizedUCCSD):
 
     def __init__(self):
-        operator = IParameter({'alpha': 1.})
         molecule = IParameter({'r0': .7414})  # .7414
-        super().__init__(operator, molecule)
-
-    # VariationalAnsatz
-    def _generate_qubits(self) -> Sequence[cirq.Qid]:
-        """Produce qubits that can be used by the ansatz circuit"""
-        return [cirq.GridQubit(i, j) for i in range(2) for j in range(2)]
+        super().__init__(molecule)
 
     # IWaveFunction
     def _generate_molecule(self, p: IParameter) -> MolecularData:
@@ -32,45 +25,22 @@ class HydrogenAnsatz(IWaveFunction):
         molecule.load()
         return molecule
 
-    # VariationalAnsatz
-    def operations(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
-        """Produce the operations of the ansatz circuit.
-        The operations should use Symbols produced by the `params` method
-        of the ansatz.
-        """
-        # _hamiltonian = self.molecule.get_molecular_hamiltonian()
-        # _qubits = self.qubits
-        # _trotter = simulate_trotter(qubits=_qubits, hamiltonian=_hamiltonian, time=1.0, n_steps=1, order=0, algorithm=trotter.LOW_RANK, omit_final_swaps=True)
-        # _circuit = cirq.Circuit(_trotter)
-        # cirq.merge_single_qubit_gates_into_phased_x_z(_circuit)
-        # yield _circuit
-        _symbols = list(self.params())
-        asdf = [cirq.ry(np.pi).on(qubits[0]),
-                cirq.ry(np.pi).on(qubits[1])]
-        yield asdf
-        yield [cirq.rx(np.pi / 2).on(qubits[0]),
-               cirq.ry(np.pi / 2).on(qubits[1]),
-               cirq.ry(np.pi / 2).on(qubits[2]),
-               cirq.ry(np.pi / 2).on(qubits[3])]
-        yield [cirq.CNOT(qubits[0], qubits[1]),
-               cirq.CNOT(qubits[1], qubits[2]),
-               cirq.CNOT(qubits[2], qubits[3])]
-        yield cirq.rz(_symbols[0]).on(qubits[3])
-        yield [cirq.CNOT(qubits[2], qubits[3]),
-               cirq.CNOT(qubits[1], qubits[2]),
-               cirq.CNOT(qubits[0], qubits[1])]
-        yield [cirq.rx(-np.pi / 2).on(qubits[0]),
-               cirq.ry(-np.pi / 2).on(qubits[1]),
-               cirq.ry(-np.pi / 2).on(qubits[2]),
-               cirq.ry(-np.pi / 2).on(qubits[3])]
-
     # IWaveFunction
     def initial_state(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
-        """Produce the initial state of the ansatz circuit before operation.
-        The operations should use Symbols produced by the `params` method
-        of the ansatz.
         """
-        yield [cirq.rz(np.pi).on(qubits[0]),
-               cirq.rz(np.pi).on(qubits[1]),
-               cirq.rz(np.pi).on(qubits[2]),
-               cirq.rz(np.pi).on(qubits[3])]
+        Initial state representation of the Hartree Fock ansatz.
+        |Phi> = |0011> + |1100> + |1001> + |0110> (disregarding normalization)
+        Start with |0000>. Example,
+        Apply two Hadamard (on q1 and q2) to get a 4 state superposition.
+        Apply two X (on q0 and q3).
+        Apply two CNOT (q1 to q3 and q2 to q0).
+        :param qubits: Circuit qubits, (0, 1, 2, 3)
+        :return:  X_0 H_1 H_2 X_3 CNOT_13 CNOT_20
+        """
+
+        yield [cirq.rx(np.pi / 2).on(qubits[0]),
+               cirq.H.on(qubits[1]),
+               cirq.H.on(qubits[2]),
+               cirq.rx(np.pi / 2).on(qubits[3])]
+        yield [cirq.CNOT(qubits[1], qubits[3]),
+               cirq.CNOT(qubits[2], qubits[0])]
