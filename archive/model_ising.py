@@ -1,4 +1,4 @@
-from src.data_containers.helper_interfaces.i_hamiltonian import IHamiltonian, T
+from archive.i_hamiltonian import IHamiltonian, T
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
 from src.data_containers.helper_interfaces.i_parameter import IParameter
 import cirq

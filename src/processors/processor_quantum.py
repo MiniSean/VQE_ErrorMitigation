@@ -4,7 +4,6 @@ import openfermioncirq
 from openfermioncirq.optimization import ScipyOptimizationAlgorithm, OptimizationParams, OptimizationTrialResult
 from openfermion import jordan_wigner, QubitOperator
 
-from src.data_containers.helper_interfaces.i_hamiltonian import IHamiltonian
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
 from src.data_containers.helper_interfaces.i_parameter import IParameter
 
