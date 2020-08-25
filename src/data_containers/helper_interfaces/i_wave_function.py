@@ -155,6 +155,13 @@ class IGeneralizedUCCSD(IWaveFunction):
 
     @staticmethod
     def qubit_to_gate_operators(qubit_operators: [of.QubitOperator], qubits: Sequence[cirq.Qid], par: sympy.Symbol) -> [cirq.GateOperation]:
+        """
+        Function to convert a list of QubitOperators to a cirq.Circuit().
+        :param qubit_operators: list of FermionicOperators
+        :param qubits: list of cirq.GridQubits
+        :param par: parameter used per QubitOpterator string
+        :return: list of GateOperations
+        """
         # dictionary for converting x and y rotations to z
         map = IGeneralizedUCCSD.pauli_basis_map()
 
