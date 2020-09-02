@@ -13,6 +13,7 @@ if __name__ == '__main__':
     parameters = uccsd_ansatz.operator_parameters
 
     # Get resolved circuit
+    print('Show circuit with initial state preparation')
     circuit = QPU.get_initial_state_circuit(uccsd_ansatz)
     circuit.append(uccsd_ansatz.circuit)
     print(circuit)
