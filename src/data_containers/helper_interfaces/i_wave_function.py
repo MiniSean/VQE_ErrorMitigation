@@ -35,6 +35,7 @@ class IMolecule:
         """Updates molecule parameters and overrides the local data"""
         self._params_molecule = p
         self.molecule = self._generate_molecule(p=p)
+        self.molecule.save()
         # if os.path.exists(self.molecule.filename + '.hdf5'):
         #     self.molecule.load()
         # else:
@@ -204,21 +205,9 @@ class IGeneralizedUCCSD(IWaveFunction):
             #     for qbt, pau in pauli_op:
             #         yield map[pau](qubits[qbt], -1)
 
+    @abstractmethod
     def initial_state(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
         """
-        Initial state representation of the Hartree Fock ansatz.
-        |Phi> = |0011> + |1100> + |1001> + |0110> (disregarding normalization)
-        Start with |0000>. Example,
-        Apply two Hadamard (on q1 and q2) to get a 4 state superposition.
-        Apply two X (on q0 and q3).
-        Apply two CNOT (q1 to q3 and q2 to q0).
-        :param qubits: Circuit qubits, (0, 1, 2, 3)
-        :return:  X_0 H_1 H_2 X_3 CNOT_13 CNOT_20
+        Not Implemented yet
         """
-
-        yield [cirq.rx(np.pi / 2).on(qubits[0]),
-               cirq.H.on(qubits[1]),
-               cirq.H.on(qubits[2]),
-               cirq.rx(np.pi / 2).on(qubits[3])]
-        yield [cirq.CNOT(qubits[1], qubits[3]),
-               cirq.CNOT(qubits[2], qubits[0])]
+        yield []
