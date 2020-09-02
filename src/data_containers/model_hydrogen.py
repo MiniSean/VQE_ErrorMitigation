@@ -10,7 +10,7 @@ from src.data_containers.helper_interfaces.i_parameter import IParameter
 class HydrogenAnsatz(IGeneralizedUCCSD):
 
     def __init__(self):
-        molecule = IParameter({'r0': .7414})  # .7414
+        molecule = IParameter({'r0': 1.5})  # .7414, 'r1': 1.
         super().__init__(molecule)
 
     # IWaveFunction
@@ -19,9 +19,8 @@ class HydrogenAnsatz(IGeneralizedUCCSD):
         Using a singlet state with S = 0 to specify we are looking for the lowest singlet energy state.
         multiplicity = 2S + 1
         """
-        r = p['r0']
-        geometry = [('H', (0., 0., 0.)), ('H', (0., 0., r))]
-        molecule = MolecularData(geometry=geometry, basis='sto-3g', multiplicity=1, charge=0, description=format(r))
+        geometry = [('H', (0., 0., 0.)), ('H', (0., 0., p['r0']))]  # , ('H', (0., p['r1'], 0.))
+        molecule = MolecularData(geometry=geometry, basis='sto-3g', multiplicity=1, charge=0, description=format(p['r0']))
         molecule.load()
         return molecule
 
