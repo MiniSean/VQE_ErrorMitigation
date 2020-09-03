@@ -135,7 +135,7 @@ class IGeneralizedUCCSD(IWaveFunction):
 
         for i, fo in enumerate(_ucc_operator[::2]):
             # Jordan-Wigner transform each fermionic operator + its Hermitian conjugate
-            qo_list = list(of.jordan_wigner(fo + of.hermitian_conjugated(fo)))
+            qo_list = list(of.jordan_wigner(fo - of.hermitian_conjugated(fo)))
             yield IGeneralizedUCCSD.qubit_to_gate_operators(qubit_operators=qo_list, qubits=qubits, par=_symbols[i])
 
     @staticmethod
