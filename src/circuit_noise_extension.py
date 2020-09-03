@@ -16,20 +16,39 @@ class Noisify:
         :param circuit: Collection of gate operation to introduce noise to
         :return: Same circuit with noise operations included
         """
-        result = []
-        for moment in circuit.moments:
-            for gate_op in moment.operations:
-                noise_op = Noisify.uniform_rotation_gate(1000)  # Create random noise operation per gate operation
-                new_moments = [gate_op]
-                for q_op in noise_op:
-                    noise_model = cirq.ConstantQubitNoiseModel(q_op)
-                    # Handle obscure noisy_operation function output
-                    noise_moment = noise_model.noisy_operation(operation=new_moments[0])
-                    new_moments.append(noise_moment[1])  # Collects the added noise moment after gate operation
-                # Append to new moment
-                result.append(new_moments)
+        # result = []
+        # for moment in circuit.moments:
+        #     for gate_op in moment.operations:
+        #         noise_list = Noisify.uniform_rotation_gate(1000)  # Create random noise operation per gate operation
+        #         new_gate_list = [gate_op]
+        #         for noise_op in noise_list:
+        #             noise_model = cirq.ConstantQubitNoiseModel(noise_op)
+        #             # Handle obscure noisy_operation function output
+        #             new_moment_list = noise_model.noisy_operation(operation=new_gate_list[0])
+        #             new_gate_list.append(new_moment_list[1])  # Collects the added noise moment after gate operation
+        #         # Append to new moment
+        #         result.append(new_gate_list)
+        # result = [val for sublist in result for val in sublist]  # Flatten list of list of cirq.Moments
+        result = Noisify.introduce_noise_tree(circuit.moments)
         # Create new circuit and set order strategy
         return cirq.Circuit(result, strategy=cirq.InsertStrategy.EARLIEST)
+
+    @staticmethod
+    def introduce_noise_tree(op_tree: cirq.OP_TREE) -> cirq.OP_TREE:
+        result = []
+        for op_list in op_tree:
+            for gate_op in op_list:
+                noise_list = Noisify.uniform_rotation_gate(1000)  # Create random noise operation per gate operation
+                new_gate_list = [gate_op]
+                for noise_op in noise_list:
+                    noise_model = cirq.ConstantQubitNoiseModel(noise_op)
+                    # Handle obscure noisy_operation function output
+                    new_moment_list = noise_model.noisy_operation(operation=new_gate_list[0])
+                    new_gate_list.append(new_moment_list[1])  # Collects the added noise moment after gate operation
+                # Append to new moment
+                result.append(new_gate_list)
+        result = [val for sublist in result for val in sublist]  # Flatten list of list of cirq.Moments
+        return result
 
     @staticmethod
     def uniform_rotation_gate(sample_count: int) -> [of.QubitOperator]:
