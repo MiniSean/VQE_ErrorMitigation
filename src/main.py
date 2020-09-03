@@ -14,7 +14,7 @@ if __name__ == '__main__':
     parameters = uccsd_ansatz.operator_parameters
 
     # Get resolved circuit
-    print('Show circuit with initial state preparation')
+    print('Show circuit with initial state preparation:')
     circuit = QPU.get_initial_state_circuit(uccsd_ansatz)
     circuit.append(uccsd_ansatz.circuit)
     print(circuit)
@@ -29,10 +29,12 @@ if __name__ == '__main__':
 
     # --------------------------
 
+    print("\nTaking the existing circuit and apply a noise filter:")
     # Noisy circuit
     noise_circuit = Noisify.introduce_noise(circuit)
     print(noise_circuit)
 
+    print("\nIntroduce noise directly into the initial state and operator preparations of the Hydrogen model:")
     # Noisy initial state
     noisy_hydrogen = NoisyHydrogen()
     noise_circuit = cirq.Circuit(noisy_hydrogen.initial_state(noisy_hydrogen.qubits))
