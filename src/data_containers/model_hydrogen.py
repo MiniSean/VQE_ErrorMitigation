@@ -23,6 +23,7 @@ class HydrogenAnsatz(IGeneralizedUCCSD):
         geometry = [('H', (0., 0., 0.)), ('H', (0., 0., p['r0']))]  # , ('H', (0., p['r1'], 0.))
         molecule = MolecularData(geometry=geometry, basis='sto-3g', multiplicity=1, charge=0, description=format(p['r0']))
         molecule.load()
+        print(f'Reference (Full Configuration Energy: {molecule.fci_energy})')
         return molecule
 
     # IWaveFunction
