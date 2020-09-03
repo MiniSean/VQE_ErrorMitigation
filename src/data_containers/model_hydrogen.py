@@ -11,7 +11,7 @@ from src.circuit_noise_extension import Noisify
 class HydrogenAnsatz(IGeneralizedUCCSD):
 
     def __init__(self):
-        molecule = IParameter({'r0': 1.5})  # .7414, 'r1': 1.
+        molecule = IParameter({'r0': .7414})  # .7414, 'r1': 1.
         super().__init__(molecule)
 
     # IWaveFunction
@@ -29,22 +29,16 @@ class HydrogenAnsatz(IGeneralizedUCCSD):
     # IWaveFunction
     def initial_state(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
         """
-        Initial state representation of the Hartree Fock ansatz.
-        |Phi> = |0011> + |1100> + |1001> + |0110> (disregarding normalization)
-        Start with |0000>. Example,
-        Apply two Hadamard (on q1 and q2) to get a 4 state superposition.
-        Apply two X (on q0 and q3).
-        Apply two CNOT (q1 to q3 and q2 to q0).
-        :param qubits: Circuit qubits, (0, 1, 2, 3)
-        :return:  X_0 H_1 H_2 X_3 CNOT_13 CNOT_20
-        """
+        Using Hartree Fock state:
+        |1100>
+        instead of the most general state:
+        |0011> + |1100> + |1001> + |0110> (disregarding normalization)
 
-        yield [cirq.rx(np.pi / 2).on(qubits[0]),
-               cirq.H.on(qubits[1]),
-               cirq.H.on(qubits[2]),
-               cirq.rx(np.pi / 2).on(qubits[3])]
-        yield [cirq.CNOT(qubits[1], qubits[3]),
-               cirq.CNOT(qubits[2], qubits[0])]
+        :param qubits: Circuit qubits, (0, 1, 2, 3)
+        :return:  X_0 X_1
+        """
+        yield [cirq.rx(np.pi).on(qubits[0]),
+               cirq.rx(np.pi).on(qubits[1])]
 
 
 class NoisyHydrogen(HydrogenAnsatz):

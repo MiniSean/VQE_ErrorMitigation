@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     print("H2-Molecule example. Finding expectation value for molecule with optimal atom distance (.7414 angstrom)")
     print("Using a generated operator tree based on the UCCSD theorem")
-    uccsd_ansatz = NoisyHydrogen()
+    uccsd_ansatz = HydrogenAnsatz()
     parameters = uccsd_ansatz.operator_parameters
 
     # Get resolved circuit
