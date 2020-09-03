@@ -5,6 +5,7 @@ from openfermion import MolecularData
 
 from src.data_containers.helper_interfaces.i_wave_function import IGeneralizedUCCSD
 from src.data_containers.helper_interfaces.i_parameter import IParameter
+from src.circuit_noise_extension import Noisify
 
 
 class HydrogenAnsatz(IGeneralizedUCCSD):
@@ -43,3 +44,12 @@ class HydrogenAnsatz(IGeneralizedUCCSD):
                cirq.rx(np.pi / 2).on(qubits[3])]
         yield [cirq.CNOT(qubits[1], qubits[3]),
                cirq.CNOT(qubits[2], qubits[0])]
+
+
+class NoisyHydrogen(HydrogenAnsatz):
+
+    def operations(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
+        yield Noisify.introduce_noise_tree(IGeneralizedUCCSD.operations(self, qubits=qubits))
+
+    def initial_state(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
+        yield Noisify.introduce_noise_tree(HydrogenAnsatz.initial_state(self, qubits=qubits))

@@ -1,6 +1,6 @@
 import cirq
 
-from src.data_containers.model_hydrogen import HydrogenAnsatz
+from src.data_containers.model_hydrogen import HydrogenAnsatz, NoisyHydrogen
 from src.processors.processor_quantum import QPU
 from src.processors.processor_classic import CPU
 from src.circuit_noise_extension import Noisify
@@ -31,6 +31,12 @@ if __name__ == '__main__':
 
     # Noisy circuit
     noise_circuit = Noisify.introduce_noise(circuit)
+    print(noise_circuit)
+
+    # Noisy initial state
+    noisy_hydrogen = NoisyHydrogen()
+    noise_circuit = cirq.Circuit(noisy_hydrogen.initial_state(noisy_hydrogen.qubits))
+    noise_circuit.append(noisy_hydrogen.operations(noisy_hydrogen.qubits))
     print(noise_circuit)
 
     # --------------------------
