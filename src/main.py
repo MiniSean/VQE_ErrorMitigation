@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     print("H2-Molecule example. Finding expectation value for molecule with optimal atom distance (.7414 angstrom)")
     print("Using a generated operator tree based on the UCCSD theorem")
-    uccsd_ansatz = HydrogenAnsatz()
+    uccsd_ansatz = NoisyHydrogen()
     parameters = uccsd_ansatz.operator_parameters
 
     # Get resolved circuit
@@ -31,7 +31,10 @@ if __name__ == '__main__':
 
     print("\nTaking the existing circuit and apply a noise filter:")
     # Noisy circuit
-    noise_circuit = Noisify.introduce_noise(circuit)
+    clean_hydrogen = HydrogenAnsatz()
+    noise_circuit = QPU.get_initial_state_circuit(clean_hydrogen)  # Append state initialisation
+    noise_circuit.append(clean_hydrogen.circuit)  # Append operations
+    noise_circuit = Noisify.introduce_noise(noise_circuit)  # 'Noisify'
     print(noise_circuit)
 
     print("\nIntroduce noise directly into the initial state and operator preparations of the Hydrogen model:")

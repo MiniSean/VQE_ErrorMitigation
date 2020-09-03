@@ -42,6 +42,9 @@ class Noisify:
                 new_gate_list = [gate_op]
                 for noise_op in noise_list:
                     noise_model = cirq.ConstantQubitNoiseModel(noise_op)
+                    # Check if evaluated gate is no virtual noise moment
+                    if isinstance(new_gate_list[0], cirq.Moment) and noise_model.is_virtual_moment(new_gate_list[0]):
+                        continue
                     # Handle obscure noisy_operation function output
                     new_moment_list = noise_model.noisy_operation(operation=new_gate_list[0])
                     new_gate_list.append(new_moment_list[1])  # Collects the added noise moment after gate operation
