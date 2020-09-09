@@ -2,12 +2,13 @@
 # Project module requirements
 
 # Basics
-numpy==1.19.0
-scipy==1.5.1
-sympy==1.6.1
+numpy==1.19.1
+scipy==1.5.2
+sympy==1.6.2
 
 # Eigensolver specifics
 cirq==0.8.2
 openfermion==0.11.0
 openfermioncirq==0.4.0
 openfermionpsi4==0.4
+# psi4==1.3.2
