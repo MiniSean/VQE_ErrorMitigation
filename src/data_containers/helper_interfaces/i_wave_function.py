@@ -36,12 +36,6 @@ class IMolecule:
         self._params_molecule = p
         self.molecule = self._generate_molecule(p=p)
         self.molecule.save()
-        # if os.path.exists(self.molecule.filename + '.hdf5'):
-        #     self.molecule.load()
-        # else:
-        # self.molecule = run_psi4(self.molecule, run_mp2=True, run_cisd=True, run_ccsd=True, run_fci=True)
-        # two_electron_integral = self.molecule.two_body_integrals
-        # self.molecule.save()
         return self.molecule
 
 
