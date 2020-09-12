@@ -1,4 +1,7 @@
-import cirq
+import os
+import json
+import jsonpickle  # TEMP
+import matplotlib.pyplot as plt  # TEMP
 
 from src.data_containers.model_hydrogen import HydrogenAnsatz, NoisyHydrogen
 from src.processors.processor_quantum import QPU
@@ -29,13 +32,21 @@ if __name__ == '__main__':
 
     # --------------------------
 
-    print("\nTaking the existing circuit and apply a noise filter:")
-    # Noisy circuit
-    clean_hydrogen = HydrogenAnsatz()
-    noise_circuit = QPU.get_initial_state_circuit(clean_hydrogen)  # Append state initialisation
-    noise_circuit.append(clean_hydrogen.circuit)  # Append operations
-    noise_circuit = Noisify.introduce_noise(noise_circuit)  # 'Noisify'
-    print(noise_circuit)
+    # # First test in applying noise to circuits or molecule classes directly
+    # print("\nTaking the existing circuit and apply a noise filter:")
+    # # Noisy circuit
+    # clean_hydrogen = HydrogenAnsatz()
+    # noise_circuit = QPU.get_initial_state_circuit(clean_hydrogen)  # Append state initialisation
+    # noise_circuit.append(clean_hydrogen.circuit)  # Append operations
+    # noise_circuit = Noisify.introduce_noise(noise_circuit)  # 'Noisify'
+    # print(noise_circuit)
+    #
+    # print("\nIntroduce noise directly into the initial state and operator preparations of the Hydrogen model:")
+    # # Noisy initial state
+    # noisy_hydrogen = NoisyHydrogen()
+    # noise_circuit = cirq.Circuit(noisy_hydrogen.initial_state(noisy_hydrogen.qubits))
+    # noise_circuit.append(noisy_hydrogen.operations(noisy_hydrogen.qubits))
+    # print(noise_circuit)
 
     # --------------------------
 
