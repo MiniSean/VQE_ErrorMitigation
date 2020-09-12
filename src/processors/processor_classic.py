@@ -4,9 +4,10 @@ import cirq
 import openfermioncirq
 from openfermioncirq.optimization import OptimizationTrialResult
 
+from src.data_containers.helper_interfaces.i_typed_list import ITypedList
 from src.processors.processor_quantum import QPU
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
-from src.data_containers.helper_interfaces.i_parameter import IParameter
+from src.data_containers.helper_interfaces.i_collection import IContainer
 
 
 class CPU:
