@@ -23,8 +23,6 @@ class IMolecule:
     def __init__(self, molecule_params: IParameter):
         self._params_molecule = molecule_params
         self.molecule = self._generate_molecule(p=molecule_params)
-        # self.molecule = run_pyscf(self.molecule, run_mp2=True, run_cisd=True, run_ccsd=True, run_fci=True)
-        # two_electron_integral = self.molecule.two_body_integrals
 
     @abstractmethod
     def _generate_molecule(self, p: IParameter) -> of.MolecularData:
@@ -35,7 +33,6 @@ class IMolecule:
         """Updates molecule parameters and overrides the local data"""
         self._params_molecule = p
         self.molecule = self._generate_molecule(p=p)
-        self.molecule.save()
         return self.molecule
 
 
@@ -102,8 +99,6 @@ class IGeneralizedUCCSD(IWaveFunction):
         if isinstance(_ucc_operator, of.FermionOperator):
             _ucc_operator = list(_ucc_operator)
         return _ucc_operator
-
-    # hamiltonian = property(_get_hamiltonian)
 
     def __init__(self, molecule_params: IParameter):
         IMolecule.__init__(self, molecule_params)
@@ -180,24 +175,6 @@ class IGeneralizedUCCSD(IWaveFunction):
 
             for qbt, pau in pauli_op:
                 yield map[pau](qubits[qbt], -1)
-            # # Multi user pauli string
-            # for pauli_op, coefficient in q_op.terms.items():  # Tuple of (Pauli operator string, exponent coefficient)
-            #     # convert Pauli string into rz and CNOT gates
-            #     sign = np.sign(coefficient)
-            #     for qbt, pau in pauli_op:  # Tuple of (qubit ID, rotation ID)
-            #         yield map[pau](qubits[qbt], 1)
-            #
-            #     for j in range(len(pauli_op) - 1):
-            #         yield cirq.CNOT(qubits[pauli_op[j][0]], qubits[pauli_op[j + 1][0]])
-            #
-            #     # Last operator in Pauli string specifies the R_z qubit focus
-            #     yield cirq.rz(2 * sign * par).on(qubits[pauli_op[-1][0]])
-            #
-            #     for j in range(len(pauli_op) - 1, 0, -1):
-            #         yield cirq.CNOT(qubits[pauli_op[j - 1][0]], qubits[pauli_op[j][0]])
-            #
-            #     for qbt, pau in pauli_op:
-            #         yield map[pau](qubits[qbt], -1)
 
     @abstractmethod
     def initial_state(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
