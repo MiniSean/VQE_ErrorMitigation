@@ -1,7 +1,5 @@
 import numpy as np
 from scipy import optimize
-import cirq
-import openfermioncirq
 from openfermioncirq.optimization import OptimizationTrialResult
 
 from src.data_containers.helper_interfaces.i_typed_list import ITypedList
@@ -33,6 +31,21 @@ class CPU:
         method = 'Nelder-Mead'
         options = {'maxiter': cpu_iter}
         return optimize.minimize(fun=optimize_func, x0=initial_values, method=method, options=options)
+
+    @staticmethod
+    def get_semi_optimized_ground_state(w: IWaveFunction, qpu_iter: int) -> ITypedList:
+        param_space = np.linspace(0.1, 3.0, 30)
+        print(param_space)
+        molecule_params = w.molecule_parameters
+        result = ITypedList(allowed_types=IContainer)
+        for par in param_space:
+            for i, key in enumerate(molecule_params):
+                molecule_params.dict[key] = round(par, 1)  # Temporary rounding to use correct mol_data
+            w.update_molecule(molecule_params)
+            trial_result = CPU.get_optimized_state(w=w, max_iter=qpu_iter)  # Calculate trial result
+            container = IContainer(molecule_params, trial_result.optimal_value, w.molecule.fci_energy)
+            result.append(container)
+        return result
 
     @staticmethod
     def get_optimized_state(w: IWaveFunction, max_iter: int) -> OptimizationTrialResult:

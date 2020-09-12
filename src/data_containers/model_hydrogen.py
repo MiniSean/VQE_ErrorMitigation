@@ -13,7 +13,7 @@ from src.circuit_noise_extension import Noisify
 class HydrogenAnsatz(IGeneralizedUCCSD):
 
     def __init__(self):
-        molecule_params = IParameter({'r0': .7414})  # .7414, 'r1': 1.
+        molecule_params = IParameter({'r0': 0.1})  # .7414, 'r1': 1.
         super().__init__(molecule_params)
 
     def _generate_molecule(self, p: IParameter) -> MolecularData:

@@ -37,30 +37,40 @@ if __name__ == '__main__':
     noise_circuit = Noisify.introduce_noise(noise_circuit)  # 'Noisify'
     print(noise_circuit)
 
-    print("\nIntroduce noise directly into the initial state and operator preparations of the Hydrogen model:")
-    # Noisy initial state
-    noisy_hydrogen = NoisyHydrogen()
-    noise_circuit = cirq.Circuit(noisy_hydrogen.initial_state(noisy_hydrogen.qubits))
-    noise_circuit.append(noisy_hydrogen.operations(noisy_hydrogen.qubits))
-    print(noise_circuit)
+    # --------------------------
+
+    # Run 'optimization and store data in a json format
+    data_directory = os.getcwd() + '/classic_minimisation'
+    filename = data_directory + '/H2_semi_minimisation'
+    # container_list = CPU.get_semi_optimized_ground_state(w=uccsd_ansatz, qpu_iter=10)
+    # # Temporarily store results
+    # if not os.path.exists(data_directory):  # If non existing -> create
+    #     os.mkdir(data_directory)
+    # # Something like pickle or json or jsonpickle?
+    # # Writing JSON object
+    # with open(filename, 'w') as wf:
+    #     # json.dump(container_list.__dict__, f, indent=4)
+    #     wf.write(jsonpickle.encode(value=container_list, indent=4))
 
     # --------------------------
 
-    # CPU.get_optimized_ground_state(w=uccsd_ansatz, qpu_iter=10, cpu_iter=10)
+    # Read stored json format and express as a good old matlab plot
+    # Read JSON object
+    with open(filename, 'r') as rf:
+        obj = jsonpickle.decode(rf.read())
 
-    # Get variational study
-    # for i in range(5):
-    #     result = CPU.get_optimized_state(w=ansatz, max_iter=10)
-    #     print(f'Operator expectation value: {result.optimal_value}\nOperator parameters: {result.optimal_parameters}')
-    #
-    #     for j, key in enumerate(ansatz.molecule_parameters):
-    #         ansatz.molecule_parameters.dict[key] += .5
-    #     ansatz.update_molecule(ansatz.molecule_parameters)
-    #
-    # parameters.update(r=result)
-    # resolved_circuit = QPU.get_resolved_circuit(circuit, parameters)
-    # print(resolved_circuit)
+    x = [collection.molecule_param for collection in obj]
+    print(x)
+    y = [collection.measured_value for collection in obj]
+    print(y)
+    z = [collection.fci_value for collection in obj]
+    print(z)
 
-    # Get molecule study
-    # minimization = CPU.get_optimized_ground_state(w=ansatz, qpu_iter=10, cpu_iter=10)
-    # print(minimization)
+    fig, ax = plt.subplots()
+    ax.plot(x, y, '-', label="measurement")
+    ax.plot(x, z, '.', label="fci energy")
+    ax.legend()
+
+    plt.show()
+    # --------------------------
+
