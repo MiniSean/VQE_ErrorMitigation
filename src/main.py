@@ -71,15 +71,17 @@ if __name__ == '__main__':
         obj = jsonpickle.decode(rf.read())
 
     x = [collection.molecule_param for collection in obj]
-    print(x)
     y = [collection.measured_value for collection in obj]
-    print(y)
     z = [collection.fci_value for collection in obj]
-    print(z)
 
     fig, ax = plt.subplots()
-    ax.plot(x, y, '-', label="measurement")
-    ax.plot(x, z, '.', label="fci energy")
+    # Set plot layout
+    ax.title.set_text("Eigen Energy depending on Atomic distance for H2")
+    ax.set_xlabel("Interatomic Distance [$\AA$]")
+    ax.set_ylabel("Energy (Hartree) [$a.u.$]")
+    # Set plot points
+    ax.plot(x, y, '-', label="STO-3G")
+    ax.plot(x, z, 'o', label="fci energy")
     ax.legend()
 
     plt.show()

@@ -1,8 +1,8 @@
 import numpy as np
 from scipy import optimize
 from openfermioncirq.optimization import OptimizationTrialResult
+from typing import List
 
-from src.data_containers.helper_interfaces.i_typed_list import ITypedList
 from src.processors.processor_quantum import QPU
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
 from src.data_containers.helper_interfaces.i_collection import IContainer
@@ -33,11 +33,11 @@ class CPU:
         return optimize.minimize(fun=optimize_func, x0=initial_values, method=method, options=options)
 
     @staticmethod
-    def get_semi_optimized_ground_state(w: IWaveFunction, qpu_iter: int) -> ITypedList:
+    def get_semi_optimized_ground_state(w: IWaveFunction, qpu_iter: int) -> List:
         param_space = np.linspace(0.1, 3.0, 30)
         print(param_space)
         molecule_params = w.molecule_parameters
-        result = ITypedList(allowed_types=IContainer)
+        result = list()  # ITypedList(allowed_types=IContainer)
         for par in param_space:
             for i, key in enumerate(molecule_params):
                 molecule_params.dict[key] = round(par, 1)  # Temporary rounding to use correct mol_data

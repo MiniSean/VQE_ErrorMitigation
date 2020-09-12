@@ -3,7 +3,7 @@ from openfermioncirq.optimization import OptimizationTrialResult
 from src.data_containers.helper_interfaces.i_parameter import IParameter
 
 
-class IContainer(object):
+class IContainer:
 
     def get_molecule_parameter(self) -> float:  # IParameter
         return self._molecular_parameter
@@ -29,13 +29,3 @@ class IContainer(object):
         print(self._molecular_parameter)
         self._measured_eigenvalue = e_value
         self._fci_value = fci_value
-
-    # @staticmethod
-    # def json_hook(obj_to_decode):
-    #     if '_molecular_parameter' in obj_to_decode and '_measured_eigenvalue' in obj_to_decode and '_fci_value' in obj_to_decode:
-    #         return IContainer(obj_to_decode['_molecular_parameter'], obj_to_decode['_measured_eigenvalue'], obj_to_decode['_fci_value'])
-    #     else:
-    #         return obj_to_decode
-    #
-    # def to_json(self):
-    #     return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
