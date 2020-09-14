@@ -1,5 +1,4 @@
 import os
-import json
 import jsonpickle  # TEMP
 import matplotlib.pyplot as plt  # TEMP
 
@@ -82,7 +81,23 @@ if __name__ == '__main__':
     # Set plot points
     ax.plot(x, y, '-', label="STO-3G")
     ax.plot(x, z, 'o', label="fci energy")
-    ax.legend()
+    ax.legend(loc=0)
+
+    # https://matplotlib.org/3.1.0/gallery/subplots_axes_and_figures/zoom_inset_axes.html
+    # inset axes....
+    axins = ax.inset_axes([0.5, 0.5, 0.47, 0.27])
+    # axins.imshow(Z2, interpolation="nearest", origin="lower")
+    axins.plot(x, y, '-', label="STO-3G")
+    axins.plot(x, z, 'o', label="fci energy")
+
+    # sub region of the original image
+    x1, x2, y1, y2 = .65, .85, -1.14, -1.125
+    axins.set_xlim(x1, x2)
+    axins.set_ylim(y1, y2)
+    # axins.set_xticklabels('')
+    # axins.set_yticklabels('')
+
+    ax.indicate_inset_zoom(axins)
 
     plt.show()
     # --------------------------
