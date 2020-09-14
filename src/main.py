@@ -1,10 +1,8 @@
-import os
-import jsonpickle  # TEMP
-import matplotlib.pyplot as plt  # TEMP
-
 from src.data_containers.model_hydrogen import HydrogenAnsatz, NoisyHydrogen
 from src.processors.processor_quantum import QPU
 from src.processors.processor_classic import CPU
+from src.calculate_minimisation import calculate_and_store
+from src.plot_minimisation import read_and_plot
 from src.circuit_noise_extension import Noisify
 
 
@@ -49,56 +47,13 @@ if __name__ == '__main__':
 
     # --------------------------
 
+    filename = 'H2_semi_minimisation'
     # Run 'optimization and store data in a json format
-    data_directory = os.getcwd() + '/classic_minimisation'
-    filename = data_directory + '/H2_semi_minimisation'
-    # container_list = CPU.get_semi_optimized_ground_state(w=uccsd_ansatz, qpu_iter=10)
-    # # Temporarily store results
-    # if not os.path.exists(data_directory):  # If non existing -> create
-    #     os.mkdir(data_directory)
-    # # Something like pickle or json or jsonpickle?
-    # # Writing JSON object
-    # with open(filename, 'w') as wf:
-    #     # json.dump(container_list.__dict__, f, indent=4)
-    #     wf.write(jsonpickle.encode(value=container_list, indent=4))
-
-    # --------------------------
-
+    wave_function_class = HydrogenAnsatz()
+    calculate_and_store(wave_class=wave_function_class, filename=filename)
     # Read stored json format and express as a good old matlab plot
-    # Read JSON object
-    with open(filename, 'r') as rf:
-        obj = jsonpickle.decode(rf.read())
+    plt_obj = read_and_plot(filename=filename)
+    plt_obj.show()
 
-    x = [collection.molecule_param for collection in obj]
-    y = [collection.measured_value for collection in obj]
-    z = [collection.fci_value for collection in obj]
-
-    fig, ax = plt.subplots()
-    # Set plot layout
-    ax.title.set_text("Eigen Energy depending on Atomic distance for H2")
-    ax.set_xlabel("Interatomic Distance [$\AA$]")
-    ax.set_ylabel("Energy (Hartree) [$a.u.$]")
-    # Set plot points
-    ax.plot(x, y, '-', label="STO-3G")
-    ax.plot(x, z, 'o', label="fci energy")
-    ax.legend(loc=0)
-
-    # https://matplotlib.org/3.1.0/gallery/subplots_axes_and_figures/zoom_inset_axes.html
-    # inset axes....
-    axins = ax.inset_axes([0.5, 0.5, 0.47, 0.27])
-    # axins.imshow(Z2, interpolation="nearest", origin="lower")
-    axins.plot(x, y, '-', label="STO-3G")
-    axins.plot(x, z, 'o', label="fci energy")
-
-    # sub region of the original image
-    x1, x2, y1, y2 = .65, .85, -1.14, -1.125
-    axins.set_xlim(x1, x2)
-    axins.set_ylim(y1, y2)
-    # axins.set_xticklabels('')
-    # axins.set_yticklabels('')
-
-    ax.indicate_inset_zoom(axins)
-
-    plt.show()
     # --------------------------
 
