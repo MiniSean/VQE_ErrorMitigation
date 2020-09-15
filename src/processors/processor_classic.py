@@ -5,6 +5,8 @@ from typing import List
 
 from src.processors.processor_quantum import QPU
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
+from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseWrapper
+from src.data_containers.helper_interfaces.i_parameter import IParameter
 from src.data_containers.helper_interfaces.i_collection import IContainer
 
 

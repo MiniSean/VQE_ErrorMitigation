@@ -7,7 +7,6 @@ from openfermionpsi4 import run_psi4
 
 from src.data_containers.helper_interfaces.i_wave_function import IGeneralizedUCCSD
 from src.data_containers.helper_interfaces.i_parameter import IParameter
-from src.circuit_noise_extension import Noisify
 
 
 class HydrogenAnsatz(IGeneralizedUCCSD):

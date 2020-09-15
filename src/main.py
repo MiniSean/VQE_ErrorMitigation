@@ -1,11 +1,12 @@
 import cirq  # TEMP
 
 from src.data_containers.model_hydrogen import HydrogenAnsatz
+from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseWrapper
 from src.processors.processor_quantum import QPU
 from src.processors.processor_classic import CPU
 from src.calculate_minimisation import calculate_and_store
 from src.plot_minimisation import read_and_plot
-from src.circuit_noise_extension import Noisify, NoiseWrapper
+from src.circuit_noise_extension import Noisify
 
 
 if __name__ == '__main__':
