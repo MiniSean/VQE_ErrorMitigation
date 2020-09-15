@@ -92,6 +92,12 @@ class NoiseWrapper(IWaveFunction):
         return self._ideal_wave_function._generate_molecule(p=p)
 
     def __init__(self, w_class: IWaveFunction, noise_channel: List[cirq.Gate]):
+        """
+        Noise Wrapper Constructor.
+        Extents functionality of IWaveFunction class by introducing noise channels on both initial state preparation as ansatz operations.
+        :param w_class: any class that inherits directly or indirectly from IWaveFunction
+        :param noise_channel: List of cirq noise channel(s)
+        """
         self._ideal_wave_function = w_class
         self._noise_channel = lambda: noise_channel  # Callable[[], List[cirq.Gate]]
         IWaveFunction.__init__(self, w_class.operator_parameters, w_class.molecule_parameters)
