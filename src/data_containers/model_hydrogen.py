@@ -79,12 +79,3 @@ class HydrogenAnsatz(IGeneralizedUCCSD):
         """
         yield [cirq.rx(np.pi).on(qubits[0]),
                cirq.rx(np.pi).on(qubits[1])]
-
-
-class NoisyHydrogen(HydrogenAnsatz):
-
-    def operations(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
-        yield Noisify.introduce_noise_tree(IGeneralizedUCCSD.operations(self, qubits=qubits))
-
-    def initial_state(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
-        yield Noisify.introduce_noise_tree(HydrogenAnsatz.initial_state(self, qubits=qubits))

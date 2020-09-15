@@ -1,7 +1,7 @@
 import os
 import jsonpickle
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
-from src.data_containers.model_hydrogen import HydrogenAnsatz, NoisyHydrogen
+from src.data_containers.model_hydrogen import HydrogenAnsatz
 from src.processors.processor_classic import CPU
 
 DATA_DIR = os.getcwd() + '/classic_minimisation'

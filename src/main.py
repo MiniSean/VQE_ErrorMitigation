@@ -1,6 +1,6 @@
 import cirq  # TEMP
 
-from src.data_containers.model_hydrogen import HydrogenAnsatz, NoisyHydrogen
+from src.data_containers.model_hydrogen import HydrogenAnsatz
 from src.processors.processor_quantum import QPU
 from src.processors.processor_classic import CPU
 from src.calculate_minimisation import calculate_and_store
