@@ -4,6 +4,7 @@ from typing import Sequence, List
 
 from src.data_containers.helper_interfaces.i_parameter import IParameter
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
+from src.processors.processor_quantum import QPU
 from src.circuit_noise_extension import Noisify
 
 
@@ -34,8 +35,20 @@ class INoiseWrapper(IWaveFunction, cirq.NoiseModel):
         IWaveFunction.__init__(self, w_class.operator_parameters, w_class.molecule_parameters)
         cirq.NoiseModel.__init__(self)
 
+    # cirq.NoiseModel
     def noisy_operation(self, op):
         result = [op]
         for gates in self._noise_channel():
             result.append(gates.on(op.qubits[0]))
+        return result
+
+    # quick access
+    def get_clean_circuit(self) -> cirq.circuits.circuit:
+        result = QPU.get_initial_state_circuit(w=self._ideal_wave_function)  # Initial state
+        result.append(self._ideal_wave_function.operations(self._ideal_wave_function.qubits))  # Ansatz operators
+        return result
+
+    def get_noisy_circuit(self) -> cirq.circuits.circuit:
+        result = QPU.get_initial_state_circuit(w=self)  # Initial state
+        result.append(self.operations(self._ideal_wave_function.qubits))  # Ansatz operators
         return result
