@@ -22,7 +22,7 @@ def create_dir(rel_dir: str) -> bool:
     return result
 
 
-def calculate_and_store(wave_class: IWaveFunction, filename: str):
+def calculate_and_write(wave_class: IWaveFunction, filename: str):
     file_path = f'{DATA_DIR}/{filename}'
     container_list = CPU.get_semi_optimized_ground_state(w=wave_class, cpu_iter=CPU_ITER, qpu_iter=OPT_ITER)
     # Temporarily store results
@@ -34,4 +34,4 @@ def calculate_and_store(wave_class: IWaveFunction, filename: str):
 
 if __name__ == '__main__':
     wave_function_class = HydrogenAnsatz()
-    calculate_and_store(wave_class=wave_function_class, filename='H2_semi_minimisation')
+    calculate_and_write(wave_class=wave_function_class, filename='H2_semi_minimisation')
