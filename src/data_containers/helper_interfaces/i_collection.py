@@ -21,7 +21,7 @@ class IContainer:
         return self._measured_standard_deviation
 
     def get_fci_value(self) -> float:
-        return self._fci_value
+        return self._fci_value if self._fci_value is not None else float('NaN')
 
     molecule_param = property(get_molecule_parameter)  # , set_molecule_parameter)
     measured_value = property(get_measured_eigenvalue)  # , set_measured_eigenvalue)
