@@ -52,13 +52,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "xbbGivoeDUA="
+                            "py/b64": "P774jOwYDUA="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.935559576729839,
+        "_measured_standard_deviation": 0.9258092476133095,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -150,13 +150,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "e+gLYTjz8z8="
+                            "py/b64": "LCXSdeVB7T8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.9390742496320458,
+        "_measured_standard_deviation": 0.7641681879557782,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -248,13 +248,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "M81LW6H+rb8="
+                            "py/b64": "oTLjntrxsj8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.46353474712591075,
+        "_measured_standard_deviation": 0.7823842529249397,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -346,13 +346,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "+/4ZAjLbkr8="
+                            "py/b64": "sOv9l/AF4L8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.2437593131815782,
+        "_measured_standard_deviation": 0.5242478696280866,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -444,13 +444,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "8P7tcVAB578="
+                            "py/b64": "BDo4HiQ2478="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.5613319655483358,
+        "_measured_standard_deviation": 0.38005314248878336,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -542,13 +542,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "oEZVwrbmoj8="
+                            "py/b64": "hpO/SsTR678="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.7356274276444927,
+        "_measured_standard_deviation": 0.32560371839778357,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -640,13 +640,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "MNnqSE5n7b8="
+                            "py/b64": "w6dhLevf778="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.3437906042432764,
+        "_measured_standard_deviation": 0.2489784128034848,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -738,13 +738,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "p/WIiF16y78="
+                            "py/b64": "8yckkkfL7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.7761124042556404,
+        "_measured_standard_deviation": 0.2513708954670132,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -836,13 +836,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "xh2jCFwO6b8="
+                            "py/b64": "G8EzaTCr778="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.27298012833383406,
+        "_measured_standard_deviation": 0.18173147499875572,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -934,13 +934,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "oUOdRWwR6L8="
+                            "py/b64": "wUlrtZYQ7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.2722487910741596,
+        "_measured_standard_deviation": 0.18328160810381153,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -1032,13 +1032,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "uamBO6iV8L8="
+                            "py/b64": "PuzybXg4778="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 1.2356497447463258e-07,
+        "_measured_standard_deviation": 0.10821278874644036,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -1130,13 +1130,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "+QC8aQNl7L8="
+                            "py/b64": "+vt02GEI778="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.10199636576360183,
+        "_measured_standard_deviation": 0.07250097333229104,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -1228,13 +1228,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "12E+7/ef7L8="
+                            "py/b64": "vazhcyfD7r8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.06805475607587096,
+        "_measured_standard_deviation": 0.03628080008897842,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -1326,13 +1326,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "UC5NsN637L8="
+                            "py/b64": "3t619GG07b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.038135754812246576,
+        "_measured_standard_deviation": 0.0271074678053547,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -1424,13 +1424,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "XEDkBuF43r8="
+                            "py/b64": "XePUbd4l7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.7178593260723185,
+        "_measured_standard_deviation": 4.422667368373316e-07,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -1522,13 +1522,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "8aCHT8UR6b8="
+                            "py/b64": "nvDsz3Tc7L8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.20523379474530976,
+        "_measured_standard_deviation": 4.3634969649807826e-07,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -1620,13 +1620,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "dfYYh3oh7b8="
+                            "py/b64": "J74or4oK7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 7.225659328881862e-07,
+        "_measured_standard_deviation": 0.012522009583152248,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -1718,13 +1718,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "QCjLaKZB578="
+                            "py/b64": "6y6NbpNU7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.08869638965517562,
+        "_measured_standard_deviation": 3.9697656376113965e-07,
         "_fci_value": null
     },
     {
@@ -1757,13 +1757,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "fOetkZgB678="
+                            "py/b64": "pIfwTsVK7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.0668787360029415,
+        "_measured_standard_deviation": 0.02590202264531122,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -1855,13 +1855,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "khn+AFR+6b8="
+                            "py/b64": "1uGmM86V7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.22147072597155948,
+        "_measured_standard_deviation": 3.239993787242975e-07,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -1953,13 +1953,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "hHUysYpe5r8="
+                            "py/b64": "P++DYYok7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.0565359634581887,
+        "_measured_standard_deviation": 0.05011340053036147,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -2051,13 +2051,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "YWUGBAkL6L8="
+                            "py/b64": "DjDgEYK47b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.15368548714845162,
+        "_measured_standard_deviation": 4.412681551653742e-07,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -2149,13 +2149,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "XGI6ewnD7b8="
+                            "py/b64": "ZaEHFwnD7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 3.387183395373132e-07,
+        "_measured_standard_deviation": 5.633587694293225e-07,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -2247,13 +2247,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "vFLuYpoW6r8="
+                            "py/b64": "ZfBdAJfK7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.200435493409106,
+        "_measured_standard_deviation": 3.3777713064057276e-07,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -2345,13 +2345,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "S8Wm1/vP7b8="
+                            "py/b64": "7NVmYPvP7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 3.331800215167218e-07,
+        "_measured_standard_deviation": 4.6980784089689984e-07,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -2443,13 +2443,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "+PwZPSk+6L8="
+                            "py/b64": "Tohqqy9x7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.15258836638156623,
+        "_measured_standard_deviation": 0.05383963984929744,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -2541,13 +2541,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "yq6JoIDW7b8="
+                            "py/b64": "rkrFLYHW7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 2.7973369518082675e-07,
+        "_measured_standard_deviation": 5.611309202785908e-07,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -2639,13 +2639,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "tYLRTGvB6r8="
+                            "py/b64": "1lub+tf27L8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 0.1672365514776281,
+        "_measured_standard_deviation": 0.08487220848953181,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -2737,13 +2737,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "TNcUebXZ7b8="
+                            "py/b64": "jwyU21lr7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 6.420222410457036e-08,
+        "_measured_standard_deviation": 0.06024432883669373,
         "_fci_value": {
             "py/reduce": [
                 {
@@ -2835,13 +2835,13 @@
                             "py/id": 3
                         },
                         {
-                            "py/b64": "IDMLAJza7b8="
+                            "py/b64": "gtzqxTJp7b8="
                         }
                     ]
                 }
             ]
         },
-        "_measured_standard_deviation": 4.847734553025885e-07,
+        "_measured_standard_deviation": 0.06191418084155256,
         "_fci_value": {
             "py/reduce": [
                 {
