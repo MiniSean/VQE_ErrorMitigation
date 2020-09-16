@@ -22,15 +22,18 @@ def get_plot(plot_obj: plt, data: List[IContainer]) -> (Figure, Subplot):
     # Data
     x = [collection.molecule_param for collection in data]
     y = [collection.measured_value for collection in data]
+    e = [collection.measured_std for collection in data]
     z = [collection.fci_value for collection in data]
 
     fig, ax = plot_obj.subplots()
     # Set plot layout
-    ax.title.set_text("Eigen Energy depending on Atomic distance for H2")  # Title
+    ax.title.set_text("Eigen Energy depending on Noise Channel")  # Title "Eigen Energy depending on Atomic distance for H2"
     ax.set_xlabel("Interatomic Distance [$\AA$]")  # X axis label
     ax.set_ylabel("Energy (Hartree) [$a.u.$]")  # Y axis label
     # Set plot points
-    ax.plot(x, y, '-', label="STO-3G")
+    ax.errorbar(x, y, yerr=e, linestyle='None', marker='^', label="STO-3G (w/ bit & phase flip p=.1)")
+    # ax.errorbar(x, z, yerr=e, linestyle='None', marker='^', label="fci energy")
+    # ax.plot(x, y, 'o', label="STO-3G")
     ax.plot(x, z, 'o', label="fci energy")
     ax.legend(loc=0)
     return fig, ax
@@ -46,8 +49,8 @@ def plot_with_inset(plot_obj: plt, data: List[IContainer], inset_region: Tuple[f
     fig, ax = get_plot(plot_obj=plot_obj, data=data)
     # inset axes....
     axins = ax.inset_axes([0.5, 0.5, 0.47, 0.27])
-    axins.plot(x, y, '-', label="STO-3G")
-    axins.plot(x, z, 'o', label="fci energy")
+    axins.plot(x, y, 'o')
+    axins.plot(x, z, 'o')
 
     # sub region of the original image
     x1, x2, y1, y2 = inset_region
@@ -67,7 +70,9 @@ def read_and_plot(filename: str) -> plt:
         raise Exception(f'Indicated file path does not exist: {file_path}')
     # Matplot magic
     plot_obj = plt
-    return plot_with_inset(plot_obj=plot_obj, data=container_data, inset_region=(.65, .85, -1.14, -1.125))
+    f, a = get_plot(plot_obj=plot_obj, data=container_data)
+    # plot_obj = plot_with_inset(plot_obj=plot_obj, data=container_data, inset_region=(.65, .85, -1.14, -1.125))
+    return plot_obj
 
 
 if __name__ == '__main__':

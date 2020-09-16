@@ -6,6 +6,7 @@ from src.processors.processor_classic import CPU
 
 DATA_DIR = os.getcwd() + '/classic_minimisation'
 OPT_ITER = 10
+CPU_ITER = 20
 
 
 def check_dir(rel_dir: str) -> bool:
@@ -23,7 +24,7 @@ def create_dir(rel_dir: str) -> bool:
 
 def calculate_and_store(wave_class: IWaveFunction, filename: str):
     file_path = f'{DATA_DIR}/{filename}'
-    container_list = CPU.get_semi_optimized_ground_state(w=wave_class, qpu_iter=OPT_ITER)
+    container_list = CPU.get_semi_optimized_ground_state(w=wave_class, cpu_iter=CPU_ITER, qpu_iter=OPT_ITER)
     # Temporarily store results
     create_dir(DATA_DIR)  # If non existing -> create
     # Writing JSON object
