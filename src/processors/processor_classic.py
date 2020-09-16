@@ -77,3 +77,42 @@ class CPU:
         initial_state_circuit = QPU.get_initial_state_circuit(w=w)
         study = QPU.get_variational_study(w=w, p_c=initial_state_circuit, name='HydrogenStudy')
         return QPU.get_optimized_state(s=study, max_iter=max_iter)
+
+    @staticmethod
+    def get_custom_optimized_state(n_w: INoiseWrapper, max_iter: int) -> (float, List[float]):
+        """
+        Performs custom operator parameter optimization.
+        A quantum circuit is created with initial state preparation and ansatz operators.
+        This circuit depends on sympy.Symbol variables which are subject to optimization.
+        :param n_w: Stationary NoiseWrapper(IWaveFunction) to evaluate expectation value from
+        :param noise_model: Noise model needed for the expectation value
+        :param max_iter: Maximum iteration steps for (classic) scipy optimize
+        :return:
+        """
+        operator_params = n_w.operator_parameters
+        # Prepare evaluation circuit (With noise
+        evaluation_circuit = n_w.get_noisy_circuit()  # Initial state + Ansatz operators
+        for q in n_w.qubits:
+            evaluation_circuit.append(cirq.measure(q))  # Measurement
+
+        def update_variational_parameters(p: IParameter, v: np.ndarray) -> IParameter:
+            for i, key in enumerate(p):
+                p.dict[key] = v[i]
+            return p
+
+        def evaluate_circuit(c: cirq.circuits.circuit, p: IParameter) -> float:
+            # trial_result = QPU.get_noisy_expectation_value(r_c=c, r=p.get_resolved(), max_iter=qpu_iter, noise_model=n_w)
+            # exp_value = QPU.get_expectation_value(t_r=trial_result, w=n_w)
+            exp_value = QPU.get_simulated_noisy_expectation_value(w=n_w, r_c=c, r=p.get_resolved())
+            return exp_value
+
+        def optimize_func(x: np.ndarray) -> float:
+            update_variational_parameters(p=operator_params, v=x)
+            result = evaluate_circuit(c=evaluation_circuit, p=operator_params)
+            return result
+
+        initial_values = np.fromiter(operator_params.dict.values(), dtype=float)
+        method = 'Nelder-Mead'
+        options = {'maxiter': max_iter}
+        optimize_result = optimize.minimize(fun=optimize_func, x0=initial_values, method=method, options=options)
+        return optimize_result.fun, optimize_result.x
