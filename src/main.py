@@ -65,11 +65,11 @@ if __name__ == '__main__':
     # Perform minimisation calculation with noise channel
     noise_channel = [cirq.bit_flip(p=.1), cirq.phase_flip(p=.1)]  # Example noise channel
     noise_channel2 = [cirq.AmplitudeDampingChannel(gamma=.1)]  # Example noise channel
-    filename = 'H2_noisy_semi_minimisation_02'
+    filename = 'H2_noisy_semi_minimisation_cpu20_qpu10'
     clean_class = HydrogenAnsatz()
     noisy_class = INoiseWrapper(clean_class, noise_channel)
     # Run optimization and store data in a json format
-    calculate_and_write(wave_class=noisy_class, filename=filename)
+    # calculate_and_write(wave_class=noisy_class, filename=filename)
     # Read stored json format and express as a good old matlab plot
     plt_obj = read_and_plot(filename=filename)
     plt_obj.show()
