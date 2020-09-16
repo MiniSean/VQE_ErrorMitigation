@@ -1,8 +1,9 @@
 import numpy as np
 import cirq
 import openfermioncirq
+from typing import List
 from openfermioncirq.optimization import ScipyOptimizationAlgorithm, OptimizationParams, OptimizationTrialResult
-from openfermion import jordan_wigner, QubitOperator
+from openfermion import jordan_wigner, QubitOperator, expectation
 
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
 from src.data_containers.helper_interfaces.i_parameter import IParameter
@@ -17,9 +18,22 @@ class QPU:
         return objective.value(t_r.measurements['x'])
 
     @staticmethod
+    def get_simulated_noisy_expectation_value(w: IWaveFunction, r_c: cirq.circuits.circuit, r: cirq.study.resolver) -> float:
+        simulator = cirq.Simulator()  # Mixed state simulator
+        simulated_result = simulator.simulate(program=r_c, param_resolver=r)
+        qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
+        objective = openfermioncirq.HamiltonianObjective(qubit_operator)
+        return objective.value(simulated_result)
+
+    @staticmethod
     def get_trial_results(r_c: cirq.circuits.circuit, r: cirq.study.resolver, max_iter: int) -> cirq.TrialResult:
         simulator = cirq.Simulator()  # Setup simulator
-        return simulator.run(r_c, r, max_iter)  # Probabilistic result
+        trial_result = simulator.run(program=r_c, param_resolver=r, repetitions=max_iter)  # Probabilistic result
+        return trial_result
+
+    @staticmethod
+    def get_noisy_trial_result(r_c: cirq.circuits.circuit, r: cirq.study.resolver, max_iter: int, noise_model: 'cirq.NOISE_MODEL_LIKE' = None) -> cirq.TrialResult:
+        return cirq.sample(program=r_c, noise=noise_model, param_resolver=r, repetitions=max_iter)  # Probabilistic result
 
     @staticmethod
     def get_initial_state_circuit(w: IWaveFunction) -> cirq.circuits.circuit:
