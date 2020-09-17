@@ -1,6 +1,7 @@
 import numpy as np
 import cirq
 import openfermioncirq
+from scipy.sparse import csc_matrix
 from typing import List
 from openfermioncirq.optimization import ScipyOptimizationAlgorithm, OptimizationParams, OptimizationTrialResult
 from openfermion import jordan_wigner, QubitOperator, expectation
@@ -19,11 +20,15 @@ class QPU:
 
     @staticmethod
     def get_simulated_noisy_expectation_value(w: IWaveFunction, r_c: cirq.circuits.circuit, r: cirq.study.resolver) -> float:
-        simulator = cirq.Simulator()  # Mixed state simulator
-        simulated_result = simulator.simulate(program=r_c, param_resolver=r)
+        simulator = cirq.DensityMatrixSimulator()  # Mixed state simulator
+        simulated_result = simulator.simulate(program=r_c, param_resolver=r)  # Include final density matrix
         qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
         objective = openfermioncirq.HamiltonianObjective(qubit_operator)
-        return objective.value(simulated_result)
+
+        # Tr( rho * H )
+        x = (csc_matrix(simulated_result.final_density_matrix) * objective._hamiltonian_linear_op)
+        trace = x.diagonal().sum()
+        return trace.real  # objective.value(simulated_result)  # If simulation result is cirq.WaveFunctionTrialResult
 
     @staticmethod
     def get_trial_results(r_c: cirq.circuits.circuit, r: cirq.study.resolver, max_iter: int) -> cirq.TrialResult:
