@@ -76,5 +76,39 @@ def read_and_plot(filename: str) -> plt:
 
 
 if __name__ == '__main__':
-    plt_obj = read_and_plot(filename='H2_semi_minimisation')
-    plt_obj.show()
+    container_data_005 = import_file(f'{DATA_DIR}/H2_depolar_005')
+    container_data_010 = import_file(f'{DATA_DIR}/H2_depolar_010')
+    container_data_015 = import_file(f'{DATA_DIR}/H2_depolar_015')
+    container_data_020 = import_file(f'{DATA_DIR}/H2_depolar_020')
+
+    # Data
+    x = [collection.molecule_param for collection in container_data_005]
+    y1 = [collection.measured_value for collection in container_data_005]
+    e1 = [collection.measured_std for collection in container_data_005]
+    z = [collection.fci_value for collection in container_data_005]
+
+    y2 = [collection.measured_value for collection in container_data_010]
+    e2 = [collection.measured_std for collection in container_data_010]
+
+    y3 = [collection.measured_value for collection in container_data_015]
+    e3 = [collection.measured_std for collection in container_data_015]
+
+    y4 = [collection.measured_value for collection in container_data_020]
+    e4 = [collection.measured_std for collection in container_data_020]
+
+    fig, ax = plt.subplots()
+    # Set plot layout
+    ax.title.set_text("Depolarizing noise at different probabilities")  # Title "Eigen Energy depending on Noise Channel"
+    ax.set_xlabel("Interatomic Distance [$\AA$]")  # X axis label
+    ax.set_ylabel("Energy (Hartree) [$a.u.$]")  # Y axis label
+    # Set plot points
+    ax.errorbar(x, y1, yerr=e1, linestyle='None', marker='^', label="p = 0.05")
+    ax.errorbar(x, y2, yerr=e2, linestyle='None', marker='^', label="p = 0.10")
+    ax.errorbar(x, y3, yerr=e3, linestyle='None', marker='^', label="p = 0.15")
+    ax.errorbar(x, y4, yerr=e4, linestyle='None', marker='^', label="p = 0.20")
+    ax.plot(x, z, 'o', label="fci energy")
+    ax.legend(loc=0)
+    plt.show()
+
+    # plt_obj = read_and_plot(filename='H2_bitflip_005')
+    # plt_obj.show()
