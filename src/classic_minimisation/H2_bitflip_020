@@ -1,1 +1,1985 @@
-[{"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/object": "__builtin__.builtin_function_or_method"}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "ZdOjPO/h8L8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/object": "__builtin__.builtin_function_or_method"}, {"py/tuple": [{"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, {"py/b64": "zQxBSoiI6L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.3567386149216808, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "AAAAAAAA4D8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "8KyMN+868b8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "GCHIQqoZ778=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.2912947176505555, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "eQ3lNZTX4D8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "EtI7ccOB8b8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "B/0Q6dwz7L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.32072678129771515, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "8hrKayiv4T8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "TKf43Uq58b8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "QMYFdlpz8L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.20586828857230705, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "bCivobyG4j8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "UEjgtOTj8b8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "7KdUmBSl8b8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 5.773802494738741e-07, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "5TWU11Be4z8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "ppCeqIsD8r8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "UL6nG0+A778=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.26396447711413606, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "XkN5DeU15D8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "usJOAeoZ8r8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "yz4VU3TT8b8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 5.126691883712211e-07, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "2FBeQ3kN5T8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "2Lwfmmgo8r8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "UkHL+8Tg778=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.25396612360140575, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "UV5DeQ3l5T8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "zJ9QOjow8r8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "OxLtkysy7L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.3051623853506113, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "ymsor6G85j8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "SHyOWmQy8r8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "UY7749sD8L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.2444913176524603, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "Q3kN5TWU5z8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "ZGxwGsYv8r8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "OgtyikTz8L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.1761775763062895, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "vIbyGspr6D8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "7Ysu7x0p8r8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "grrdagsd8L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.2216925943670018, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "NpTXUF5D6T8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "fJieaA4f8r8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "N7XCASsm8L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.20909862974181884, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "r6G8hvIa6j8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "qi0nSSIS8r8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "U91Hwwwr8L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.1970804507493946, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "KK+hvIby6j8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "9CN+FtAC8r8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "vMzBKTks8L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.18559864804548806, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "oryG8hrK6z8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "2kO7OX3x8b8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "AynSCMbT8L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.13096234446940558, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "G8prKK+h7D8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "Q5PTu4De8b8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "6vZ3I5ML778=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.18799803640081628, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "lNdQXkN57T8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "25VmpiXK8b8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "qcGo7r4d8L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.15401276082334073, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "DeU1lNdQ7j8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "uB2ODq208b8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "8gU38keg8L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.1082474602264834, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "hvIaymso7z8=\n"}]}, null, null, null]}}, {"py/object": "data_containers.helper_interfaces.i_collection.IContainer", "_fci_value": {"py/reduce": [{"py/id": 3}, {"py/tuple": [{"py/type": "numpy.ndarray"}, {"py/tuple": [0]}, {"py/b64": "Yg==\n"}]}, {"py/tuple": [1, {"py/tuple": []}, {"py/reduce": [{"py/type": "numpy.dtype"}, {"py/tuple": ["f8", false, true]}, {"py/tuple": [3, "<", null, null, null, -1, -1, 0]}, null, null]}, false, {"py/b64": "Emn+zk+e8b8=\n"}]}, null, null]}, "_measured_eigenvalue": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "7sTdrnAI8L8=\n"}]}, null, null, null]}, "_measured_standard_deviation": 0.13502356123718717, "_molecular_parameter": {"py/reduce": [{"py/id": 6}, {"py/tuple": [{"py/id": 7}, {"py/b64": "AAAAAAAA8D8=\n"}]}, null, null, null]}}]
+[
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "py/b64": "AAAAAAAA4D8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "r3ks7G6+6r8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.33369750581559376,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "ZdOjPO/h8L8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "eQ3lNZTX4D8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "kLGK6t+L678="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.32713567838839924,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "8KyMN+868b8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "8hrKayiv4T8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "pIEKi/nI778="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.27586167739379214,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "EtI7ccOB8b8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "bCivobyG4j8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "I41efv598b8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 8.765258677873048e-07,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "TKf43Uq58b8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "5TWU11Be4z8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "EaVwGpef8L8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.20187055866547896,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "UEjgtOTj8b8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "XkN5DeU15D8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "Z9tA1ZHA8L8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.19797269869337294,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "ppCeqIsD8r8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "2FBeQ3kN5T8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "xwQfRdm4778="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.25889858226112616,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "usJOAeoZ8r8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "UV5DeQ3l5T8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "qvebFuIF7L8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.3110430893625359,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "2Lwfmmgo8r8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "ymsor6G85j8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "03olET8W7r8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.2854523277279995,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "zJ9QOjow8r8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "Q3kN5TWU5z8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "x42UWt7e8b8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 4.617140378756476e-07,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "SHyOWmQy8r8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "vIbyGspr6D8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "90o0TblV7r8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.26911473445496187,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "ZGxwGsYv8r8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "NpTXUF5D6T8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "2ASLm8HL8b8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 6.825514337381305e-07,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "7Ysu7x0p8r8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "r6G8hvIa6j8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "CF3m9kfx8L8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.1568234504982041,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "fJieaA4f8r8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "KK+hvIby6j8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "PxtbeAkr8L8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.1970797356419577,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "qi0nSSIS8r8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "oryG8hrK6z8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "aTP/pDUs8L8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.185597955425787,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "9CN+FtAC8r8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "G8prKK+h7D8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "RrL+Fbyt7b8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.21386016074039016,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "2kO7OX3x8b8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "lNdQXkN57T8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "PW26F3Bp7b8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.2194318004950254,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "Q5PTu4De8b8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "DeU1lNdQ7j8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "ED2JEnvS778="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.18353230839142867,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "25VmpiXK8b8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "hvIaymso7z8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "tkKr7ICK7b8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.19766141500761591,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "uB2ODq208b8="
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "py/object": "src.data_containers.helper_interfaces.i_collection.IContainer",
+        "_molecular_parameter": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "AAAAAAAA8D8="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_eigenvalue": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray.scalar"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/id": 3
+                        },
+                        {
+                            "py/b64": "zOTO7IMK778="
+                        }
+                    ]
+                }
+            ]
+        },
+        "_measured_standard_deviation": 0.15468833322835512,
+        "_fci_value": {
+            "py/reduce": [
+                {
+                    "py/function": "numpy.core.multiarray._reconstruct"
+                },
+                {
+                    "py/tuple": [
+                        {
+                            "py/type": "numpy.ndarray"
+                        },
+                        {
+                            "py/tuple": [
+                                0
+                            ]
+                        },
+                        {
+                            "py/b64": "Yg=="
+                        }
+                    ]
+                },
+                {
+                    "py/tuple": [
+                        1,
+                        {
+                            "py/tuple": []
+                        },
+                        {
+                            "py/reduce": [
+                                {
+                                    "py/type": "numpy.dtype"
+                                },
+                                {
+                                    "py/tuple": [
+                                        "f8",
+                                        false,
+                                        true
+                                    ]
+                                },
+                                {
+                                    "py/tuple": [
+                                        3,
+                                        "<",
+                                        null,
+                                        null,
+                                        null,
+                                        -1,
+                                        -1,
+                                        0
+                                    ]
+                                }
+                            ]
+                        },
+                        false,
+                        {
+                            "py/b64": "Emn+zk+e8b8="
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+]
