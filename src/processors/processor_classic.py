@@ -68,7 +68,7 @@ class CPU:
             avg_value = mean(opt_value_list)
             std_value = stdev(opt_value_list)
 
-            container = IContainer(m_param=molecule_params, e_value=avg_value, std_value=std_value, fci_value=w.molecule.fci_energy)
+            container = IContainer(m_param=molecule_params, e_value=avg_value, std_value=std_value, fci_value=w.molecule.fci_energy, hf_value=w.molecule.hf_energy)
             result.append(container)
         return result
 

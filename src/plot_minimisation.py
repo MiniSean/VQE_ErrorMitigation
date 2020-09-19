@@ -23,18 +23,20 @@ def get_plot(plot_obj: plt, data: List[IContainer]) -> (Figure, Subplot):
     x = [collection.molecule_param for collection in data]
     y = [collection.measured_value for collection in data]
     e = [collection.measured_std for collection in data]
-    z = [collection.fci_value for collection in data]
+    f = [collection.fci_value for collection in data]
+    h = [collection.hf_value for collection in data]
 
     fig, ax = plot_obj.subplots()
     # Set plot layout
-    ax.title.set_text("Eigen Energy depending on Noise Channel")  # Title "Eigen Energy depending on Atomic distance for H2"
+    ax.title.set_text("Expectation value calculated with Tr(rho H)")  # Title "Eigen Energy depending on Noise Channel"
     ax.set_xlabel("Interatomic Distance [$\AA$]")  # X axis label
     ax.set_ylabel("Energy (Hartree) [$a.u.$]")  # Y axis label
     # Set plot points
-    ax.errorbar(x, y, yerr=e, linestyle='None', marker='^', label="STO-3G (w/ bit & phase flip p=.1)")
+    ax.errorbar(x, y, yerr=e, linestyle='None', marker='^', label="STO-3G")
     # ax.errorbar(x, z, yerr=e, linestyle='None', marker='^', label="fci energy")
     # ax.plot(x, y, 'o', label="STO-3G")
-    ax.plot(x, z, 'o', label="fci energy")
+    ax.plot(x, f, 'o', label="fci energy")
+    ax.plot(x, h, 'o', label="HF energy")
     ax.legend(loc=0)
     return fig, ax
 
@@ -86,6 +88,7 @@ if __name__ == '__main__':
     y1 = [collection.measured_value for collection in container_data_005]
     e1 = [collection.measured_std for collection in container_data_005]
     z = [collection.fci_value for collection in container_data_005]
+    h = [float('NaN') for collection in container_data_005]
 
     y2 = [collection.measured_value for collection in container_data_010]
     e2 = [collection.measured_std for collection in container_data_010]
@@ -107,6 +110,7 @@ if __name__ == '__main__':
     ax.errorbar(x, y3, yerr=e3, linestyle='None', marker='^', label="p = 0.15")
     ax.errorbar(x, y4, yerr=e4, linestyle='None', marker='^', label="p = 0.20")
     ax.plot(x, z, 'o', label="fci energy")
+    ax.plot(x, h, 'o', label="HF energy")
     ax.legend(loc=0)
     plt.show()
 
