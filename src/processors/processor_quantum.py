@@ -18,6 +18,8 @@ class QPU:
         objective = openfermioncirq.HamiltonianObjective(qubit_operator)
         return objective.value(t_r.measurements['x'])
 
+    # How to calculate an Expected Value of some operator acting on qubits?
+    # https://quantumcomputing.stackexchange.com/questions/6940/how-to-calculate-an-expected-value-of-some-operator-acting-on-qubits
     @staticmethod
     def get_simulated_noisy_expectation_value(w: IWaveFunction, r_c: cirq.circuits.circuit, r: cirq.study.resolver) -> float:
         simulator = cirq.DensityMatrixSimulator()  # Mixed state simulator
@@ -25,9 +27,12 @@ class QPU:
         qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
         objective = openfermioncirq.HamiltonianObjective(qubit_operator)
 
+        # plot hartree fock energy
+        # try using final state
+        # renormalize density matrix
         # Tr( rho * H )
         x = (csc_matrix(simulated_result.final_density_matrix) * objective._hamiltonian_linear_op)
-        trace = x.diagonal().sum()
+        trace = x.diagonal().sum()  # Shouldn't be complex
         return trace.real  # objective.value(simulated_result)  # If simulation result is cirq.WaveFunctionTrialResult
 
     @staticmethod
