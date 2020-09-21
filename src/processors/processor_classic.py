@@ -37,24 +37,25 @@ class CPU:
         return optimize.minimize(fun=optimize_func, x0=initial_values, method=method, options=options)
 
     @staticmethod
-    def get_semi_optimized_ground_state(w: IWaveFunction, cpu_iter: int, qpu_iter: int) -> List:
+    def get_specific_ground_states(p_space: np.ndarray, w: IWaveFunction, cpu_iter: int, qpu_iter: int) -> List:
         """
         Uses pre-calculated data points to update molecule geometry.
         Calculates optimized expectation value through either VariationalStudy (for noiseless wave functions)
         or a custom optimization loop (for noisy wave functions).
         The calculation of expectation values is repeated #cpu_iter number of times where each calculation has a max iteration of #qpu_iter.
         The resulting information is stored in IContainer classes and returned as in a list.
+        :param p_space: Linear space of molecule parameters being evaluated
         :param w: (Noisy) IWaveFunction class that determines the calculation method for expectation value.
         :param cpu_iter: Number of iterations for calculating the mean and std of expectation value results.
         :param qpu_iter: Number of iterations for calculating the expectation value itself.
         :return: List of IContainer classes.
         """
-        param_space = np.linspace(0.1, 3.0, 30)
+        # p_space = np.linspace(0.1, 3.0, 30)
         molecule_params = w.molecule_parameters
         result = list()  # ITypedList(allowed_types=IContainer)
-        for par in param_space:
+        for par in p_space:
             for i, key in enumerate(molecule_params):
-                molecule_params.dict[key] = round(par, 1)  # Temporary rounding to use correct mol_data
+                molecule_params.dict[key] = par  # Temporary rounding to use correct mol_data
             w.update_molecule(molecule_params)
 
             # Implement statistical average and standard deviation

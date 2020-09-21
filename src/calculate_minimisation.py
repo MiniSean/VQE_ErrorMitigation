@@ -6,7 +6,7 @@ from src.processors.processor_classic import CPU
 
 DATA_DIR = os.getcwd() + '/classic_minimisation'
 OPT_ITER = 10
-CPU_ITER = 10  # 20
+CPU_ITER = 2  # 20
 
 
 def check_dir(rel_dir: str) -> bool:
@@ -22,9 +22,9 @@ def create_dir(rel_dir: str) -> bool:
     return result
 
 
-def calculate_and_write(wave_class: IWaveFunction, filename: str):
+def calculate_and_write(wave_class: IWaveFunction, filename: str, **kwargs):
     file_path = f'{DATA_DIR}/{filename}'
-    container_list = CPU.get_semi_optimized_ground_state(w=wave_class, cpu_iter=CPU_ITER, qpu_iter=OPT_ITER)
+    container_list = CPU.get_specific_ground_states(p_space=kwargs['p_space'], w=wave_class, cpu_iter=CPU_ITER, qpu_iter=OPT_ITER)
     # Temporarily store results
     create_dir(DATA_DIR)  # If non existing -> create
     # Writing JSON object
@@ -34,12 +34,14 @@ def calculate_and_write(wave_class: IWaveFunction, filename: str):
 
 if __name__ == '__main__':
     import cirq
+    import numpy as np
     from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseWrapper
     from src.plot_minimisation import read_and_plot
     # Calculate noise models near ground state energy
     clean_ansatz = HydrogenAnsatz()
     filename = 'H2_temptest4'
-    calculate_and_write(wave_class=INoiseWrapper(clean_ansatz, []), filename=filename)  # cirq.bit_flip(p=.05)
+    parameter_space = np.round(np.linspace(0.1, 3.0, 15), 1)
+    calculate_and_write(wave_class=INoiseWrapper(clean_ansatz, []), filename=filename, p_space=parameter_space)  # cirq.bit_flip(p=.05)
     plt_obj = read_and_plot(filename=filename)
     plt_obj.show()
 
