@@ -2,9 +2,8 @@ import numpy as np
 import cirq
 import openfermioncirq
 from scipy.sparse import csc_matrix
-from typing import List
 from openfermioncirq.optimization import ScipyOptimizationAlgorithm, OptimizationParams, OptimizationTrialResult
-from openfermion import jordan_wigner, QubitOperator, expectation
+from openfermion import jordan_wigner, QubitOperator
 
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
 from src.data_containers.helper_interfaces.i_parameter import IParameter
@@ -26,13 +25,11 @@ class QPU:
         simulated_result = simulator.simulate(program=r_c, param_resolver=r)  # Include final density matrix
         qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
         objective = openfermioncirq.HamiltonianObjective(qubit_operator)
-
-        # plot hartree fock energy
-        # try using final state
-        # renormalize density matrix
+        # Perform trace between Hamiltonian operator and final state density matrix
+        H_operator = objective._hamiltonian_linear_op
+        sparse_density_matrix = csc_matrix(simulated_result.final_density_matrix)
         # Tr( rho * H )
-        x = (csc_matrix(simulated_result.final_density_matrix) * objective._hamiltonian_linear_op)
-        trace = x.diagonal().sum()  # Shouldn't be complex
+        trace = (sparse_density_matrix * H_operator).diagonal().sum()  # Complex stored value that should always be real
         return trace.real  # objective.value(simulated_result)  # If simulation result is cirq.WaveFunctionTrialResult
 
     @staticmethod

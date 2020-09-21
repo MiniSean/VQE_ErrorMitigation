@@ -35,9 +35,15 @@ def calculate_and_write(wave_class: IWaveFunction, filename: str):
 if __name__ == '__main__':
     import cirq
     from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseWrapper
+    from src.plot_minimisation import read_and_plot
     # Calculate noise models near ground state energy
     clean_ansatz = HydrogenAnsatz()
-    calculate_and_write(wave_class=INoiseWrapper(clean_ansatz, [cirq.bit_flip(p=.05)]), filename='H2_bitflip_005')
-    calculate_and_write(wave_class=INoiseWrapper(clean_ansatz, [cirq.bit_flip(p=.1)]), filename='H2_bitflip_010')
-    calculate_and_write(wave_class=INoiseWrapper(clean_ansatz, [cirq.bit_flip(p=.15)]), filename='H2_bitflip_015')
-    calculate_and_write(wave_class=INoiseWrapper(clean_ansatz, [cirq.bit_flip(p=.2)]), filename='H2_bitflip_020')
+    filename = 'H2_temptest4'
+    calculate_and_write(wave_class=INoiseWrapper(clean_ansatz, []), filename=filename)  # cirq.bit_flip(p=.05)
+    plt_obj = read_and_plot(filename=filename)
+    plt_obj.show()
+
+    # calculate_and_write(wave_class=INoiseWrapper(clean_ansatz, [cirq.bit_flip(p=.05)]), filename='H2_bitflip_005')
+    # calculate_and_write(wave_class=INoiseWrapper(clean_ansatz, [cirq.bit_flip(p=.1)]), filename='H2_bitflip_010')
+    # calculate_and_write(wave_class=INoiseWrapper(clean_ansatz, [cirq.bit_flip(p=.15)]), filename='H2_bitflip_015')
+    # calculate_and_write(wave_class=INoiseWrapper(clean_ansatz, [cirq.bit_flip(p=.2)]), filename='H2_bitflip_020')

@@ -92,8 +92,6 @@ class CPU:
         operator_params = n_w.operator_parameters
         # Prepare evaluation circuit (With noise
         evaluation_circuit = n_w.get_noisy_circuit()  # Initial state + Ansatz operators
-        for q in n_w.qubits:
-            evaluation_circuit.append(cirq.measure(q))  # Measurement
 
         def update_variational_parameters(p: IParameter, v: np.ndarray) -> IParameter:
             for i, key in enumerate(p):
@@ -101,8 +99,6 @@ class CPU:
             return p
 
         def evaluate_circuit(c: cirq.circuits.circuit, p: IParameter) -> float:
-            # trial_result = QPU.get_noisy_expectation_value(r_c=c, r=p.get_resolved(), max_iter=qpu_iter, noise_model=n_w)
-            # exp_value = QPU.get_expectation_value(t_r=trial_result, w=n_w)
             exp_value = QPU.get_simulated_noisy_expectation_value(w=n_w, r_c=c, r=p.get_resolved())
             return exp_value
 
