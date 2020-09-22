@@ -104,6 +104,7 @@ class IGeneralizedUCCSD(IWaveFunction):
         IMolecule.__init__(self, molecule_params)
         parameter_count = int(.5 * len(self._get_fermionic_operators()))
         self._params_operator = IParameter({f'alpha{i}': 0.0 for i in range(parameter_count)})
+        self._fermionic_operators = self._get_fermionic_operators()
         VariationalAnsatz.__init__(self)
 
     @abstractmethod
@@ -120,7 +121,7 @@ class IGeneralizedUCCSD(IWaveFunction):
     def operations(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
         """Returns qubit operators based on STO-3G and UCCSD ansatz"""
         _symbols = list(self.params())
-        _ucc_operator = self._get_fermionic_operators()
+        _ucc_operator = self._fermionic_operators  # self._get_fermionic_operators()
 
         for i, fo in enumerate(_ucc_operator[::2]):
             # Jordan-Wigner transform each fermionic operator + its Hermitian conjugate
