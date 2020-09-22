@@ -26,7 +26,7 @@ class QPU:
         qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
         objective = openfermioncirq.HamiltonianObjective(qubit_operator)
         # Perform trace between Hamiltonian operator and final state density matrix
-        H_operator = objective._hamiltonian_linear_op
+        H_operator = objective._hamiltonian_linear_op  # Observable
         sparse_density_matrix = csc_matrix(simulated_result.final_density_matrix)
         # Tr( rho * H )
         trace = (sparse_density_matrix * H_operator).diagonal().sum()  # Complex stored value that should always be real
