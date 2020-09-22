@@ -37,8 +37,8 @@ def calculate_and_write(wave_class: IWaveFunction, filename: str, **kwargs):
 
 def calculate_and_write_collection(collection: IMeasurementCollection, filename: str):
     # Populate IMeasurementCollection
-    collection.set(CPU.get_collection_ground_states(collection=collection, cpu_iter=CPU_ITER, qpu_iter=OPT_ITER))
-    container_obj = collection
+    collection.container = CPU.get_collection_ground_states(collection=collection, cpu_iter=CPU_ITER, qpu_iter=OPT_ITER)
+    container_obj = collection.container
 
     # Temporarily store results
     create_dir(DATA_DIR)  # If non existing -> create
@@ -51,13 +51,13 @@ def calculate_and_write_collection(collection: IMeasurementCollection, filename:
 if __name__ == '__main__':
     import cirq
     import numpy as np
-    from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseWrapper
+    from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseModel
     from src.plot_minimisation import read_and_plot
     # Calculate noise models near ground state energy
     clean_ansatz = HydrogenAnsatz()
-    filename = 'H2_temptest6'
+    filename = 'H2_temptest5'
     parameter_space = [.7414]  # np.round(np.linspace(0.1, 3.0, 15), 1)  #
-    noise_space = [[cirq.depolarize(p=p)] for p in [0.0, 0.001, 0.002]]
+    noise_space = [INoiseModel(noise_gates=[cirq.depolarize(p=p)], description=f'Depolarize (p={p})') for p in [0.000, 0.002, 0.005, 0.010, 0.015, 0.020, 0.030, 0.040, 0.050]]
     measure_collection = IMeasurementCollection(w=clean_ansatz, p_space=parameter_space, n_space=noise_space)
     calculate_and_write_collection(collection=measure_collection, filename=filename)
 

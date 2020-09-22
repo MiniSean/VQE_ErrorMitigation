@@ -20,19 +20,29 @@ def import_file(rel_dir: str) -> List[IContainer]:
 def get_plot(plot_obj: plt, data: List[IContainer]) -> (Figure, Subplot):
     """Returns plt object"""
     # Data
-    x = [collection.molecule_param for collection in data]
-    y = [collection.measured_value for collection in data]
-    e = [collection.measured_std for collection in data]
-    f = [collection.fci_value for collection in data]
-    h = [collection.hf_value for collection in data]
-
+    labeled_dict = {}
+    for collection in data:
+        if collection.label not in labeled_dict:
+            labeled_dict[collection.label] = list()
+        labeled_dict[collection.label].append(collection)
     fig, ax = plot_obj.subplots()
     # Set plot layout
-    ax.title.set_text("Expectation value calculated with Tr(rho H)")  # Title "Eigen Energy depending on Noise Channel"
+    ax.title.set_text("Expectation value for different noise models and molecule parameters")  # Title "Eigen Energy depending on Noise Channel"
     ax.set_xlabel("Interatomic Distance [$\AA$]")  # X axis label
     ax.set_ylabel("Energy (Hartree) [$a.u.$]")  # Y axis label
+
     # Set plot points
-    ax.errorbar(x, y, yerr=e, linestyle='None', marker='^', label="STO-3G")
+    reference_key = None
+    for key in labeled_dict.keys():
+        reference_key = key
+        x = [collection.molecule_param for collection in labeled_dict[key]]
+        y = [collection.measured_value for collection in labeled_dict[key]]
+        e = [collection.measured_std for collection in labeled_dict[key]]
+        ax.errorbar(x, y, yerr=e, linestyle='None', marker='^', label=key)  # "STO-3G"
+
+    x = [collection.molecule_param for collection in labeled_dict[reference_key]]
+    f = [collection.fci_value for collection in labeled_dict[reference_key]]
+    h = [collection.hf_value for collection in labeled_dict[reference_key]]
     ax.plot(x, f, 'o', label="fci energy")
     ax.plot(x, h, 'o', label="HF energy")
     ax.legend(loc=0)

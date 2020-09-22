@@ -1,11 +1,23 @@
 import cirq
 import openfermion as of
-from typing import Sequence, List
+from typing import Sequence, List, Callable
 
 from src.data_containers.helper_interfaces.i_parameter import IParameter
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
 from src.processors.processor_quantum import QPU
 from src.circuit_noise_extension import Noisify
+
+
+class INoiseModel:
+    def get_callable(self) -> Callable[[], List[cirq.Gate]]:
+        return lambda: self._noise_gates
+
+    def get_description(self) -> str:
+        return self._description
+
+    def __init__(self, noise_gates: List[cirq.Gate], description: str):
+        self._noise_gates = noise_gates
+        self._description = description
 
 
 class INoiseWrapper(IWaveFunction, cirq.NoiseModel):
@@ -23,7 +35,7 @@ class INoiseWrapper(IWaveFunction, cirq.NoiseModel):
     def _generate_molecule(self, p: IParameter) -> of.MolecularData:
         return self._ideal_wave_function._generate_molecule(p=p)
 
-    def __init__(self, w_class: IWaveFunction, noise_channel: List[cirq.Gate]):
+    def __init__(self, w_class: IWaveFunction, noise_channel: INoiseModel):  # List[cirq.Gate]
         """
         Noise Wrapper Constructor.
         Extents functionality of IWaveFunction class by introducing noise channels on both initial state preparation as ansatz operations.
@@ -31,7 +43,7 @@ class INoiseWrapper(IWaveFunction, cirq.NoiseModel):
         :param noise_channel: List of cirq noise channel(s)
         """
         self._ideal_wave_function = w_class
-        self._noise_channel = lambda: noise_channel  # Callable[[], List[cirq.Gate]]
+        self._noise_channel = noise_channel.get_callable()  # Callable[[], List[cirq.Gate]]
         IWaveFunction.__init__(self, w_class.operator_parameters, w_class.molecule_parameters)
         cirq.NoiseModel.__init__(self)
 

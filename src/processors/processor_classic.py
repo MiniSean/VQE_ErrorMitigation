@@ -49,7 +49,7 @@ class CPU:
         :return: List of IContainer classes.
         """
         result = list()
-        for wave_function in collection.get_wave_functions():
+        for wave_function, description in collection.get_wave_functions():
             opt_value_list = []
             for j in range(cpu_iter):
                 if isinstance(wave_function, INoiseWrapper):
@@ -58,7 +58,7 @@ class CPU:
                     opt_value = CPU.get_optimized_state(w=wave_function, max_iter=qpu_iter).optimal_value
                 opt_value_list.append(opt_value)
 
-            container = IContainer(m_param=wave_function.molecule_parameters, e_values=opt_value_list, m_data=wave_function.molecule)
+            container = IContainer(m_param=wave_function.molecule_parameters, e_values=opt_value_list, m_data=wave_function.molecule, label=description)
             result.append(container)
         return result
 
