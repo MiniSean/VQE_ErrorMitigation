@@ -8,7 +8,7 @@ from src.processors.processor_quantum import QPU
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
 from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseWrapper
 from src.data_containers.helper_interfaces.i_parameter import IParameter
-from src.data_containers.helper_interfaces.i_collection import IContainer
+from src.data_containers.helper_interfaces.i_collection import IContainer, IMeasurementCollection
 
 
 class CPU:
@@ -36,7 +36,7 @@ class CPU:
         return optimize.minimize(fun=optimize_func, x0=initial_values, method=method, options=options)
 
     @staticmethod
-    def get_specific_ground_states(p_space: np.ndarray, w: IWaveFunction, cpu_iter: int, qpu_iter: int) -> List:
+    def get_specific_ground_states(p_space: np.ndarray, w: IWaveFunction, cpu_iter: int, qpu_iter: int) -> IMeasurementCollection:
         """
         Uses pre-calculated data points to update molecule geometry.
         Calculates optimized expectation value through either VariationalStudy (for noiseless wave functions)
@@ -51,7 +51,7 @@ class CPU:
         """
         # p_space = np.linspace(0.1, 3.0, 30)
         molecule_params = w.molecule_parameters
-        result = list()  # ITypedList(allowed_types=IContainer)
+        result = IMeasurementCollection(w=w)  # ITypedList(allowed_types=IContainer)
         for par in p_space:
             for i, key in enumerate(molecule_params):
                 molecule_params.dict[key] = par  # Temporary rounding to use correct mol_data

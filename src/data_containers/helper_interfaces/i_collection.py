@@ -1,7 +1,7 @@
 # Holds data for every iteration of optimization
 from statistics import stdev, mean
 from openfermion import MolecularData
-from openfermioncirq.optimization import OptimizationTrialResult
+from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
 from src.data_containers.helper_interfaces.i_parameter import IParameter
 
 
@@ -45,3 +45,16 @@ class IContainer:
         self._fci_value = m_data.fci_energy  # fci_value
         self._hf_value = m_data.hf_energy  # hf_value
 
+
+class IMeasurementCollection:
+
+    def __init__(self, w: IWaveFunction):
+        # Simple list container
+        self._container = list()
+        self._wave_function_ID = w
+
+    def append(self, item: IContainer):
+        self._container.append(item)
+
+    def __iter__(self):
+        return self._container.__iter__()
