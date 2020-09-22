@@ -33,8 +33,6 @@ def get_plot(plot_obj: plt, data: List[IContainer]) -> (Figure, Subplot):
     ax.set_ylabel("Energy (Hartree) [$a.u.$]")  # Y axis label
     # Set plot points
     ax.errorbar(x, y, yerr=e, linestyle='None', marker='^', label="STO-3G")
-    # ax.errorbar(x, z, yerr=e, linestyle='None', marker='^', label="fci energy")
-    # ax.plot(x, y, 'o', label="STO-3G")
     ax.plot(x, f, 'o', label="fci energy")
     ax.plot(x, h, 'o', label="HF energy")
     ax.legend(loc=0)

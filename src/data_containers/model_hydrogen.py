@@ -62,7 +62,7 @@ class HydrogenAnsatz(IGeneralizedUCCSD):
                                 run_cisd=run_cisd,
                                 run_ccsd=run_ccsd,
                                 run_fci=run_fci)
-        print(f'Reference (Full Configuration Energy: {molecule.fci_energy})')
+        # print(f'Reference (Full Configuration Energy: {molecule.fci_energy})')
         return molecule
 
     # IWaveFunction

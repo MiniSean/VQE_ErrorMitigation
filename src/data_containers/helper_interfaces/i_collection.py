@@ -39,14 +39,11 @@ class IContainer:
 
     def __init__(self, m_param: IParameter, e_values: [float], m_data: MolecularData):
         self._molecular_parameter = m_param['r0']
-        print(self._molecular_parameter)
-        # e_value: float, std_value: float
         self._optimized_exp_values = e_values  # Store all information
-        # self._measured_eigenvalue = mean(self._optimized_exp_values)  # e_value
-        # self._measured_standard_deviation = stdev(self._optimized_exp_values)  # std_value
-        # fci_value: float, hf_value: float
         self._fci_value = m_data.fci_energy  # fci_value
         self._hf_value = m_data.hf_energy  # hf_value
+
+        print(f'Constructed container with:\n- parameter: {self.molecule_param}\n- exp. value: {self.measured_value}\n- FCI value: {self.fci_value}')
 
 
 class IMeasurementCollection:
