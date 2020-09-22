@@ -1,7 +1,10 @@
 # Holds data for every iteration of optimization
+from cirq import Gate
+from typing import List, Iterable, Iterator
 from statistics import stdev, mean
 from openfermion import MolecularData
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
+from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseWrapper
 from src.data_containers.helper_interfaces.i_parameter import IParameter
 
 
@@ -48,13 +51,48 @@ class IContainer:
 
 class IMeasurementCollection:
 
-    def __init__(self, w: IWaveFunction):
+    def get_wave_functions(self) -> Iterator[IWaveFunction]:
+        """
+        Creates generator which yields an IWaveFunction class based on the initial wave function
+        with a specific combination of parameter and noise model setting.
+        :return: Generator IWaveFunction depending on specific parameter and noise model setting
+        """
+        wave_func = self._wave_function_ID  # Define wave function to use
+        # Create generative function call
+        for par_wave_func in self._get_param_iter(wave_func):
+            if len(self.noise_model_space) == 0:
+                yield par_wave_func
+            else:
+                for channel in self.noise_model_space:
+                    yield INoiseWrapper(par_wave_func, channel)
+
+    def _get_param_iter(self, wave_func: IWaveFunction) -> Iterator[IWaveFunction]:
+        param_layout = wave_func.molecule_parameters
+        for par in self.parameter_space:
+            for i, key in enumerate(param_layout):
+                param_layout.dict[key] = par
+            wave_func.update_molecule(param_layout)
+            yield wave_func
+
+    def __init__(self, w: IWaveFunction, p_space: List[float], n_space: List[List[Gate]]):
+        """
+        Measurement collection constructor
+        :param w: Wave function to be measured
+        :param p_space: (Moleculardata) Parameters to be evaluated
+        :param n_space: Noise channels to be evaluated
+        """
         # Simple list container
         self._container = list()
+        # Measurement specifications
         self._wave_function_ID = w
+        self.parameter_space = p_space
+        self.noise_model_space = n_space
 
     def append(self, item: IContainer):
         self._container.append(item)
+
+    def set(self, item_list: List[IContainer]):
+        self._container = item_list
 
     def __iter__(self):
         return self._container.__iter__()

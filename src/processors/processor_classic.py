@@ -36,7 +36,35 @@ class CPU:
         return optimize.minimize(fun=optimize_func, x0=initial_values, method=method, options=options)
 
     @staticmethod
-    def get_specific_ground_states(p_space: np.ndarray, w: IWaveFunction, cpu_iter: int, qpu_iter: int) -> IMeasurementCollection:
+    def get_collection_ground_states(collection: IMeasurementCollection, cpu_iter: int, qpu_iter: int) -> List[IContainer]:
+        """
+        Iterates through all wave functions to be 'measured' from collection.
+        Calculates optimized expectation value through either VariationalStudy (for noiseless wave functions)
+        or a custom optimization loop (for noisy wave functions).
+        The calculation of expectation values is repeated #cpu_iter number of times where each calculation has a max iteration of #qpu_iter.
+        The resulting information is stored in IContainer classes and returned as in a list.
+        :param collection: Collection that determines the wave functions to be calculated
+        :param cpu_iter: Number of iterations for calculating the mean and std of expectation value results.
+        :param qpu_iter: Number of iterations for calculating the expectation value itself.
+        :return: List of IContainer classes.
+        """
+        result = list()
+        for wave_function in collection.get_wave_functions():
+            opt_value_list = []
+            for j in range(cpu_iter):
+                if isinstance(wave_function, INoiseWrapper):
+                    opt_value = CPU.get_custom_optimized_state(n_w=wave_function, max_iter=qpu_iter)[0]
+                else:
+                    opt_value = CPU.get_optimized_state(w=wave_function, max_iter=qpu_iter).optimal_value
+                opt_value_list.append(opt_value)
+
+            container = IContainer(m_param=wave_function.molecule_parameters, e_values=opt_value_list, m_data=wave_function.molecule)
+            result.append(container)
+        return result
+
+    # Deprecated
+    @staticmethod
+    def get_specific_ground_states(p_space: np.ndarray, w: IWaveFunction, cpu_iter: int, qpu_iter: int) -> List[IContainer]:
         """
         Uses pre-calculated data points to update molecule geometry.
         Calculates optimized expectation value through either VariationalStudy (for noiseless wave functions)
@@ -51,10 +79,10 @@ class CPU:
         """
         # p_space = np.linspace(0.1, 3.0, 30)
         molecule_params = w.molecule_parameters
-        result = IMeasurementCollection(w=w)  # ITypedList(allowed_types=IContainer)
+        result = list()  # ITypedList(allowed_types=IContainer)
         for par in p_space:
             for i, key in enumerate(molecule_params):
-                molecule_params.dict[key] = par  # Temporary rounding to use correct mol_data
+                molecule_params.dict[key] = par
             w.update_molecule(molecule_params)
 
             # Implement statistical average and standard deviation
