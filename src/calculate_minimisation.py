@@ -24,12 +24,12 @@ def create_dir(rel_dir: str) -> bool:
 
 def calculate_and_write(wave_class: IWaveFunction, filename: str, **kwargs):
     file_path = f'{DATA_DIR}/{filename}'
-    container_list = CPU.get_specific_ground_states(p_space=kwargs['p_space'], w=wave_class, cpu_iter=CPU_ITER, qpu_iter=OPT_ITER)
+    container_obj = CPU.get_specific_ground_states(p_space=kwargs['p_space'], w=wave_class, cpu_iter=CPU_ITER, qpu_iter=OPT_ITER)
     # Temporarily store results
     create_dir(DATA_DIR)  # If non existing -> create
     # Writing JSON object
     with open(file_path, 'w') as wf:
-        wf.write(jsonpickle.encode(value=container_list, indent=4))
+        wf.write(jsonpickle.encode(value=container_obj, indent=4))
 
 
 if __name__ == '__main__':

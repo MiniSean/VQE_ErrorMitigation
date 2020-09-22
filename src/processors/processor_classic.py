@@ -1,6 +1,5 @@
 import numpy as np
 import cirq
-from statistics import stdev, mean
 from scipy import optimize
 from openfermioncirq.optimization import OptimizationTrialResult
 from typing import List
@@ -66,10 +65,8 @@ class CPU:
                 else:
                     opt_value = CPU.get_optimized_state(w=w, max_iter=qpu_iter).optimal_value  # Calculate trial result
                 opt_value_list.append(opt_value)
-            avg_value = mean(opt_value_list)
-            std_value = stdev(opt_value_list)
 
-            container = IContainer(m_param=molecule_params, e_value=avg_value, std_value=std_value, fci_value=w.molecule.fci_energy, hf_value=w.molecule.hf_energy)
+            container = IContainer(m_param=molecule_params, e_values=opt_value_list, m_data=w.molecule)
             result.append(container)
         return result
 
