@@ -7,7 +7,7 @@ from src.processors.processor_classic import CPU
 
 DATA_DIR = os.getcwd() + '/classic_minimisation'
 OPT_ITER = 10
-CPU_ITER = 5  # 20
+CPU_ITER = 1  # 20
 
 
 def check_dir(rel_dir: str) -> bool:
