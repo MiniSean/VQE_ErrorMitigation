@@ -20,7 +20,7 @@ class IContainer:
         return mean(self._optimized_exp_values)
 
     def get_measured_standard_deviation(self) -> float:
-        return stdev(self._optimized_exp_values)
+        return stdev(self._optimized_exp_values) if len(self._optimized_exp_values) >= 2 else 0
 
     def get_fci_value(self) -> float:
         return self._fci_value if self._fci_value is not None else float('NaN')
