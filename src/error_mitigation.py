@@ -2,7 +2,6 @@
 import cirq
 import numpy as np
 from typing import Tuple, Union, Callable, Iterator, List
-from scipy.sparse import csc_matrix, lil_matrix, linalg, kron
 
 MEAN = 0.0
 STD = 1.0
@@ -135,17 +134,17 @@ class BasisUnitarySet:
         """Yields all tensor products of each basis unitary operations in order."""
         for unitary_A in BasisUnitarySet.get_basis_unitary_set():
             for unitary_B in BasisUnitarySet.get_basis_unitary_set():
-                yield kron(unitary_A, unitary_B)  # Tensor product in correct format
+                yield np.kron(unitary_A, unitary_B)  # Tensor product in correct format
 
     # Get basis observable set for GST (single/double qubit gates)
     @staticmethod
-    def get_observable_set(dim: int) -> Iterator[csc_matrix]:
+    def get_observable_set(dim: int) -> Iterator[np.ndarray]:
         """Yields all basis observables in order depending on gate dimension"""
-        def _basis() -> Iterator[csc_matrix]:
-            yield csc_matrix([[1, 0], [0, 1]])  # I
-            yield csc_matrix([[0, 1], [1, 0]])  # X
-            yield csc_matrix([[0, -1j], [1j, 0]])  # Y
-            yield csc_matrix([[1, 0], [0, -1]])  # Z
+        def _basis() -> Iterator[np.ndarray]:
+            yield np.array([[1, 0], [0, 1]])  # I
+            yield np.array([[0, 1], [1, 0]])  # X
+            yield np.array([[0, -1j], [1j, 0]])  # Y
+            yield np.array([[1, 0], [0, -1]])  # Z
 
         if dim == 2:  # (single qubit)
             for observable in _basis():
@@ -153,7 +152,7 @@ class BasisUnitarySet:
         elif dim == 4:  # (double qubits)
             for observable_A in _basis():
                 for observable_B in _basis():
-                    yield kron(observable_A, observable_B)  # Tensor product in correct format
+                    yield np.kron(observable_A, observable_B)  # Tensor product in correct format
         else:
             raise NotImplemented
 
@@ -172,7 +171,7 @@ class BasisUnitarySet:
 
     # Get GST transformed unitary
     @staticmethod
-    def get_gst_basis_set(dim: int) -> Iterator[csc_matrix]:
+    def get_gst_basis_set(dim: int) -> Iterator[np.ndarray]:
         """Yields all gst transformed basis unitaries depending on gate dimension"""
         if dim == 2:  # (single qubit)
             for unitary in BasisUnitarySet.get_basis_unitary_set():
@@ -191,7 +190,7 @@ class BasisUnitarySet:
             yield IBasisOperator(unitary=unitary)
 
     @staticmethod
-    def gate_set_tomography(gate: np.ndarray) -> Tuple[csc_matrix, csc_matrix]:
+    def gate_set_tomography(gate: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Implements single qubit gate GST.
         Using mapping matrix T:
@@ -210,16 +209,16 @@ class BasisUnitarySet:
         _initial_state_set = list(BasisUnitarySet.get_initial_state_set(gate=gate))
 
         # Initiate output matrices
-        o_tilde = lil_matrix(output_shape, dtype=complex)  # Bias operator O
-        g = lil_matrix(output_shape, dtype=complex)  # Non-bias operator g
+        o_tilde = np.zeros(output_shape, dtype=complex)  # Bias operator O
+        g = np.zeros(output_shape, dtype=complex)  # Non-bias operator g
         for j, obs in enumerate(_observable_set):
             for k, rho in enumerate(_initial_state_set):
-                o_tilde[j, k] = (obs @ (gate @ rho)).diagonal().sum()  # Trace
-                g[j, k] = (obs @ rho).diagonal().sum()  # Trace
+                o_tilde[j, k] = np.trace(obs @ (gate @ rho))  #.diagonal().sum()  # Trace
+                g[j, k] = np.trace(obs @ rho)  #.diagonal().sum()  # Trace
 
         # Map lil matrix to csc matrix
-        o_tilde = o_tilde.tocsc()
-        g = g.tocsc()
+        # o_tilde = o_tilde.tocsc()
+        # g = g.tocsc()
 
         # Define estimator
         # try:
@@ -255,8 +254,8 @@ class BasisUnitarySet:
         if isinstance(gate, cirq.Gate):  # Works with gate unitary
             gate = cirq.unitary(gate)
 
-        basis = [basis.toarray() for basis in BasisUnitarySet.get_gst_basis_set(dim=gate.shape[0])]  # Convert sparse basis to array
-        gate = BasisUnitarySet.gate_set_tomography(gate)[1].toarray()  # Apply GST
+        basis = list(BasisUnitarySet.get_gst_basis_set(dim=gate.shape[0]))  # Convert sparse basis to array
+        gate = BasisUnitarySet.gate_set_tomography(gate)[1]  # Apply GST
         return BasisUnitarySet.get_quasiprobabilities(target=gate, basis_set=basis), basis
 
 
@@ -328,7 +327,7 @@ if __name__ == '__main__':
 
     cnot_unitary = cirq.unitary(two_qubit_gate)
 
-    gst_cnot = BasisUnitarySet.gate_set_tomography(gate=cnot_unitary)[1].toarray()  # For reference
+    gst_cnot = BasisUnitarySet.gate_set_tomography(gate=cnot_unitary)[1]  # For reference
     print(gst_cnot)
 
     # --------------------------
@@ -338,7 +337,7 @@ if __name__ == '__main__':
     rcs_target = reconstruct_from_basis(qp, basis)
     print(f'Calculation time: {time.time() - start_time} sec.')
     print(f'Sum of quasi-probabilities: {sum(qp)}')
-    gst_target = BasisUnitarySet.gate_set_tomography(gate=cnot_unitary)[1].toarray()  # For reference
+    gst_target = BasisUnitarySet.gate_set_tomography(gate=cnot_unitary)[1]  # For reference
     print(f'Target vs Reconst. difference: {get_matrix_difference(rcs_target, gst_target)}')
 
     # --------------------------
