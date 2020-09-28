@@ -78,5 +78,5 @@ class CPU:
         initial_values = np.fromiter(operator_params.dict.values(), dtype=float)
         method = 'Nelder-Mead'
         options = {'maxiter': max_iter}
-        optimize_result = optimize.minimize(fun=optimize_func, x0=initial_values, method=method, options=options)
+        optimize_result = optimize.minimize(fun=optimize_func, x0=initial_values, method=method, options=options, tol=1e-4)
         return optimize_result.fun, optimize_result.x
