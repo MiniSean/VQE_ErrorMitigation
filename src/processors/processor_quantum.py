@@ -21,8 +21,9 @@ class QPU:
     # https://quantumcomputing.stackexchange.com/questions/6940/how-to-calculate-an-expected-value-of-some-operator-acting-on-qubits
     @staticmethod
     def get_simulated_noisy_expectation_value(w: IWaveFunction, r_c: cirq.circuits.circuit, r: cirq.study.resolver) -> float:
-        simulator = cirq.DensityMatrixSimulator()  # Mixed state simulator
+        simulator = cirq.DensityMatrixSimulator(ignore_measurement_results=False)  # Mixed state simulator
         simulated_result = simulator.simulate(program=r_c, param_resolver=r)  # Include final density matrix
+
         qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
         objective = openfermioncirq.HamiltonianObjective(qubit_operator)
         # Perform trace between Hamiltonian operator and final state density matrix
