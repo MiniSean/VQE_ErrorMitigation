@@ -179,10 +179,11 @@ def gate_set_tomography(gate: Union[np.ndarray, cirq.Gate]) -> Tuple[csc_matrix,
     """
     if isinstance(gate, cirq.Gate):  # Works with gate unitary
         gate = cirq.unitary(gate)
+    d = 2  # Single qubit gates (d=4 in case of Two qubit gates)
     # Initial state vectors (with normalization) and observable matrices
     t_map = csc_matrix([[1, 1, 1, 1], [0, 0, 1, 0], [0, 0, 0, 1], [1, -1, 0, 0]])  # Mapping transform
     observable_set = [csc_matrix([[1, 0], [0, 1]]), csc_matrix([[0, 1], [1, 0]]), csc_matrix([[0, -1j], [1j, 0]]), csc_matrix([[1, 0], [0, -1]])]
-    initial_density_set = [.5 * (gate @ (observable @ gate.conj().transpose())) for observable in observable_set]
+    initial_density_set = [(1/d) * (gate @ (observable @ gate.conj().transpose())) for observable in observable_set]  # Pauli Transfer Matrix
 
     # Initiate output matrices
     o_tilde = lil_matrix((len(initial_density_set), len(observable_set)), dtype=complex)  # Bias operator O
@@ -197,12 +198,12 @@ def gate_set_tomography(gate: Union[np.ndarray, cirq.Gate]) -> Tuple[csc_matrix,
     g = g.tocsc()
 
     # Define estimator
-    try:
-        g_inv = linalg.inv(g)
-        t_inv = linalg.inv(t_map)
-        gate_estimator = t_map @ linalg.inv(g) @ o_tilde @ linalg.inv(t_map)  # Estimator gate O
-    except Exception:
-        print(f'Unable to create estimator.\n{gate}\n')
+    # try:
+    #     g_inv = linalg.inv(g)
+    #     t_inv = linalg.inv(t_map)
+    #     gate_estimator = t_map @ linalg.inv(g) @ o_tilde @ linalg.inv(t_map)  # Estimator gate O
+    # except Exception:
+    #     print(f'Unable to create estimator.\n{gate}\n')
 
     return o_tilde, g  # gate_estimator
 
@@ -279,7 +280,7 @@ if __name__ == '__main__':
     gst_target = gate_set_tomography(pure_gate)[1].toarray()
     qp, basis = BasisUnitarySet.get_quasi_probabilities(gate=pure_gate)
     rcs_target = reconstruct_from_basis(qp, basis)
-    print(time.time() - start_time)
+    print(f'Calculation time: {time.time() - start_time} sec.')
     print(f'Sum of quasi-probabilities: {sum(qp)}')
     print(f'Target vs Reconst. difference: {get_matrix_difference(rcs_target, gst_target)}')
 
