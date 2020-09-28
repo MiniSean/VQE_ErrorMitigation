@@ -215,7 +215,7 @@ def get_quasiprobabilities(target: np.ndarray, basis_set: List[np.ndarray]) -> L
     target_vector = target.flatten('F')
     # Catch exception
     try:
-        return np.linalg.solve(basis_set_matrix, target_vector)  # Solve system of linear equations
+        return [v.real for v in np.linalg.solve(basis_set_matrix, target_vector)]  # Solve system of linear equations
     except np.linalg.LinAlgError:
         print(f'WARNING: Not able to solve system of linear equations with ill defined basis.')
         return [0. for i in basis_set]
