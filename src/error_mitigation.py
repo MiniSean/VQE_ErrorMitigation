@@ -128,13 +128,14 @@ class BasisUnitarySet:
         yield BasisUnitarySet.pizx_unitary()
         yield BasisUnitarySet.pixy_unitary()
 
+    # Depricated
     # Get unitary generator for two qubit gates
-    @staticmethod
-    def get_basis_tensor_unitary_set() -> Iterator[np.ndarray]:
-        """Yields all tensor products of each basis unitary operations in order."""
-        for unitary_A in BasisUnitarySet.get_basis_unitary_set():
-            for unitary_B in BasisUnitarySet.get_basis_unitary_set():
-                yield np.kron(unitary_A, unitary_B)  # Tensor product in correct format
+    # @staticmethod
+    # def get_basis_tensor_unitary_set() -> Iterator[np.ndarray]:
+    #     """Yields all tensor products of each basis unitary operations in order."""
+    #     for unitary_A in BasisUnitarySet.get_basis_unitary_set():
+    #         for unitary_B in BasisUnitarySet.get_basis_unitary_set():
+    #             yield np.kron(unitary_A, unitary_B)  # Tensor product in correct format
 
     # Get basis observable set for GST (single/double qubit gates)
     @staticmethod
@@ -173,12 +174,28 @@ class BasisUnitarySet:
     @staticmethod
     def get_gst_basis_set(dim: int) -> Iterator[np.ndarray]:
         """Yields all gst transformed basis unitaries depending on gate dimension"""
-        if dim == 2:  # (single qubit)
+        def _basis() -> Iterator[np.ndarray]:
             for unitary in BasisUnitarySet.get_basis_unitary_set():
                 yield BasisUnitarySet.gate_set_tomography(unitary)[1]
+
+        # First tensor product then gate set tomography
+        # if dim == 2:  # (single qubit)
+        #     for unitary in BasisUnitarySet.get_basis_unitary_set():
+        #         yield BasisUnitarySet.gate_set_tomography(unitary)[1]
+        # elif dim == 4:  # (double qubits)
+        #     for unitary in BasisUnitarySet.get_basis_tensor_unitary_set():
+        #         yield BasisUnitarySet.gate_set_tomography(unitary)[1]
+        # else:
+        #     raise NotImplemented
+
+        # First gate set tomography then tensor product
+        if dim == 2:  # (single qubit)
+            for basis in _basis():
+                yield basis
         elif dim == 4:  # (double qubits)
-            for unitary in BasisUnitarySet.get_basis_tensor_unitary_set():
-                yield BasisUnitarySet.gate_set_tomography(unitary)[1]
+            for basis_A in _basis():
+                for basis_B in _basis():
+                    yield np.kron(basis_A, basis_B)  # Tensor product in correct format
         else:
             raise NotImplemented
 
@@ -213,13 +230,8 @@ class BasisUnitarySet:
         g = np.zeros(output_shape, dtype=complex)  # Non-bias operator g
         for j, obs in enumerate(_observable_set):
             for k, rho in enumerate(_initial_state_set):
-                o_tilde[j, k] = np.trace(obs @ (gate @ rho))  #.diagonal().sum()  # Trace
-                g[j, k] = np.trace(obs @ rho)  #.diagonal().sum()  # Trace
-
-        # Map lil matrix to csc matrix
-        # o_tilde = o_tilde.tocsc()
-        # g = g.tocsc()
-
+                o_tilde[j, k] = np.trace(obs @ (gate @ rho))  # Trace
+                g[j, k] = np.trace(obs @ rho)  # Trace
         # Define estimator
         # try:
         #     g_inv = linalg.inv(g)
