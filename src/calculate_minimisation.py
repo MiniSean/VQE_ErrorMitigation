@@ -6,8 +6,8 @@ from src.data_containers.model_hydrogen import HydrogenAnsatz
 from src.processors.processor_classic import CPU
 
 DATA_DIR = os.getcwd() + '/classic_minimisation'
-OPT_ITER = 10
-CPU_ITER = 1  # 20
+QPU_ITER = 10
+CPU_ITER = 10  # 20
 
 
 def check_dir(rel_dir: str) -> bool:
@@ -23,21 +23,21 @@ def create_dir(rel_dir: str) -> bool:
     return result
 
 
-# Deprecated
-def calculate_and_write(wave_class: IWaveFunction, filename: str, **kwargs):
-    container_obj = CPU.get_specific_ground_states(p_space=kwargs['p_space'], w=wave_class, cpu_iter=CPU_ITER, qpu_iter=OPT_ITER)
-
-    # Temporarily store results
-    create_dir(DATA_DIR)  # If non existing -> create
-    file_path = f'{DATA_DIR}/{filename}'
-    # Writing JSON object
-    with open(file_path, 'w') as wf:
-        wf.write(jsonpickle.encode(value=container_obj, indent=4))
+# # Deprecated
+# def calculate_and_write(wave_class: IWaveFunction, filename: str, **kwargs):
+#     container_obj = CPU.get_specific_ground_states(p_space=kwargs['p_space'], w=wave_class, cpu_iter=CPU_ITER, qpu_iter=QPU_ITER)
+#
+#     # Temporarily store results
+#     create_dir(DATA_DIR)  # If non existing -> create
+#     file_path = f'{DATA_DIR}/{filename}'
+#     # Writing JSON object
+#     with open(file_path, 'w') as wf:
+#         wf.write(jsonpickle.encode(value=container_obj, indent=4))
 
 
 def calculate_and_write_collection(collection: IMeasurementCollection, filename: str):
     # Populate IMeasurementCollection
-    collection.container = CPU.get_collection_ground_states(collection=collection, cpu_iter=CPU_ITER, qpu_iter=OPT_ITER)
+    collection.container = CPU.get_collection_ground_states(collection=collection, cpu_iter=CPU_ITER, qpu_iter=QPU_ITER)
     container_obj = collection.container
 
     # Temporarily store results
@@ -55,9 +55,9 @@ if __name__ == '__main__':
     from src.plot_minimisation import read_and_plot
     # Calculate noise models near ground state energy
     clean_ansatz = HydrogenAnsatz()
-    filename = 'H2_temptest5'
-    parameter_space = [.7414]  # np.round(np.linspace(0.1, 3.0, 15), 1)  #
-    noise_space = [INoiseModel(noise_gates=[cirq.depolarize(p=p)], description=f'Depolarize (p={p})') for p in [0.000, 0.002, 0.005, 0.010, 0.015, 0.020, 0.030, 0.040, 0.050]]
+    filename = 'H2_temptest6'
+    parameter_space = [.7414]  # np.round(np.linspace(0.1, 3.0, 15), 1)  # [.6, .7, .7414, .8, .9]
+    noise_space = [INoiseModel(noise_gates=[cirq.depolarize(p=p)], description=f'Depolarize (p={p})') for p in [0.000, 0.005, .5]]  # , 0.010, 0.015, 0.020, 0.030, 0.040, 0.050]]
     measure_collection = IMeasurementCollection(w=clean_ansatz, p_space=parameter_space, n_space=noise_space)
     calculate_and_write_collection(collection=measure_collection, filename=filename)
 
