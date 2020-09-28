@@ -2,7 +2,7 @@
 import cirq
 import numpy as np
 from typing import Tuple, Union, Callable, Iterator, List
-from scipy.sparse import csc_matrix, lil_matrix, linalg, vstack
+from scipy.sparse import csc_matrix, lil_matrix, linalg, kron
 
 MEAN = 0.0
 STD = 1.0
@@ -108,7 +108,7 @@ class BasisUnitarySet:
     def pixy_unitary() -> np.ndarray:
         return BasisUnitarySet.piz_unitary() @ np.linalg.matrix_power(BasisUnitarySet.rx_unitary(), 2)
 
-    # Get unitary generator
+    # Get unitary generator for single qubit gates
     @staticmethod
     def get_basis_unitary_set() -> Iterator[np.ndarray]:
         """Yields all basis unitary operations in order."""
@@ -129,12 +129,59 @@ class BasisUnitarySet:
         yield BasisUnitarySet.pizx_unitary()
         yield BasisUnitarySet.pixy_unitary()
 
+    # Get unitary generator for two qubit gates
+    @staticmethod
+    def get_basis_tensor_unitary_set() -> Iterator[np.ndarray]:
+        """Yields all tensor products of each basis unitary operations in order."""
+        for unitary_A in BasisUnitarySet.get_basis_unitary_set():
+            for unitary_B in BasisUnitarySet.get_basis_unitary_set():
+                yield kron(unitary_A, unitary_B)  # Tensor product in correct format
+
+    # Get basis observable set for GST (single/double qubit gates)
+    @staticmethod
+    def get_observable_set(dim: int) -> Iterator[csc_matrix]:
+        """Yields all basis observables in order depending on gate dimension"""
+        def _basis() -> Iterator[csc_matrix]:
+            yield csc_matrix([[1, 0], [0, 1]])  # I
+            yield csc_matrix([[0, 1], [1, 0]])  # X
+            yield csc_matrix([[0, -1j], [1j, 0]])  # Y
+            yield csc_matrix([[1, 0], [0, -1]])  # Z
+
+        if dim == 2:  # (single qubit)
+            for observable in _basis():
+                yield observable
+        elif dim == 4:  # (double qubits)
+            for observable_A in _basis():
+                for observable_B in _basis():
+                    yield kron(observable_A, observable_B)  # Tensor product in correct format
+        else:
+            raise NotImplemented
+
+    # Get initial state set for GST (single/double qubit gates)
+    @staticmethod
+    def get_initial_state_set(gate: np.ndarray) -> Iterator[np.ndarray]:
+        """Yields all initial states in order depending on gate shape"""
+        if gate.shape[0] == gate.shape[1] == 2:  # Pauli Transfer Matrix (single qubit)
+            for observable in BasisUnitarySet.get_observable_set(dim=2):
+                yield .5 * (gate @ (observable @ gate.conj().transpose()))
+        elif gate.shape[0] == gate.shape[1] == 4:  # Pauli Transfer Matrix (double qubits)
+            for observable in BasisUnitarySet.get_observable_set(dim=4):
+                yield .25 * (gate @ (observable @ gate.conj().transpose()))
+        else:
+            raise NotImplemented
+
     # Get GST transformed unitary
     @staticmethod
-    def get_gst_basis_set() -> Iterator[csc_matrix]:
-        """Yields all gst transformed basis unitaries"""
-        for unitary in BasisUnitarySet.get_basis_unitary_set():
-            yield gate_set_tomography(unitary)[1]
+    def get_gst_basis_set(dim: int) -> Iterator[csc_matrix]:
+        """Yields all gst transformed basis unitaries depending on gate dimension"""
+        if dim == 2:  # (single qubit)
+            for unitary in BasisUnitarySet.get_basis_unitary_set():
+                yield BasisUnitarySet.gate_set_tomography(unitary)[1]
+        elif dim == 4:  # (double qubits)
+            for unitary in BasisUnitarySet.get_basis_tensor_unitary_set():
+                yield BasisUnitarySet.gate_set_tomography(unitary)[1]
+        else:
+            raise NotImplemented
 
     # Get operator generator
     @staticmethod
@@ -144,16 +191,73 @@ class BasisUnitarySet:
             yield IBasisOperator(unitary=unitary)
 
     @staticmethod
-    def get_quasi_probabilities(gate: Union[np.ndarray, cirq.Gate]) -> Tuple[List[float], List[np.ndarray]]:
+    def gate_set_tomography(gate: np.ndarray) -> Tuple[csc_matrix, csc_matrix]:
         """
+        Implements single qubit gate GST.
+        Using mapping matrix T:
+        [[1, 1, 1, 1],
+         [0, 0, 1, 0],
+         [0, 0, 0, 1],
+         [1, -1, 0, 0]]
+        :type gate: Gate (with noise) to apply GST on
+        :return: Õ, g, Ô (estimator)
+        """
+        output_shape = (gate.shape[0]**2, gate.shape[1]**2)  # Temp
+
+        # Initial state vectors (with normalization) and observable matrices
+        # t_map = csc_matrix([[1, 1, 1, 1], [0, 0, 1, 0], [0, 0, 0, 1], [1, -1, 0, 0]])  # Mapping transform
+        _observable_set = list(BasisUnitarySet.get_observable_set(dim=gate.shape[0]))
+        _initial_state_set = list(BasisUnitarySet.get_initial_state_set(gate=gate))
+
+        # Initiate output matrices
+        o_tilde = lil_matrix(output_shape, dtype=complex)  # Bias operator O
+        g = lil_matrix(output_shape, dtype=complex)  # Non-bias operator g
+        for j, obs in enumerate(_observable_set):
+            for k, rho in enumerate(_initial_state_set):
+                o_tilde[j, k] = (obs @ (gate @ rho)).diagonal().sum()  # Trace
+                g[j, k] = (obs @ rho).diagonal().sum()  # Trace
+
+        # Map lil matrix to csc matrix
+        o_tilde = o_tilde.tocsc()
+        g = g.tocsc()
+
+        # Define estimator
+        # try:
+        #     g_inv = linalg.inv(g)
+        #     t_inv = linalg.inv(t_map)
+        #     gate_estimator = t_map @ linalg.inv(g) @ o_tilde @ linalg.inv(t_map)  # Estimator gate O
+        # except Exception:
+        #     print(f'Unable to create estimator.\n{gate}\n')
+
+        return o_tilde, g  # gate_estimator
+
+    @staticmethod
+    def get_quasiprobabilities(target: np.ndarray, basis_set: List[np.ndarray]) -> List[float]:
+        if target.shape != basis_set[0].shape:
+            raise ValueError(f'Target gate \n{target}\n and Basis set operation matrices should have the same shape.')
+        basis_set_matrix = np.array([basis.flatten('F') for basis in basis_set]).transpose()
+        target_vector = target.flatten('F')
+        # Catch exception
+        try:
+            return [v.real for v in np.linalg.solve(basis_set_matrix, target_vector)]  # Solve system of linear equations
+        except np.linalg.LinAlgError:
+            print(f'WARNING: Not able to solve system of linear equations with ill defined basis.')
+            return [0. for i in basis_set]
+
+    # Super function combining several functionality's
+    @staticmethod
+    def get_decomposition(gate: Union[np.ndarray, cirq.Gate]) -> Tuple[List[float], List[np.ndarray]]:
+        """
+        Determines single or double qubit gate.
         Computes gate set tomography of provided gate/unitary.
         :return: quasi-probabilities based on this and BasisUnitarySet basis set.
         """
         if isinstance(gate, cirq.Gate):  # Works with gate unitary
             gate = cirq.unitary(gate)
-        gate = gate_set_tomography(gate)[1].toarray()  # Apply GST
-        basis = [basis.toarray() for basis in BasisUnitarySet.get_gst_basis_set()]  # Convert sparse basis to array
-        return get_quasiprobabilities(target=gate, basis_set=basis), basis
+
+        basis = [basis.toarray() for basis in BasisUnitarySet.get_gst_basis_set(dim=gate.shape[0])]  # Convert sparse basis to array
+        gate = BasisUnitarySet.gate_set_tomography(gate)[1].toarray()  # Apply GST
+        return BasisUnitarySet.get_quasiprobabilities(target=gate, basis_set=basis), basis
 
 
 class IBasisOperator(cirq.SingleQubitGate):
@@ -164,61 +268,6 @@ class IBasisOperator(cirq.SingleQubitGate):
 
     def _unitary_(self):
         return np.linalg.matrix_power(self._unitary, self._exponent)
-
-
-def gate_set_tomography(gate: Union[np.ndarray, cirq.Gate]) -> Tuple[csc_matrix, csc_matrix]:
-    """
-    Implements single qubit gate GST.
-    Using mapping matrix T:
-    [[1, 1, 1, 1],
-     [0, 0, 1, 0],
-     [0, 0, 0, 1],
-     [1, -1, 0, 0]]
-    :type gate: Gate (with noise) to apply GST on
-    :return: Õ, g, Ô (estimator)
-    """
-    if isinstance(gate, cirq.Gate):  # Works with gate unitary
-        gate = cirq.unitary(gate)
-    d = 2  # Single qubit gates (d=4 in case of Two qubit gates)
-    # Initial state vectors (with normalization) and observable matrices
-    t_map = csc_matrix([[1, 1, 1, 1], [0, 0, 1, 0], [0, 0, 0, 1], [1, -1, 0, 0]])  # Mapping transform
-    observable_set = [csc_matrix([[1, 0], [0, 1]]), csc_matrix([[0, 1], [1, 0]]), csc_matrix([[0, -1j], [1j, 0]]), csc_matrix([[1, 0], [0, -1]])]
-    initial_density_set = [(1/d) * (gate @ (observable @ gate.conj().transpose())) for observable in observable_set]  # Pauli Transfer Matrix
-
-    # Initiate output matrices
-    o_tilde = lil_matrix((len(initial_density_set), len(observable_set)), dtype=complex)  # Bias operator O
-    g = lil_matrix((len(initial_density_set), len(observable_set)), dtype=complex)  # Non-bias operator g
-    for j, obs in enumerate(observable_set):
-        for k, rho in enumerate(initial_density_set):
-            o_tilde[j, k] = (obs @ (gate @ rho)).diagonal().sum()  # Trace
-            g[j, k] = (obs @ rho).diagonal().sum()  # Trace
-
-    # Map lil matrix to csc matrix
-    o_tilde = o_tilde.tocsc()
-    g = g.tocsc()
-
-    # Define estimator
-    # try:
-    #     g_inv = linalg.inv(g)
-    #     t_inv = linalg.inv(t_map)
-    #     gate_estimator = t_map @ linalg.inv(g) @ o_tilde @ linalg.inv(t_map)  # Estimator gate O
-    # except Exception:
-    #     print(f'Unable to create estimator.\n{gate}\n')
-
-    return o_tilde, g  # gate_estimator
-
-
-def get_quasiprobabilities(target: np.ndarray, basis_set: List[np.ndarray]) -> List[float]:
-    if target.shape != basis_set[0].shape:
-        raise ValueError(f'Target gate \n{target}\n and Basis set operation matrices should have the same shape.')
-    basis_set_matrix = np.array([basis.flatten('F') for basis in basis_set]).transpose()
-    target_vector = target.flatten('F')
-    # Catch exception
-    try:
-        return [v.real for v in np.linalg.solve(basis_set_matrix, target_vector)]  # Solve system of linear equations
-    except np.linalg.LinAlgError:
-        print(f'WARNING: Not able to solve system of linear equations with ill defined basis.')
-        return [0. for i in basis_set]
 
 
 def reconstruct_from_basis(quasi_probabilities: List[float], basis_set: List[np.ndarray]) -> np.ndarray:
@@ -273,16 +322,26 @@ def get_samples(precision: float, gamma: float, distribution: Callable[[Union[in
 if __name__ == '__main__':
     import time
     # from QP_QEM_lib import o_tilde_1q, basis_ops, apply_to_qubit
-    pure_gate = cirq.H
+    dummy_qubits = cirq.LineQubit.range(2)
+    two_qubit_gate = cirq.CNOT(dummy_qubits[0], dummy_qubits[1])
+    pure_gate = cirq.unitary(cirq.H)
+
+    cnot_unitary = cirq.unitary(two_qubit_gate)
+
+    gst_cnot = BasisUnitarySet.gate_set_tomography(gate=cnot_unitary)[1].toarray()  # For reference
+    print(gst_cnot)
+
+    # --------------------------
 
     start_time = time.time()
-    basis_set = list(BasisUnitarySet.get_basis_unitary_set())
-    gst_target = gate_set_tomography(pure_gate)[1].toarray()
-    qp, basis = BasisUnitarySet.get_quasi_probabilities(gate=pure_gate)
+    qp, basis = BasisUnitarySet.get_decomposition(gate=cnot_unitary)
     rcs_target = reconstruct_from_basis(qp, basis)
     print(f'Calculation time: {time.time() - start_time} sec.')
     print(f'Sum of quasi-probabilities: {sum(qp)}')
+    gst_target = BasisUnitarySet.gate_set_tomography(gate=cnot_unitary)[1].toarray()  # For reference
     print(f'Target vs Reconst. difference: {get_matrix_difference(rcs_target, gst_target)}')
+
+    # --------------------------
 
     #
     # # --------------------------
