@@ -1,5 +1,6 @@
 import numpy as np
 import cirq
+import copy
 from scipy import optimize
 from openfermioncirq.optimization import OptimizationTrialResult
 from typing import List
@@ -31,9 +32,10 @@ class CPU:
             opt_value_list = []
             for j in range(cpu_iter):
                 if isinstance(wave_function, INoiseWrapper):
-                    opt_value = CPU.get_custom_optimized_state(n_w=wave_function, max_iter=qpu_iter)[0]
+                    opt_value, par = CPU.get_custom_optimized_state(n_w=copy.deepcopy(wave_function), max_iter=qpu_iter)  # Mixed
+                    print(f'par: {par}, val: {opt_value}')
                 else:
-                    opt_value = CPU.get_optimized_state(w=wave_function, max_iter=qpu_iter).optimal_value
+                    opt_value = CPU.get_optimized_state(w=wave_function, max_iter=qpu_iter).optimal_value  # Ideal
                 opt_value_list.append(opt_value)
 
             container = IContainer(m_param=wave_function.molecule_parameters, e_values=opt_value_list, m_data=wave_function.molecule, label=description)
@@ -57,9 +59,11 @@ class CPU:
         :param max_iter: Maximum iteration steps for (classic) scipy optimize
         :return:
         """
-        operator_params = n_w.operator_parameters
-        # Prepare evaluation circuit (With noise
+        operator_params = n_w.operator_parameters  # Circuit parameters to optimize
+        # Prepare evaluation circuit (With noise)
         evaluation_circuit = n_w.get_noisy_circuit()  # Initial state + Ansatz operators
+        # for q in n_w.qubits:
+        #     evaluation_circuit.append(cirq.measure(q))  # Measurement
 
         def update_variational_parameters(p: IParameter, v: np.ndarray) -> IParameter:
             for i, key in enumerate(p):
