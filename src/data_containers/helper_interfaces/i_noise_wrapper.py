@@ -1,4 +1,5 @@
 import cirq
+import numpy as np
 import openfermion as of
 from typing import Sequence, List, Callable
 
@@ -18,6 +19,37 @@ class INoiseModel:
     def __init__(self, noise_gates: List[cirq.Gate], description: str):
         self._noise_gates = noise_gates
         self._description = description
+
+    def get_effective_gate(self, gate: np.ndarray) -> np.ndarray:
+        if gate.shape[0] == gate.shape[1] == 2:  # Pauli Transfer Matrix (single qubit)
+            # Simple single qubit case
+            for noise_gate in self._noise_gates:
+                effective_gate = np.zeros(gate.shape, dtype=complex)
+                try:  # Try mixture
+                    mixture = cirq.mixture(noise_gate)
+                    for (p, basis) in mixture:
+                        effective_gate += p * (basis @ (gate @ basis.conj().transpose()))
+                    gate = effective_gate
+                except TypeError:
+                    pass
+        elif gate.shape[0] == gate.shape[1] == 4:  # Pauli Transfer Matrix (double qubits)
+            # Two qubit case
+            for noise_gate in self._noise_gates:
+                effective_gate = np.zeros(gate.shape, dtype=complex)
+                try:
+                    mixture = cirq.mixture(noise_gate)
+                    for (p_A, basis_A) in mixture:
+                        for (p_B, basis_B) in mixture:
+                            basis_prod = np.kron(basis_A, basis_B)
+                            p_prod = p_A * p_B
+                            effective_gate += p_prod * (basis_prod @ (gate @ basis_prod.conj().transpose()))
+                    gate = effective_gate
+                except TypeError:
+                    pass
+        else:
+            raise NotImplemented
+
+        return gate
 
 
 class INoiseWrapper(IWaveFunction, cirq.NoiseModel):
