@@ -86,10 +86,10 @@ def read_and_plot(filename: str) -> plt:
 
 
 if __name__ == '__main__':
-    container_data_005 = import_file(f'{DATA_DIR}/H2_depolar_005')
-    container_data_010 = import_file(f'{DATA_DIR}/H2_depolar_010')
-    container_data_015 = import_file(f'{DATA_DIR}/H2_depolar_015')
-    container_data_020 = import_file(f'{DATA_DIR}/H2_depolar_020')
+    container_data_005 = import_file(f'{DATA_DIR}/H2_temptest1')
+    container_data_010 = import_file(f'{DATA_DIR}/H2_temptest2')
+    container_data_015 = import_file(f'{DATA_DIR}/H2_temptest3')
+    container_data_020 = import_file(f'{DATA_DIR}/H2_temptest4')
 
     # Data
     x = [collection.molecule_param for collection in container_data_005]

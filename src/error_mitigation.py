@@ -130,15 +130,7 @@ class BasisUnitarySet:
         yield BasisUnitarySet.pizx_unitary()
         yield BasisUnitarySet.pixy_unitary()
 
-    # Depricated
-    # Get unitary generator for two qubit gates
-    # @staticmethod
-    # def get_basis_tensor_unitary_set() -> Iterator[np.ndarray]:
-    #     """Yields all tensor products of each basis unitary operations in order."""
-    #     for unitary_A in BasisUnitarySet.get_basis_unitary_set():
-    #         for unitary_B in BasisUnitarySet.get_basis_unitary_set():
-    #             yield np.kron(unitary_A, unitary_B)  # Tensor product in correct format
-
+    # Get T mapping matrix for GST
     @staticmethod
     def get_t_map(dim: int) -> np.ndarray:
         t_map = np.array([[1, 1, 1, 1], [0, 0, 1, 0], [0, 0, 0, 1], [1, -1, 0, 0]])  # Mapping transform
@@ -262,31 +254,9 @@ class BasisUnitarySet:
         # Ô_PTM = <<Q_j|Rho_PTM_i>>
         output_shape = (gate.shape[0]**2, gate.shape[1]**2)
         ptm_estimation = np.zeros(output_shape, dtype=complex)  # Estimation matrix Ô, build with Pauli Transfer Matrix transform on Rho_i basis set
-        # expectation = np.zeros(output_shape, dtype=complex)  # Expectation matrix Õ, equal to 'gate' up to transformation
-        # basis_map_g = np.zeros(output_shape, dtype=complex)  # Non-bias mapping matrix g
         for j, obs in enumerate(_observable_set):
             for k, rho in enumerate(_initial_state_set_ptm):
                 ptm_estimation[j, k] = np.trace(obs @ rho)  # Trace
-                # expectation[j, k] = np.trace(obs @ (gate @ rho))  # Trace
-                # basis_map_g[j, k] = np.trace(obs @ rho)  # Trace
-
-        # print(f'g:')
-        # print(basis_map_g)
-        # print(f'Õ:')
-        # print(expectation)
-        # # Define estimator
-        # try:
-        #     g_inv = np.linalg.inv(basis_map_g)
-        #     t_inv = np.linalg.inv(_t_map)
-        #     gate_estimation = _t_map @ (g_inv @ (expectation @ t_inv))  # Estimator gate O
-        #     print(f'Ô:')
-        #     print(gate_estimation)
-        #     print(f'Test g:')
-        #     print(test_g)
-        #     return gate_estimation  # expectation, basis_map_g
-        # except np.linalg.LinAlgError:
-        #     print(f'WARNING: Not able to invert g matrix.')
-        #     return expectation
         return ptm_estimation
 
     @staticmethod
@@ -336,7 +306,6 @@ class QuasiCircuitIdentifier:
     def __init__(self, circuit: cirq.Circuit, gate_lookup: Dict[cirq.Gate, List[float]]):
         # Construct identifier indices
         self.identifiers, self.sign, self.C = QuasiCircuitIdentifier._get_identifiers(circuit=circuit, gate_lookup=gate_lookup)
-        # print(self.identifiers)
 
     @staticmethod
     def _get_identifiers(circuit: cirq.Circuit, gate_lookup: Dict[cirq.Gate, List[float]]) -> Tuple[List[int], int, float]:
@@ -633,81 +602,46 @@ def get_matrix_difference(A: np.ndarray, B: np.ndarray) -> float:
     return d / (D.shape[0] * D.shape[1])  # Normalize in matrix length
 
 
-# Probability distributions
-def get_probability_normal(var_dim: Union[int, Tuple[int]]) -> Union[float, np.ndarray]:
-    """
-    Characterized by type identity: Callable[[Union[int, Tuple[int]]], Union[float, np.ndarray]]
-    :param var_dim: Dimension of output probabilities
-    :return: Outputs set of random (normal distributed) probability depending dimensions specified
-    """
-    return np.random.normal(loc=MEAN, scale=STD, size=var_dim)
+def decomposition_time_test(gate: np.ndarray):
+    start_time = time.time()
+    qp, basis = get_decomposition(gate=gate)
+    rcs_target = reconstruct_from_basis(qp, basis)
+    print(f'Calculation time: {time.time() - start_time} sec.')
+    print(f'Sum of quasi-probabilities: {sum(qp)}')
+    gst_target = BasisUnitarySet.gate_set_tomography(gate=gate)  # For reference
+    print(f'Target vs Reconst. difference: {get_matrix_difference(rcs_target, gst_target)}')
 
 
-def get_probability_uniform(var_dim: Union[int, Tuple[int]]) -> Union[float, np.ndarray]:
-    """
-    Characterized by type identity: Callable[[Union[int, Tuple[int]]], Union[float, np.ndarray]]
-    :param var_dim: Dimension of output probabilities
-    :return: Outputs set of random (uniform distributed) probability depending dimensions specified
-    """
-    return np.random.random_sample(size=var_dim)  # np.random.uniform(low=0.0, high=1.0, size=var_dim)
+def reference_noise(hard_coded: Callable[[np.ndarray], np.ndarray], cirq_noise: cirq.DepolarizingChannel):
+    # Initial state density matrix
+    init_state = np.array([[1, 0], [0, 0]])  # np.array([[1, 0], [0, 0]])
+    # hadamard = cirq.unitary(cirq.H)
+    # init_state = hadamard @ (init_state @ hadamard.conj().transpose())
+    init_state = np.kron(init_state, init_state)
+    print(f'initial state matrix::\n{init_state}\n')
 
-
-# Monte Carlo sampling precision
-def get_samples(precision: float, gamma: float, distribution: Callable[[Union[int, Tuple[int]]], Union[float, np.ndarray]]) -> Union[float, np.ndarray]:
-    if precision == 0:
-        raise ZeroDivisionError
-    sample_count = int(np.sqrt(gamma / precision))  # Monte Carlo sample count
-    return distribution(sample_count)
+    effective_depolarize = hard_coded(init_state)
+    print(f'Custom super operator for depolarizing:\n{effective_depolarize}\n')
+    # Effective unitary
+    noise_model = INoiseModel(noise_gates=[cirq_noise], description=f'Depolarize (p={cirq_noise.p})')
+    effective_unitary = noise_model.get_effective_gate(gate=init_state)
+    print(f'Cirq mixture for depolarizing:\n{effective_unitary}\n')
 
 
 if __name__ == '__main__':
     import time
+    import matplotlib.pyplot as plt
     from QP_QEM_lib import o_tilde_1q, basis_ops, apply_to_qubit, swap_circuit
     from src.circuit_noise_extension import Noisify
     dummy_qubits = cirq.LineQubit.range(2)
     two_qubit_gate = cirq.CNOT
     pure_gate = cirq.H
-
-    cnot_unitary = cirq.unitary(two_qubit_gate)
-    pure_unitary = cirq.unitary(pure_gate)
-
-    # --------------------------
-
-    def decomposition_time_test(gate: np.ndarray):
-        start_time = time.time()
-        qp, basis = BasisUnitarySet.get_decomposition(gate=gate)
-        rcs_target = reconstruct_from_basis(qp, basis)
-        print(f'Calculation time: {time.time() - start_time} sec.')
-        print(f'Sum of quasi-probabilities: {sum(qp)}')
-        gst_target = BasisUnitarySet.gate_set_tomography(gate=gate)  # For reference
-        print(f'Target vs Reconst. difference: {get_matrix_difference(rcs_target, gst_target)}')
-    # decomposition_time_test(gate=pure_unitary)
-
-    # --------------------------
+    p = 0.5  # Depolarizing probability
 
     # Example circuit
     operator_x = cirq.X.on(dummy_qubits[0])
     operator_pure = pure_gate.on(dummy_qubits[0])
     operator_cnot = two_qubit_gate(dummy_qubits[0], dummy_qubits[1])
-
-    p = 0.5  # Depolarizing probability
-
-    def reference_noise(hard_coded: Callable[[np.ndarray], np.ndarray], cirq_noise: cirq.DepolarizingChannel):
-        # Initial state density matrix
-        init_state = np.array([[1, 0], [0, 0]])  # np.array([[1, 0], [0, 0]])
-        # hadamard = cirq.unitary(cirq.H)
-        # init_state = hadamard @ (init_state @ hadamard.conj().transpose())
-        init_state = np.kron(init_state, init_state)
-        print(f'initial state matrix::\n{init_state}\n')
-
-        effective_depolarize = hard_coded(init_state)
-        print(f'Custom super operator for depolarizing:\n{effective_depolarize}\n')
-        # Effective unitary
-        noise_model = INoiseModel(noise_gates=[cirq_noise], description=f'Depolarize (p={cirq_noise.p})')
-        effective_unitary = noise_model.get_effective_gate(gate=init_state)
-        print(f'Cirq mixture for depolarizing:\n{effective_unitary}\n')
-
-    # reference_noise(get_hardcoded_noise(name='depolar', p=p), cirq.depolarize(p=p))
 
     # --------------------------
 
@@ -723,90 +657,9 @@ if __name__ == '__main__':
     print(mu_values)
     print(mu)
     # Plotting for the lol
-    import matplotlib.pyplot as plt
     n_bins = 10
     fig, axs = plt.subplots(1, 1, tight_layout=True)
 
     # We can set the number of bins with the `bins` kwarg
     axs.hist(mu_values,  bins=n_bins)
     plt.show()
-
-    # --------------------------
-
-    # print(circuit)
-    # gate_to_qp = IErrorMitigationManager.get_qp_distribution_from_circuit(clean_circuit=circuit, noise_wrapper=wrapper)
-    # print(f'Look-up dictionary keys:\n{gate_to_qp.keys()}\nEntire:\n{gate_to_qp}')
-    # # Example
-    # gate = list(gate_to_qp.keys())[1]
-    # qp = gate_to_qp[gate]
-    # print(f'Total quasi probability sum: {sum(qp)} for gate {gate}')
-    # gate = cirq.unitary(gate)
-    # basis = list(BasisUnitarySet.get_basis_set(gate.shape[0]))
-    # for i in range(5):
-    #     random_basis = IErrorMitigationManager.get_quasi_probability_induced_basis(basis, qp)
-    #     print(random_basis)
-
-    # --------------------------
-
-    # noise_model = INoiseModel(noise_gates=[cirq.depolarize(p=p)], description=f'Depolarize (p={p})')
-    # noisy_circuit = Noisify.introduce_noise(circuit, noise_model.get_callable())
-    # print(f'{noisy_circuit}\n')
-    # # print(f'Noise mixture (at p={p}):\n{cirq.mixture(cirq.depolarize(p=p))}')
-    # get_qp_distribution_from_circuit(clean_circuit=circuit, noise_model=noise_model)
-
-    # effective_noise_operator = (IBasisOperator(unitary=effective_unitary)).on(dummy_qubits[0])
-    # circuit = cirq.Circuit(effective_noise_operator)
-    # print(f'{circuit}\n')
-    # get_qp_distribution_from_circuit(clean_circuit=circuit, noise_model=None)
-
-    #
-    # noise_model_custom = INoiseModel(noise_gates=[gate_depo], description=f'Super Operator Depolarize (e={p})')
-    # noisy_circuit_custom = Noisify.introduce_noise(circuit, noise_model_custom.get_callable())
-    # print(f'{noisy_circuit_custom}\n')
-    # get_qp_distribution_from_circuit(clean_circuit=circuit, noise_model=noise_model_custom)
-
-    # --------------------------
-
-    #
-    # # --------------------------
-    #
-    # # Reference GST transformation on basis sets
-    # # Requires an applied gate
-    # dummy_qubit = cirq.LineQubit(0)
-    # error_type = 'depolarize'
-    #
-    # operator = IBasisOperator(cirq.unitary(pure_gate))
-    # operator = operator.on(dummy_qubit)
-    # gst_target_ref = o_tilde_1q(gate=operator, noisy=False, error_type=error_type, error=0)
-    #
-    # applied_list = [apply_to_qubit(op, dummy_qubit) for op in basis_ops()]
-    # gst_basis_ref = [o_tilde_1q(app_on, noisy=False, error_type=error_type, error=0).real for app_on in applied_list]
-    #
-    # print('Test basis set equality:')
-    # basis_set_ref = [cirq.Circuit(gate).unitary() for gate in applied_list]
-    # print(np.array(basis_set) == np.array(basis_set_ref))
-    # # --------------------------
-    #
-    # # Local GST transformation on basis sets
-    # gst_target = gate_set_tomography(pure_gate).toarray()
-    # gst_basis = [gate_set_tomography(u).toarray() for u in BasisUnitarySet.get_basis_unitary_set()]
-    #
-    # print('Test GST target equality:')
-    # print(gst_target == gst_target_ref)
-    # print('Test GST basis set equality:')
-    # print(np.array(gst_basis) == np.array(gst_basis_ref))
-    #
-    # # --------------------------
-    #
-    # print('target:')
-    # print(gst_target)
-    # quasi_probabilities = get_quasiprobabilities(gst_target, gst_basis)
-    # print('probabilities:')
-    # print(quasi_probabilities)
-    # result = reconstruct_from_basis(quasi_probabilities, gst_basis)
-    # print('reconstruction:')
-    # print(result)
-    # print('Test gate reconstruction from quasi probabilities')
-    # print(np.array(gst_target) == np.array(result))
-    #
-    # # --------------------------
