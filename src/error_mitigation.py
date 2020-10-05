@@ -2,11 +2,10 @@
 import random
 import cirq
 import numpy as np
-from typing import Tuple, Union, Callable, Iterator, List, Dict
+from tqdm import tqdm  # For displaying for-loop process to console
+from typing import Tuple, Union, Callable, Iterator, List, Dict, Sequence
 from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseModel
-
-MEAN = 0.0
-STD = 1.0
+import itertools as it  # Temp
 
 
 # Contains all 16 basis unitary operations
@@ -305,26 +304,32 @@ class QuasiCircuitIdentifier:
 
     def __init__(self, circuit: cirq.Circuit, gate_lookup: Dict[cirq.Gate, List[float]]):
         # Construct identifier indices
-        self.identifiers, self.sign, self.C = QuasiCircuitIdentifier._get_identifiers(circuit=circuit, gate_lookup=gate_lookup)
+        self.identifiers_id, self.sign, self.identifiers_weight = QuasiCircuitIdentifier._get_identifiers(circuit=circuit, gate_lookup=gate_lookup)
 
     @staticmethod
-    def _get_identifiers(circuit: cirq.Circuit, gate_lookup: Dict[cirq.Gate, List[float]]) -> Tuple[List[int], int, float]:
+    def _get_identifiers(circuit: cirq.Circuit, gate_lookup: Dict[cirq.Gate, List[float]]) -> Tuple[List[int], int, List[float]]:
         id_list = list()  # Order specific identifier collection
         id_sign = 1
-        id_weight = 1
+        id_weight = []
         for operator in circuit.all_operations():
             if type(operator.gate).__name__ == 'MeasurementGate':
+                id_weight.append(1)
                 continue
             qp = gate_lookup[operator.gate]
-            id, p_sign, weight = QuasiCircuitIdentifier._get_identifier(quasi_probabilities=qp)
-            id_list.append(id)  # Append basis id to result list
+            basis_id, p_sign, weight = QuasiCircuitIdentifier._get_identifier(quasi_probabilities=qp)
+            id_list.append(basis_id)  # Append basis basis_id to result list
+            # np.sign(p_sign) == np.sign(qp[basis_id])
             id_sign *= p_sign  # Multiply probability sign to result sign
-            id_weight *= weight  # Multiply quasi probability weight
+            id_weight.append(weight)  # Multiply quasi probability weight
         return id_list, id_sign, id_weight
 
     @staticmethod
     def _get_identifier(quasi_probabilities: List[float]) -> Tuple[int, int, float]:
-        """Returns random index from quasi probability list depending on probability distribution, its sign and weight"""
+        """
+        Returns random index from quasi probability list depending on probability distribution, its sign and weight
+        :param quasi_probabilities:
+        :return: Basis index, quasi probability sign, total quasi probability weight
+        """
         c_weight = sum([abs(p) for p in quasi_probabilities])
         p_indicator = random.uniform(0, 1) * c_weight  # Scales random from [0, c_weight]
         for i, probability in enumerate(quasi_probabilities):
@@ -334,56 +339,91 @@ class QuasiCircuitIdentifier:
         last_index = len(quasi_probabilities) - 1
         return last_index, np.sign(quasi_probabilities[last_index]), c_weight
 
+    @property
+    def identity(self):
+        """Returns list of 0's with size of len(self.identifiers_id) targeting only identity basis matrices"""
+        return [0 for basis_id in range(len(self.identifiers_id))]
+
     def __eq__(self, other):
         return other.__hash__() == self.__hash__()
 
     def __hash__(self):
-        return hash(tuple(self.identifiers))
+        return hash(tuple(self.identifiers_id))
 
 
 class IErrorMitigationManager:
     """Manages family of circuits to be measured"""
 
-    def get_mu_effective(self) -> Tuple[List[float], float]:
+    def get_mu_effective(self, error_mitigation: bool, density_representation: bool, meas_reps: int = 1) -> Tuple[List[float], float]:
         """
-        Constructs circuits based on identifiers, measures them once, multiplies by the times the identifier appears.
-        Calculates effective average.
-        :return: Effective average of circuit measurement values.
+        Constructs circuits based on identifiers_id, measures them and calculates effective average.
+        :type error_mitigation: Whether to use error mitigation or not.
+        :param density_representation: Whether to use density matrix simulation or not.
+        :param meas_reps: Amount of circuit measurements performed when density_representation is false.
+        :return: List of (signed) measurement values, Effective average of circuit measurement values.
         """
-        result = list()
-        C_weight = 1
-        simulator = cirq.DensityMatrixSimulator(ignore_measurement_results=False)  # Mixed state simulator
-        for key, value in self._dict_identifiers.items():
-            circuit_to_run = IErrorMitigationManager.get_updated_circuit(clean_circuit=self.circuit, noise_wrapper=self._noise_wrapper, circuit_identifier=key)
-            # Setup simulator
-            simulated_result = simulator.simulate(program=circuit_to_run)  # Include final density matrix
-            # Get final density matrix trace
-            trace = (np.array(simulated_result.final_density_matrix)).diagonal().sum()
-            # Add for value amount
-            for i in range(value):
-                result.append(trace.real * key.sign)
-                C_weight = key.C
-        return result, np.mean(result) / C_weight
+        raw_measurement_results = list()
+        weight_list = [1]
+        simulator = cirq.DensityMatrixSimulator(ignore_measurement_results=True)  # Mixed state simulator
+        for key, value in tqdm(self._dict_identifiers.items(), desc='Processing identifier circuits'):
+            # Possible toggle to use error mitigation or not
+            identifier_list = key.identifiers_id if error_mitigation else key.identity
+            print(identifier_list)
+            sign_weight = key.sign if error_mitigation else 1
+            weight_list = key.identifiers_weight if error_mitigation else [1]
+
+            # Circuit with noise and noise counter
+            circuit_to_run = IErrorMitigationManager.get_updated_circuit(clean_circuit=self.circuit, noise_wrapper=self._noise_model.get_operators, circuit_identifier=identifier_list)
+
+            # Repeat measurement for every occurrence of identical circuit identifier
+            signed_measurement_results = []
+            for identifier_occurrence in range(value):
+                if density_representation:
+                    # Setup simulator
+                    simulated_result = simulator.simulate(program=circuit_to_run)  # Include final density matrix
+
+                    # Get final density matrix trace
+                    rho = np.array([[1, 0], [0, 0]])
+                    identity = np.eye(16)
+                    trace_out = np.kron(identity, rho)
+                    trace = (trace_out @ np.array(simulated_result.final_density_matrix)).diagonal().sum()
+                    measurement = trace.real
+                else:
+                    # Setup simulator
+                    simulated_result = simulator.run(program=circuit_to_run, repetitions=meas_reps)  # Include final measurement values
+
+                    # Get final measurement value
+                    hist = simulated_result.histogram(key='M')  # Hist (0: x, 1: meas_reps - x)
+                    measurement = hist[0]/meas_reps  # Normalized measurement [0, 1]
+
+                # Add individual measurements
+                measurement = 2 * measurement - 1  # Rescaled measurement [-1, 1]
+                signed_measurement_results.append(sign_weight * measurement)
+
+            raw_measurement_results.append(np.mean(signed_measurement_results))  # Additional averaging step
+
+        weighted_effective_mean = np.prod(weight_list) * np.mean(raw_measurement_results)
+        return raw_measurement_results, weighted_effective_mean
 
     # Temp
     def get_identifiers(self) -> Iterator[List[int]]:
         for id_class in self._dict_identifiers.keys():
             yield id_class.identifiers
 
-    def __init__(self, clean_circuit: cirq.Circuit, noise_wrapper: Callable[[np.ndarray], np.ndarray]):
+    def __init__(self, clean_circuit: cirq.Circuit, noise_model: INoiseModel):  # Callable[[np.ndarray], np.ndarray]):
         # Store properties
         self.circuit = clean_circuit
-        self._noise_wrapper = noise_wrapper
-        self._gate_lookup = IErrorMitigationManager.get_qp_lookup(clean_circuit, noise_wrapper)
+        self._noise_model = noise_model
+        self._gate_lookup = IErrorMitigationManager.get_qp_lookup(clean_circuit, noise_model.get_effective_gate)
         self._dict_identifiers = {}
 
-    # Magic function, adds range of 'QuasiCircuitIdentifier' to dictionary of identifiers
+    # Magic function, adds range of 'QuasiCircuitIdentifier' to dictionary of identifiers_id
     def set_identifier_range(self, count: int):
         self._dict_identifiers = {}
         for i in range(count):
             self.add_circuit_identifier()
 
-    # Magic function, adds 'QuasiCircuitIdentifier' to dictionary of identifiers
+    # Magic function, adds 'QuasiCircuitIdentifier' to dictionary of identifiers_id
     def add_circuit_identifier(self):
         circuit_identifier = QuasiCircuitIdentifier(circuit=self.circuit, gate_lookup=self._gate_lookup)
         if circuit_identifier in self._dict_identifiers:
@@ -400,7 +440,7 @@ class IErrorMitigationManager:
         From this the inverse of the noise is calculated: N^-1 = O_clean @ O_noisy^-1.
         Both the quasi-probabilities as their weight is stored in a dictionary keyed by the gate itself.
         :param clean_circuit: Noiseless quantum circuit to iterate through
-        :param noise_wrapper: Applies noise channel to single gate operation
+        :param noise_wrapper: Applies noise channel to single or two qubit gate operation
         :return: Dictionary containing gate types as key and both the q-p list as their combined weight as values
         """
         result = {}  # gate to quasi probabilities
@@ -410,16 +450,17 @@ class IErrorMitigationManager:
             # Get effective gates
             clean_gate = cirq.unitary(operator)  # Without noise
             # Get gate set tomography versions
-            clean_gst_gate = BasisUnitarySet.gate_set_tomography(clean_gate)  # [1]
-            noisy_gst_gate = BasisUnitarySet.gate_set_tomography(clean_gate, noise_wrapper=noise_wrapper)  # [1]
+            clean_gst_gate = BasisUnitarySet.gate_set_tomography(clean_gate)
+            noisy_gst_gate = BasisUnitarySet.gate_set_tomography(clean_gate, noise_wrapper=noise_wrapper)
             # Get inverse noise
             N_inv = clean_gst_gate.dot(np.linalg.inv(noisy_gst_gate))
 
-            basis_set = list(BasisUnitarySet.get_gst_basis_set(dim=clean_gate.shape[0]))  # Convert sparse basis_set to array
+            basis_set = list(BasisUnitarySet.get_gst_basis_set(dim=clean_gate.shape[0]))
             qp = BasisUnitarySet.get_quasiprobabilities(target=N_inv, basis_set=basis_set)
             result[operator.gate] = qp
         return result
 
+    # Deprecated
     @staticmethod
     def get_quasi_probability_induced_basis(basis: List[np.ndarray], quasi_probabilities: List[float]) -> np.ndarray:
         """
@@ -444,31 +485,36 @@ class IErrorMitigationManager:
         return basis[-1]
 
     @staticmethod
-    def get_updated_circuit(clean_circuit: cirq.Circuit, noise_wrapper: Callable[[np.ndarray], np.ndarray], circuit_identifier: QuasiCircuitIdentifier) -> cirq.Circuit:
+    def get_updated_circuit(clean_circuit: cirq.Circuit, noise_wrapper: Callable[[Tuple[cirq.Qid]], List[cirq.Operation]], circuit_identifier: List[int]) -> cirq.Circuit:  # QuasiCircuitIdentifier
         result = cirq.Circuit()
         for i, clean_operator in enumerate(clean_circuit.all_operations()):
+            # First Ideal operator
+            result.append(clean_operator)
+
             if type(clean_operator.gate).__name__ == 'MeasurementGate':
-                result.append(clean_operator)  # Just in case
                 continue
-            unitary = cirq.unitary(clean_operator.gate)  # Get clean gate unitary
+
+            # Get clean gate unitary
+            unitary = cirq.unitary(clean_operator.gate)
             # Use correct basis
             basis_dim = unitary.shape[0]
             basis_set = list(BasisUnitarySet.get_basis_set(basis_dim))
+
             # Build noisy and canceling basis
-            noisy_basis = noise_wrapper(unitary)
-            noise_canceling_basis = basis_set[circuit_identifier.identifiers[i]]
+            noise_canceling_basis = basis_set[circuit_identifier[i]]
             # Construct operators
             qubit_list = clean_operator.qubits
+            noisy_operator = noise_wrapper(*qubit_list)  # qubit_list[0]
             if len(qubit_list) == 1:
                 noise_canceling_operator = IBasisGateSingle(unitary=noise_canceling_basis).on(*qubit_list)  # qubit_list[0]
-                noisy_operator = IBasisGateSingle(unitary=noisy_basis).on(*qubit_list)  # qubit_list[0]
             elif len(qubit_list) == 2:
                 noise_canceling_operator = IBasisGateTwo(unitary=noise_canceling_basis).on(*qubit_list)  # qubit_list[0], qubit_list[1]
-                noisy_operator = IBasisGateTwo(unitary=noisy_basis).on(*qubit_list)
             else:
                 raise NotImplemented('Can only construct single and two qubit operators')
             # Add to new circuit
-            result.append([noisy_operator, noise_canceling_operator])
+            result.append(noisy_operator)  # Noise after ideal operation
+            result.append(noise_canceling_operator)  # Correction after noise
+            result.append(noisy_operator)  # Noise after correction
         return result
 
     def __str__(self):
@@ -623,43 +669,166 @@ def reference_noise(hard_coded: Callable[[np.ndarray], np.ndarray], cirq_noise: 
     effective_depolarize = hard_coded(init_state)
     print(f'Custom super operator for depolarizing:\n{effective_depolarize}\n')
     # Effective unitary
-    noise_model = INoiseModel(noise_gates=[cirq_noise], description=f'Depolarize (p={cirq_noise.p})')
+    noise_model = INoiseModel(noise_gates_1q=[cirq_noise], description=f'Depolarize (p={cirq_noise.p})')
     effective_unitary = noise_model.get_effective_gate(gate=init_state)
     print(f'Cirq mixture for depolarizing:\n{effective_unitary}\n')
+
+
+# Hard coded copy of two qubit depolarizing channel
+class TwoQubitDepolarizingChannel(cirq.ops.gate_features.TwoQubitGate):
+    '''
+    Two qubit depolarizing channel based on single qubit depolarizing channel from Cirq
+
+    '''
+
+    def __init__(self, p: float) -> None:
+
+        self._p = cirq.value.validate_probability(p/15, 'p')
+        self._p_i = 1 - cirq.value.validate_probability(16*p/15, 'sum_p')
+
+    def _mixture_(self) -> Sequence[Tuple[float, np.ndarray]]:
+
+        tuple_2q = ((self._p_i, np.kron(cirq.protocols.unitary(cirq.ops.identity.I),
+                                        cirq.protocols.unitary(cirq.ops.identity.I))),)
+
+        for op_tup in it.product([cirq.protocols.unitary(cirq.ops.identity.I),
+                                  cirq.protocols.unitary(
+                                      cirq.ops.pauli_gates.X),
+                                  cirq.protocols.unitary(
+                                      cirq.ops.pauli_gates.Y),
+                                  cirq.protocols.unitary(cirq.ops.pauli_gates.Z)], repeat=2):
+
+            tuple_2q += ((self._p, np.kron(*op_tup)),)
+
+        return tuple_2q
+
+    def _has_mixture_(self) -> bool:
+        return True
+
+    def _value_equality_values_(self):
+        return self._p
+
+    def __repr__(self) -> str:
+        return 'cirq.two_qubit_depolarize(p={!r})'.format(
+            self._p
+        )
+
+    def __str__(self) -> str:
+        return 'two_qubit_depolarize(p={!r})'.format(
+            self._p
+        )
+
+    def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs' ) -> 'cirq.CircuitDiagramInfo':
+        return cirq.protocols.CircuitDiagramInfo(
+            wire_symbols=('D({:.3f})'.format(self._p), 'D({:.3f})'.format(self._p)))
+
+    @property
+    def p_(self) -> float:
+        """The probability that an error occurs."""
+        return self._p
+
+    # def _json_dict_(self) -> Dict[str, Any]:
+    #     return protocols.obj_to_dict_helper(self, ['p'])
 
 
 if __name__ == '__main__':
     import time
     import matplotlib.pyplot as plt
-    from QP_QEM_lib import o_tilde_1q, basis_ops, apply_to_qubit, swap_circuit
+    from QP_QEM_lib import o_tilde_1q, basis_ops, apply_to_qubit, swap_circuit, noise_model
     from src.circuit_noise_extension import Noisify
     dummy_qubits = cirq.LineQubit.range(2)
-    two_qubit_gate = cirq.CNOT
-    pure_gate = cirq.H
-    p = 0.5  # Depolarizing probability
 
     # Example circuit
-    operator_x = cirq.X.on(dummy_qubits[0])
-    operator_pure = pure_gate.on(dummy_qubits[0])
-    operator_cnot = two_qubit_gate(dummy_qubits[0], dummy_qubits[1])
+    prob = 1e-2
+    circuit_01 = cirq.Circuit()
+    circuit_02 = cirq.Circuit()
+    n_gate = noise_model(dim=2, error_type='depolarize', error=prob)
+    channel_1q = [cirq.depolarize(p=prob)]
+    channel_2q = [TwoQubitDepolarizingChannel(p=prob)]
+    n_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'depolarize (p={prob}')
+
+    circuit_01.append(n_gate.on(*dummy_qubits))
+    circuit_02.append(n_model.get_operators(*dummy_qubits))
+
+    density_01 = cirq.DensityMatrixSimulator().simulate(circuit_01).final_density_matrix
+    density_02 = cirq.DensityMatrixSimulator().simulate(circuit_02).final_density_matrix
+
+    print(f'Following density matrices should be identical:\n{density_01}\n{density_02}\n')
 
     # --------------------------
 
-    n = 2
-    circuit = swap_circuit(n, cirq.LineQubit.range(2*n+1), True)
-    wrapper = get_hardcoded_noise(name='depolar', p=.0)
+    def plot_single():
+        # Settings
+        n = 2
+        circuit_name = 'Swap-circuit'
+        noise_name = 'depolar'
+        noise_probability = 1e-2
+        noise_identifier_count = 50
+        circuit_measurement_repetitions = 1000
+        using_error_mitigation = True
+        using_density_representation = True
+        plot_title = f'{circuit_name} measurement histogram.\n(Info: {noise_name}, p={noise_probability}, error mitigation={using_error_mitigation}, reps={circuit_measurement_repetitions})'
 
-    # Manager test
-    manager = IErrorMitigationManager(clean_circuit=circuit, noise_wrapper=wrapper)
-    manager.set_identifier_range(50)
-    print(manager)
-    mu_values, mu = manager.get_mu_effective()
-    print(mu_values)
-    print(mu)
-    # Plotting for the lol
-    n_bins = 10
-    fig, axs = plt.subplots(1, 1, tight_layout=True)
+        # Construct circuit and noise wrapper
+        circuit = swap_circuit(n, cirq.LineQubit.range(2 * n + 1), True)
+        channel_1q = [cirq.depolarize(p=noise_probability)]
+        channel_2q = [TwoQubitDepolarizingChannel(p=noise_probability)]
+        n_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'depolarize (p={noise_probability})')
+        print(f'Circuit used:')
+        print(circuit)
 
-    # We can set the number of bins with the `bins` kwarg
-    axs.hist(mu_values,  bins=n_bins)
+        # Error Mitigation Manager
+        manager = IErrorMitigationManager(clean_circuit=circuit, noise_model=n_model)
+        manager.set_identifier_range(noise_identifier_count)
+        print(f'Start calculating raw mu from circuit identifiers_id')
+        mu_values, mu = manager.get_mu_effective(error_mitigation=using_error_mitigation, density_representation=using_density_representation, meas_reps=circuit_measurement_repetitions)
+        # Plotting for the lol
+        n_bins = 100
+        fig, ax = plt.subplots(1, 1, tight_layout=True)
+        ax.title.set_text(plot_title)
+        ax.set_xlabel(f'{circuit_name} measurement outcome (avg: {mu})')  # X axis label
+        ax.set_xlim([-1, 1])  # X axis limit
+        ax.set_ylabel(f'Bin count')  # Y axis label
+        # We can set the number of bins with the `bins` kwarg
+        ax.hist(mu_values, bins=n_bins)
+
+    def plot_shihonage():
+        # Settings
+        n = 2
+        circuit_name = 'Swap-circuit'
+        noise_name = 'depolar'
+        noise_probability = [0, 1e-2]
+        noise_identifier_count = 50
+        circuit_measurement_repetitions = 1000
+        using_error_mitigation = [False, True]
+        using_density_representation = True
+        n_bins = 100
+        fig, axs = plt.subplots(2, 2, tight_layout=True)
+        # Construct circuit
+        circuit = swap_circuit(n, cirq.LineQubit.range(2 * n + 1), True)
+        fig.suptitle(f'{circuit_name} (#register qubits={n})', fontsize=16)
+        print(circuit)
+
+        for i, prob in enumerate(noise_probability):
+            for j, error in enumerate(using_error_mitigation):
+                # if i + j != 2:  # Temp
+                #     continue
+                # Construct noise wrapper
+                channel_1q = [cirq.depolarize(p=prob)]
+                channel_2q = [TwoQubitDepolarizingChannel(p=prob)]
+                noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'depolarize (p={prob})')
+                # Error Mitigation Manager
+                manager = IErrorMitigationManager(clean_circuit=circuit, noise_model=noise_model)
+                # Calculate measurement values
+                manager.set_identifier_range(noise_identifier_count)
+                meas_values, mu = manager.get_mu_effective(error_mitigation=error, density_representation=using_density_representation, meas_reps=circuit_measurement_repetitions)
+                plot_title = f'{circuit_name} measurement histogram.\n(Info: {noise_name}, p={prob}, error mitigation={error}, reps={circuit_measurement_repetitions})'
+                axs[i][j].title.set_text(plot_title)
+                axs[i][j].set_xlabel(f'(weighted) measurement outcome (avg: {mu})')  # X axis label
+                axs[i][j].set_xlim([-1, 1])  # X axis limit
+                axs[i][j].set_ylabel(f'Bin count')  # Y axis label
+                axs[i][j].hist(meas_values,  bins=n_bins)
+
+    plot_shihonage()
+
     plt.show()
