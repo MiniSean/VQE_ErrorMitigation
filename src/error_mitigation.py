@@ -368,7 +368,6 @@ class IErrorMitigationManager:
         for key, value in tqdm(self._dict_identifiers.items(), desc='Processing identifier circuits'):
             # Possible toggle to use error mitigation or not
             identifier_list = key.identifiers_id if error_mitigation else key.identity
-            print(identifier_list)
             sign_weight = key.sign if error_mitigation else 1
             weight_list = key.identifiers_weight if error_mitigation else [1]
 
