@@ -129,6 +129,25 @@ class BasisUnitarySet:
         yield BasisUnitarySet.pizx_unitary()
         yield BasisUnitarySet.pixy_unitary()
 
+    # Get normal unitary set
+    @staticmethod
+    def get_basis_set(dim: int) -> Iterator[np.ndarray]:
+        """Yields all gst transformed basis unitaries depending on gate dimension"""
+        def _single_qubit() -> Iterator[np.ndarray]:
+            for unitary in BasisUnitarySet.get_basis_unitary_set():
+                yield unitary
+
+        # First gate set tomography then tensor product
+        if dim == 2:  # (single qubit)
+            for basis in _single_qubit():
+                yield basis
+        elif dim == 4:  # (double qubits)
+            for basis_A in _single_qubit():
+                for basis_B in _single_qubit():
+                    yield np.kron(basis_A, basis_B)  # Tensor product in correct format
+        else:
+            raise NotImplemented
+
     # Get T mapping matrix for GST
     @staticmethod
     def get_t_map(dim: int) -> np.ndarray:
@@ -171,25 +190,6 @@ class BasisUnitarySet:
         elif gate.shape[0] == gate.shape[1] == 4:  # Pauli Transfer Matrix (double qubits)
             for observable in BasisUnitarySet.get_observable_set(dim=4):
                 yield .25 * (gate @ (observable @ gate.conj().transpose()))
-        else:
-            raise NotImplemented
-
-    # Get normal unitary set
-    @staticmethod
-    def get_basis_set(dim: int) -> Iterator[np.ndarray]:
-        """Yields all gst transformed basis unitaries depending on gate dimension"""
-        def _single_qubit() -> Iterator[np.ndarray]:
-            for unitary in BasisUnitarySet.get_basis_unitary_set():
-                yield unitary
-
-        # First gate set tomography then tensor product
-        if dim == 2:  # (single qubit)
-            for basis in _single_qubit():
-                yield basis
-        elif dim == 4:  # (double qubits)
-            for basis_A in _single_qubit():
-                for basis_B in _single_qubit():
-                    yield np.kron(basis_A, basis_B)  # Tensor product in correct format
         else:
             raise NotImplemented
 
@@ -812,6 +812,7 @@ if __name__ == '__main__':
             for j, error in enumerate(using_error_mitigation):
                 # if i + j != 2:  # Temp
                 #     continue
+
                 # Construct noise wrapper
                 channel_1q = [cirq.depolarize(p=prob)]
                 channel_2q = [TwoQubitDepolarizingChannel(p=prob)]
@@ -821,6 +822,8 @@ if __name__ == '__main__':
                 # Calculate measurement values
                 manager.set_identifier_range(noise_identifier_count)
                 meas_values, mu = manager.get_mu_effective(error_mitigation=error, density_representation=using_density_representation, meas_reps=circuit_measurement_repetitions)
+
+                # Plotting
                 plot_title = f'{circuit_name} measurement histogram.\n(Info: {noise_name}, p={prob}, error mitigation={error}, reps={circuit_measurement_repetitions})'
                 axs[i][j].title.set_text(plot_title)
                 axs[i][j].set_xlabel(f'(weighted) measurement outcome (avg: {mu})')  # X axis label
