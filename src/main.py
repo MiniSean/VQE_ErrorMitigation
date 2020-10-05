@@ -30,7 +30,7 @@ if __name__ == '__main__':
     print(resolved_circuit)
 
     # Get custom optimization
-    noise_channel = INoiseModel(noise_gates=[cirq.bit_flip(p=.5), cirq.phase_flip(p=.5)], description=f'Bit and Phase flip (p={0.5})')  # [cirq.AmplitudeDampingChannel(gamma=.1)]
+    noise_channel = INoiseModel(noise_gates_1q=[cirq.bit_flip(p=.5), cirq.phase_flip(p=.5)], noise_gates_2q=[], description=f'Bit and Phase flip (p={0.5})')  # [cirq.AmplitudeDampingChannel(gamma=.1)]
     noisy_ansatz = INoiseWrapper(uccsd_ansatz, noise_channel)
     values, params = CPU.get_custom_optimized_state(n_w=noisy_ansatz, max_iter=10)
     print(f'Operator expectation value: {values}\nOperator parameters: {params}')

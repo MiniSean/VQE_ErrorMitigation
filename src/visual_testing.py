@@ -151,7 +151,7 @@ def single_qubit_depolar_noise():
     circuit = cirq.Circuit(cirq.H.on(dummy_qubits[0]))
     matrix = simulate_density_matrix(circuit)
     # Noisy
-    noise_model = INoiseModel(noise_gates=[cirq.depolarize(p=p)], description=f'Depolarize (p={p})')
+    noise_model = INoiseModel(noise_gates_1q=[cirq.depolarize(p=p)], noise_gates_2q=[], description=f'Depolarize (p={p})')
     circuit_noise = Noisify.introduce_noise(circuit, noise_model.get_callable())
     matrix_noise = simulate_density_matrix(circuit_noise)
     # Build a quantum circuit
@@ -167,7 +167,7 @@ def single_qubit_depolar_noise2():
     p = .5
     # Visualize simple circuit
 
-    noise_model = INoiseModel(noise_gates=[cirq.depolarize(p=p)], description=f'Depolarize (p={p})')
+    noise_model = INoiseModel(noise_gates_1q=[cirq.depolarize(p=p)], noise_gates_2q=[], description=f'Depolarize (p={p})')
 
     effective_unitary = np.array([[1, 0], [0, 0]])
     effective_unitary = cirq.unitary(cirq.H) @ (effective_unitary @ cirq.unitary(cirq.H).conj().transpose())
@@ -203,7 +203,7 @@ def single_qubit_dephase_noise():
     circuit = cirq.Circuit(cirq.H.on(dummy_qubits[0]))
     matrix = simulate_density_matrix(circuit)
     # Noisy
-    noise_model = INoiseModel(noise_gates=[cirq.phase_damp(gamma=p)], description=f'Phase damping (p={p})')
+    noise_model = INoiseModel(noise_gates_1q=[cirq.phase_damp(gamma=p)], noise_gates_2q=[], description=f'Phase damping (p={p})')
     circuit_noise = Noisify.introduce_noise(circuit, noise_model.get_callable())
     matrix_noise = simulate_density_matrix(circuit_noise)
     # Build a quantum circuit
@@ -232,7 +232,7 @@ def single_qubit_ampdamp_noise():
     circuit = cirq.Circuit(cirq.H.on(dummy_qubits[0]))
     matrix = simulate_density_matrix(circuit)
     # Noisy
-    noise_model = INoiseModel(noise_gates=[cirq.amplitude_damp(gamma=p)], description=f'Amplitude damping (p={p})')
+    noise_model = INoiseModel(noise_gates_1q=[cirq.amplitude_damp(gamma=p)], noise_gates_2q=[], description=f'Amplitude damping (p={p})')
     circuit_noise = Noisify.introduce_noise(circuit, noise_model.get_callable())
     matrix_noise = simulate_density_matrix(circuit_noise)
     # Build a quantum circuit

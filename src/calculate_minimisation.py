@@ -57,7 +57,7 @@ if __name__ == '__main__':
     clean_ansatz = HydrogenAnsatz()
     filename = 'H2_temptest6'
     parameter_space = [.7414]  # np.round(np.linspace(0.1, 3.0, 15), 1)  # [.6, .7, .7414, .8, .9]
-    noise_space = [INoiseModel(noise_gates=[cirq.depolarize(p=p)], description=f'Depolarize (p={p})') for p in [0.000, 0.005, .5]]  # , 0.010, 0.015, 0.020, 0.030, 0.040, 0.050]]
+    noise_space = [INoiseModel(noise_gates_1q=[cirq.depolarize(p=p)], noise_gates_2q=[], description=f'Depolarize (p={p})') for p in [0.000, 0.005, .5]]  # , 0.010, 0.015, 0.020, 0.030, 0.040, 0.050]]
     measure_collection = IMeasurementCollection(w=clean_ansatz, p_space=parameter_space, n_space=noise_space)
     calculate_and_write_collection(collection=measure_collection, filename=filename)
 
