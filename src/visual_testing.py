@@ -291,7 +291,7 @@ def gst_hadamard_ideal():
     effective_unitary = np.array([[1, 0], [0, 0]])
     effective_unitary = cirq.unitary(cirq.H) @ (effective_unitary @ cirq.unitary(cirq.H).conj().transpose())  # rho under Hadamard
 
-    matrix = BasisUnitarySet.gate_set_tomography(gate=effective_unitary)[1]
+    matrix = BasisUnitarySet.pauli_transfer_matrix(gate=effective_unitary)[1]
     # Plot
     setup_before_after_2D_3D_plot(density_matrix=effective_unitary, noise_matrix=matrix, circuit=None, title=r'Gate set tomography of Density Matrix')
 
@@ -308,7 +308,7 @@ def gst_identity_ideal():
     effective_unitary = np.array([[1, 0], [0, 0]])
     effective_unitary = cirq.unitary(cirq.I) @ (effective_unitary @ cirq.unitary(cirq.I).conj().transpose())  # rho under Hadamard
 
-    matrix = BasisUnitarySet.gate_set_tomography(gate=effective_unitary)[1]
+    matrix = BasisUnitarySet.pauli_transfer_matrix(gate=effective_unitary)[1]
     # Plot
     setup_before_after_2D_3D_plot(density_matrix=effective_unitary, noise_matrix=matrix, circuit=None, title=r'Gate set tomography of Density Matrix')
 

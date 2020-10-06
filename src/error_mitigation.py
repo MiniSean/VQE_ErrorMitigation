@@ -1,11 +1,11 @@
 # Random parameter sampling from probability distribution
-import random
 import cirq
 import numpy as np
 from tqdm import tqdm  # For displaying for-loop process to console
-from typing import Tuple, Union, Callable, Iterator, List, Dict, Sequence
+from typing import Tuple, Union, Callable, Iterator, List, Dict, Sequence, Any
 from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseModel
 import itertools as it  # Temp
+from multiprocessing import Pool
 
 
 # Contains all 16 basis unitary operations
@@ -132,7 +132,7 @@ class BasisUnitarySet:
     # Get normal unitary set
     @staticmethod
     def get_basis_set(dim: int) -> Iterator[np.ndarray]:
-        """Yields all gst transformed basis unitaries depending on gate dimension"""
+        """Yields all basis unitaries depending on gate dimension"""
         def _single_qubit() -> Iterator[np.ndarray]:
             for unitary in BasisUnitarySet.get_basis_unitary_set():
                 yield unitary
@@ -148,7 +148,7 @@ class BasisUnitarySet:
         else:
             raise NotImplemented
 
-    # Get T mapping matrix for GST
+    # Get T mapping matrix for PTM
     @staticmethod
     def get_t_map(dim: int) -> np.ndarray:
         t_map = np.array([[1, 1, 1, 1], [0, 0, 1, 0], [0, 0, 0, 1], [1, -1, 0, 0]])  # Mapping transform
@@ -159,7 +159,7 @@ class BasisUnitarySet:
         else:
             raise NotImplemented
 
-    # Get basis observable set for GST (single/double qubit gates)
+    # Get basis observable set for PTM (single/double qubit gates)
     @staticmethod
     def get_observable_set(dim: int) -> Iterator[np.ndarray]:
         """Yields all basis observables in order depending on gate dimension"""
@@ -179,7 +179,7 @@ class BasisUnitarySet:
         else:
             raise NotImplemented
 
-    # Get initial state set for GST (single/double qubit gates)
+    # Get initial state set for PTM (single/double qubit gates)
     @staticmethod
     def get_initial_state_set(gate: np.ndarray) -> Iterator[np.ndarray]:
         """Yields all initial states in order depending on gate shape"""
@@ -193,13 +193,13 @@ class BasisUnitarySet:
         else:
             raise NotImplemented
 
-    # Get GST transformed unitary
+    # Get PTM transformed unitary
     @staticmethod
-    def get_gst_basis_set(dim: int) -> Iterator[np.ndarray]:
-        """Yields all gst transformed basis unitaries depending on gate dimension"""
+    def get_ptm_basis_set(dim: int) -> Iterator[np.ndarray]:
+        """Yields all ptm transformed basis unitaries depending on gate dimension"""
         def _single_qubit() -> Iterator[np.ndarray]:
             for unitary in BasisUnitarySet.get_basis_unitary_set():
-                yield BasisUnitarySet.gate_set_tomography(unitary)
+                yield BasisUnitarySet.pauli_transfer_matrix(unitary)
 
         # First gate set tomography then tensor product
         if dim == 2:  # (single qubit)
@@ -212,24 +212,18 @@ class BasisUnitarySet:
         else:
             raise NotImplemented
 
-    # Get operator generator
-    @staticmethod
-    def get_basis_operator_set() -> Iterator[cirq.SingleQubitGate]:
-        """Yields all basis operators in order."""
-        for unitary in BasisUnitarySet.get_basis_unitary_set():
-            yield IBasisGateSingle(unitary=unitary)
-
     # Apply subsequent noise model to gate before applying this function
+    # Refer to figure 4.2 of 'Introduction to Quantum Gate Set Tomography' - Daniel Greenbaum
     @staticmethod
-    def gate_set_tomography(gate: np.ndarray, noise_wrapper: Callable[[np.ndarray], np.ndarray] = None) -> np.ndarray:  # Tuple[np.ndarray, np.ndarray]:
+    def pauli_transfer_matrix(gate: np.ndarray, noise_wrapper: Callable[[np.ndarray], np.ndarray] = None) -> np.ndarray:  # Tuple[np.ndarray, np.ndarray]:
         """
-        Implements single and double qubit gate GST.
+        Implements single and double qubit gate PTM.
         Using mapping matrix T:
         [[1, 1, 1, 1],
          [0, 0, 1, 0],
          [0, 0, 0, 1],
          [1, -1, 0, 0]]
-        :type gate: Gate (without noise) to apply GST on
+        :type gate: Gate (without noise) to apply PTM on
         :param noise_wrapper: Noise wrapper for Initial state matrices
         :return: Ô (Estimator)
         """
@@ -308,36 +302,31 @@ class QuasiCircuitIdentifier:
 
     @staticmethod
     def _get_identifiers(circuit: cirq.Circuit, gate_lookup: Dict[cirq.Gate, List[float]]) -> Tuple[List[int], int, List[float]]:
-        id_list = list()  # Order specific identifier collection
-        id_sign = 1
+        id_list = []  # Order specific identifier collection
+        id_sign = []
         id_weight = []
         for operator in circuit.all_operations():
             if type(operator.gate).__name__ == 'MeasurementGate':
                 id_weight.append(1)
                 continue
             qp = gate_lookup[operator.gate]
-            basis_id, p_sign, weight = QuasiCircuitIdentifier._get_identifier(quasi_probabilities=qp)
+            basis_id, weight = QuasiCircuitIdentifier._get_identifier(quasi_probabilities=qp)
             id_list.append(basis_id)  # Append basis basis_id to result list
-            # np.sign(p_sign) == np.sign(qp[basis_id])
-            id_sign *= p_sign  # Multiply probability sign to result sign
+            id_sign.append(qp[basis_id])  # Multiply probability sign to result sign
             id_weight.append(weight)  # Multiply quasi probability weight
-        return id_list, id_sign, id_weight
+        return id_list, np.sign(np.prod(id_sign)), id_weight
 
     @staticmethod
-    def _get_identifier(quasi_probabilities: List[float]) -> Tuple[int, int, float]:
+    def _get_identifier(quasi_probabilities: List[float]) -> Tuple[int, float]:
         """
-        Returns random index from quasi probability list depending on probability distribution, its sign and weight
-        :param quasi_probabilities:
-        :return: Basis index, quasi probability sign, total quasi probability weight
+        Returns random index from quasi probability list depending on probability distribution and weight
+        :param quasi_probabilities: Quasi probabilities that decide the index chosen
+        :return: Basis index, total quasi probability weight
         """
         c_weight = sum([abs(p) for p in quasi_probabilities])
-        p_indicator = random.uniform(0, 1) * c_weight  # Scales random from [0, c_weight]
-        for i, probability in enumerate(quasi_probabilities):
-            p_indicator -= abs(probability)
-            if p_indicator <= 0:
-                return i, np.sign(probability), c_weight
-        last_index = len(quasi_probabilities) - 1
-        return last_index, np.sign(quasi_probabilities[last_index]), c_weight
+        prob_q = np.abs(quasi_probabilities) / c_weight
+        quasi_index = np.random.choice(range(len(quasi_probabilities)), p=prob_q)
+        return quasi_index, c_weight
 
     @property
     def identity(self):
@@ -354,6 +343,40 @@ class QuasiCircuitIdentifier:
 class IErrorMitigationManager:
     """Manages family of circuits to be measured"""
 
+    def process_circuit(self, process_settings: Tuple[QuasiCircuitIdentifier, int]) -> List[float]:
+        _key, _value = process_settings
+        # Possible toggle to use error mitigation or not
+        _identifier_list = _key.identifiers_id if self._error_mitigation else _key.identity
+        _sign_weight = _key.sign if self._error_mitigation else 1
+        _weight_list = _key.identifiers_weight if self._error_mitigation else [1]
+
+        # Circuit with noise and noise counter
+        _circuit_to_run = self.get_updated_circuit(clean_circuit=self.circuit,
+                                                   noise_wrapper=self._noise_model.get_operators,
+                                                   circuit_identifier=_identifier_list,
+                                                   include_measurements=(not self._density_representation))
+
+        _simulator = cirq.DensityMatrixSimulator(ignore_measurement_results=False)  # Mixed state simulator
+        # Repeat measurement for every occurrence of identical circuit identifier
+        if self._density_representation:
+            # Setup simulator
+            _simulated_result = _simulator.simulate(program=_circuit_to_run)  # Include final density matrix
+
+            # Get final density matrix trace
+            _trace_out = np.kron(np.eye(16), np.array([[1, 0], [0, -1]]))  # Z o I o I o I o I
+            _trace = (_trace_out @ np.array(_simulated_result.final_density_matrix)).diagonal().sum()
+            _measurement = _trace.real
+        else:
+            # Setup simulator
+            _simulated_result = _simulator.run(program=_circuit_to_run, repetitions=(self._meas_reps * _value))  # Include final measurement values
+
+            # Get final measurement value
+            _hist = _simulated_result.histogram(key='M')  # Hist (0: x, 1: meas_reps - x)
+            _measurement = _hist[0] / (self._meas_reps * _value)  # Normalized measurement [0, 1]
+            _measurement = 2 * _measurement - 1  # Rescaled measurement [-1, 1]
+
+        return [_sign_weight * _measurement] * _value
+
     def get_mu_effective(self, error_mitigation: bool, density_representation: bool, meas_reps: int = 1) -> Tuple[List[float], float]:
         """
         Constructs circuits based on identifiers_id, measures them and calculates effective average.
@@ -362,45 +385,20 @@ class IErrorMitigationManager:
         :param meas_reps: Amount of circuit measurements performed when density_representation is false.
         :return: List of (signed) measurement values, Effective average of circuit measurement values.
         """
-        raw_measurement_results = list()
-        weight_list = [1]
-        simulator = cirq.DensityMatrixSimulator(ignore_measurement_results=True)  # Mixed state simulator
-        for key, value in tqdm(self._dict_identifiers.items(), desc='Processing identifier circuits'):
-            # Possible toggle to use error mitigation or not
-            identifier_list = key.identifiers_id if error_mitigation else key.identity
-            sign_weight = key.sign if error_mitigation else 1
-            weight_list = key.identifiers_weight if error_mitigation else [1]
+        # TEMP variable setting
+        self._error_mitigation = error_mitigation
+        self._density_representation = density_representation
+        self._meas_reps = meas_reps
 
-            # Circuit with noise and noise counter
-            circuit_to_run = IErrorMitigationManager.get_updated_circuit(clean_circuit=self.circuit, noise_wrapper=self._noise_model.get_operators, circuit_identifier=identifier_list)
+        # Function for multiprocessing
+        with Pool(5) as p:
+            multi_processing_output = p.map(self.process_circuit, tqdm(self._dict_identifiers.items(), desc='Processing identifier circuits'))
 
-            # Repeat measurement for every occurrence of identical circuit identifier
-            signed_measurement_results = []
-            for identifier_occurrence in range(value):
-                if density_representation:
-                    # Setup simulator
-                    simulated_result = simulator.simulate(program=circuit_to_run)  # Include final density matrix
+        def flatten(l: List[List[Any]]) -> List[Any]:
+            return [item for sublist in l for item in sublist]
+        raw_measurement_results = flatten(multi_processing_output)
 
-                    # Get final density matrix trace
-                    rho = np.array([[1, 0], [0, 0]])
-                    identity = np.eye(16)
-                    trace_out = np.kron(identity, rho)
-                    trace = (trace_out @ np.array(simulated_result.final_density_matrix)).diagonal().sum()
-                    measurement = trace.real
-                else:
-                    # Setup simulator
-                    simulated_result = simulator.run(program=circuit_to_run, repetitions=meas_reps)  # Include final measurement values
-
-                    # Get final measurement value
-                    hist = simulated_result.histogram(key='M')  # Hist (0: x, 1: meas_reps - x)
-                    measurement = hist[0]/meas_reps  # Normalized measurement [0, 1]
-
-                # Add individual measurements
-                measurement = 2 * measurement - 1  # Rescaled measurement [-1, 1]
-                signed_measurement_results.append(sign_weight * measurement)
-
-            raw_measurement_results.append(np.mean(signed_measurement_results))  # Additional averaging step
-
+        weight_list = next(iter(self._dict_identifiers)).identifiers_weight  # All identifier weights are equal
         weighted_effective_mean = np.prod(weight_list) * np.mean(raw_measurement_results)
         return raw_measurement_results, weighted_effective_mean
 
@@ -409,12 +407,16 @@ class IErrorMitigationManager:
         for id_class in self._dict_identifiers.keys():
             yield id_class.identifiers
 
-    def __init__(self, clean_circuit: cirq.Circuit, noise_model: INoiseModel):  # Callable[[np.ndarray], np.ndarray]):
+    def __init__(self, clean_circuit: cirq.Circuit, noise_model: INoiseModel):
         # Store properties
         self.circuit = clean_circuit
         self._noise_model = noise_model
         self._gate_lookup = IErrorMitigationManager.get_qp_lookup(clean_circuit, noise_model.get_effective_gate)
         self._dict_identifiers = {}
+        # TEMP
+        self._error_mitigation = False
+        self._density_representation = True
+        self._meas_reps = 1
 
     # Magic function, adds range of 'QuasiCircuitIdentifier' to dictionary of identifiers_id
     def set_identifier_range(self, count: int):
@@ -449,49 +451,37 @@ class IErrorMitigationManager:
             # Get effective gates
             clean_gate = cirq.unitary(operator)  # Without noise
             # Get gate set tomography versions
-            clean_gst_gate = BasisUnitarySet.gate_set_tomography(clean_gate)
-            noisy_gst_gate = BasisUnitarySet.gate_set_tomography(clean_gate, noise_wrapper=noise_wrapper)
+            clean_ptm_gate = BasisUnitarySet.pauli_transfer_matrix(clean_gate)
+            noisy_ptm_gate = BasisUnitarySet.pauli_transfer_matrix(clean_gate, noise_wrapper=noise_wrapper)
             # Get inverse noise
-            N_inv = clean_gst_gate.dot(np.linalg.inv(noisy_gst_gate))
+            N_inv = clean_ptm_gate.dot(np.linalg.inv(noisy_ptm_gate))
 
-            basis_set = list(BasisUnitarySet.get_gst_basis_set(dim=clean_gate.shape[0]))
+            basis_set = list(BasisUnitarySet.get_ptm_basis_set(dim=clean_gate.shape[0]))
             qp = BasisUnitarySet.get_quasiprobabilities(target=N_inv, basis_set=basis_set)
             result[operator.gate] = qp
         return result
 
-    # Deprecated
     @staticmethod
-    def get_quasi_probability_induced_basis(basis: List[np.ndarray], quasi_probabilities: List[float]) -> np.ndarray:
+    def get_updated_circuit(clean_circuit: cirq.Circuit, noise_wrapper: Callable[[Tuple[cirq.Qid]], List[cirq.Operation]], circuit_identifier: List[int], include_measurements: bool = False) -> cirq.Circuit:  # QuasiCircuitIdentifier
         """
-        Selects a random basis based on the corresponding quasi-probability.
-        Random value is chosen from uniform distributed values [0, 1] and scaled using the qp summed weight.
-        Classic pie-size selection scheme to retrieve the list specific index.
-        Returns the corresponding basis.
-        :param basis: List containing all basis matrices to choose from
-        :param quasi_probabilities: List of singed probabilities to induce probability distribution
-        :return: basis[i] where i is chosen based on the weighted probability distribution
+        Constructs circuit based on noiseless (clean) circuit.
+        After each operation a noise operation and noise mitigation operation is placed.
+        If the noise mitigation operator is not the identity operator an additional noise operation is placed afterwards.
+        :param clean_circuit: Noiseless circuit used as basis.
+        :param noise_wrapper: Function that provides noise channel depending on number of qubits it acts on.
+        :param circuit_identifier: Pre-calculated identifiers that points to a basis operation (used as mitigation) from known set.
+        :param include_measurements: Whether to include measurement operations (relevant when using density matrix simulators).
+        :return:
         """
-        if len(basis) != len(quasi_probabilities):
-            raise IndexError('Each probability needs to represent a basis. Both list need to have the same length')
-        c_weight = sum([abs(p) for p in quasi_probabilities])
-        p_indicator = random.uniform(0, 1) * c_weight  # Scales random from [0, c_weight]
-        print(f'Probability check landed on {p_indicator} in range [0, {c_weight})')  # Temporary print statements
-        for i, probability in enumerate(quasi_probabilities):
-            p_indicator -= abs(probability)
-            if p_indicator <= 0:
-                print(f'Using basis {i}')  # Temporary print statements
-                return basis[i]
-        return basis[-1]
-
-    @staticmethod
-    def get_updated_circuit(clean_circuit: cirq.Circuit, noise_wrapper: Callable[[Tuple[cirq.Qid]], List[cirq.Operation]], circuit_identifier: List[int]) -> cirq.Circuit:  # QuasiCircuitIdentifier
         result = cirq.Circuit()
         for i, clean_operator in enumerate(clean_circuit.all_operations()):
+            if type(clean_operator.gate).__name__ == 'MeasurementGate':  # Bail on measurement operator
+                if include_measurements:
+                    result.append(clean_operator)
+                continue
+
             # First Ideal operator
             result.append(clean_operator)
-
-            if type(clean_operator.gate).__name__ == 'MeasurementGate':
-                continue
 
             # Get clean gate unitary
             unitary = cirq.unitary(clean_operator.gate)
@@ -500,73 +490,25 @@ class IErrorMitigationManager:
             basis_set = list(BasisUnitarySet.get_basis_set(basis_dim))
 
             # Build noisy and canceling basis
-            noise_canceling_basis = basis_set[circuit_identifier[i]]
+            noise_mitigating_basis = basis_set[circuit_identifier[i]]
             # Construct operators
             qubit_list = clean_operator.qubits
             noisy_operator = noise_wrapper(*qubit_list)  # qubit_list[0]
             if len(qubit_list) == 1:
-                noise_canceling_operator = IBasisGateSingle(unitary=noise_canceling_basis).on(*qubit_list)  # qubit_list[0]
+                noise_canceling_operator = IBasisGateSingle(unitary=noise_mitigating_basis).on(*qubit_list)  # qubit_list[0]
             elif len(qubit_list) == 2:
-                noise_canceling_operator = IBasisGateTwo(unitary=noise_canceling_basis).on(*qubit_list)  # qubit_list[0], qubit_list[1]
+                noise_canceling_operator = IBasisGateTwo(unitary=noise_mitigating_basis).on(*qubit_list)  # qubit_list[0], qubit_list[1]
             else:
                 raise NotImplemented('Can only construct single and two qubit operators')
             # Add to new circuit
             result.append(noisy_operator)  # Noise after ideal operation
             result.append(noise_canceling_operator)  # Correction after noise
-            result.append(noisy_operator)  # Noise after correction
+            if circuit_identifier[i] != 0:  # Only if correction basis is not identity
+                result.append(noisy_operator)  # Noise after correction
         return result
 
     def __str__(self):
         return self._dict_identifiers.__str__()
-
-
-# Deprecated
-def compose_gate_matrix(operator: cirq.Operation, noise_model: INoiseModel = None) -> np.ndarray:
-    """
-    Constructs matrix from gate and potential noise model.
-    If no noise model is provided, simply call cirq.Gate._unitary_().
-    Else, set up a density matrix simulator, run the gate + noise model and return the final density matrix.
-    :param operator: cirq operation to be evaluated
-    :param noise_model: custom noise model containing cirq noise operators.
-    :return: (Unitary) matrix
-    """
-    qubit_count = len(operator.qubits)
-    _dummy_qubits = cirq.LineQubit.range(qubit_count)
-    simulator = cirq.DensityMatrixSimulator(ignore_measurement_results=True)  # Mixed state simulator
-    _circuit = cirq.Circuit()
-    # Apply operations and noise model to circuit
-    if noise_model is None:
-        _circuit.append(operator.gate.on(_dummy_qubits[0]))
-        # return cirq.unitary(operator.gate)
-    else:
-        if qubit_count == 1:
-            _circuit.append(operator.gate.on(_dummy_qubits[0]))
-            _circuit.append([noise_gate.on(_dummy_qubits[0]) for noise_gate in noise_model.get_callable()()])
-        elif qubit_count == 2:
-            _circuit.append(operator.gate.on(_dummy_qubits[0], _dummy_qubits[1]))
-            _circuit.append([noise_gate.on(_dummy_qubits[0]) for noise_gate in noise_model.get_callable()()])  # Only on first qubit?
-            _circuit.append([noise_gate.on(_dummy_qubits[1]) for noise_gate in noise_model.get_callable()()])  # Or also on seccond?
-        else:
-            raise NotImplemented
-    # Simulate circuit and return final density matrix
-    simulated_result = simulator.simulate(program=_circuit)  # Include final density matrix
-    return simulated_result.final_density_matrix
-
-
-# Deprecated
-# Super function combining several functionality's
-def get_decomposition(gate: Union[np.ndarray, cirq.Gate]) -> Tuple[List[float], List[np.ndarray]]:
-    """
-    Determines single or double qubit gate.
-    Computes gate set tomography of provided gate/unitary.
-    :return: quasi-probabilities based on this and BasisUnitarySet basis set.
-    """
-    if isinstance(gate, cirq.Gate):  # Works with gate unitary
-        gate = cirq.unitary(gate)
-
-    basis = list(BasisUnitarySet.get_gst_basis_set(dim=gate.shape[0]))  # Convert sparse basis to array
-    gate = BasisUnitarySet.gate_set_tomography(gate)  # Apply GST
-    return BasisUnitarySet.get_quasiprobabilities(target=gate, basis_set=basis), basis
 
 
 def reconstruct_from_basis(quasi_probabilities: List[float], basis_set: List[np.ndarray]) -> np.ndarray:
@@ -576,6 +518,7 @@ def reconstruct_from_basis(quasi_probabilities: List[float], basis_set: List[np.
     return sum(i[0] * i[1] for i in zip(quasi_probabilities, basis_set))  # Dot product of lists
 
 
+# Deprecated
 def get_hardcoded_noise(name: str, p: float) -> Callable[[np.ndarray], np.ndarray]:
 
     def gate_depolarize(gate: np.ndarray) -> np.ndarray:
@@ -653,24 +596,8 @@ def decomposition_time_test(gate: np.ndarray):
     rcs_target = reconstruct_from_basis(qp, basis)
     print(f'Calculation time: {time.time() - start_time} sec.')
     print(f'Sum of quasi-probabilities: {sum(qp)}')
-    gst_target = BasisUnitarySet.gate_set_tomography(gate=gate)  # For reference
-    print(f'Target vs Reconst. difference: {get_matrix_difference(rcs_target, gst_target)}')
-
-
-def reference_noise(hard_coded: Callable[[np.ndarray], np.ndarray], cirq_noise: cirq.DepolarizingChannel):
-    # Initial state density matrix
-    init_state = np.array([[1, 0], [0, 0]])  # np.array([[1, 0], [0, 0]])
-    # hadamard = cirq.unitary(cirq.H)
-    # init_state = hadamard @ (init_state @ hadamard.conj().transpose())
-    init_state = np.kron(init_state, init_state)
-    print(f'initial state matrix::\n{init_state}\n')
-
-    effective_depolarize = hard_coded(init_state)
-    print(f'Custom super operator for depolarizing:\n{effective_depolarize}\n')
-    # Effective unitary
-    noise_model = INoiseModel(noise_gates_1q=[cirq_noise], description=f'Depolarize (p={cirq_noise.p})')
-    effective_unitary = noise_model.get_effective_gate(gate=init_state)
-    print(f'Cirq mixture for depolarizing:\n{effective_unitary}\n')
+    ptm_target = BasisUnitarySet.pauli_transfer_matrix(gate=gate)  # For reference
+    print(f'Target vs Reconst. difference: {get_matrix_difference(rcs_target, ptm_target)}')
 
 
 # Hard coded copy of two qubit depolarizing channel
@@ -794,10 +721,9 @@ if __name__ == '__main__':
     def plot_shihonage():
         # Settings
         n = 2
-        circuit_name = 'Swap-circuit'
         noise_name = 'depolar'
         noise_probability = [0, 1e-2]
-        noise_identifier_count = 50
+        noise_identifier_count = 100
         circuit_measurement_repetitions = 1000
         using_error_mitigation = [False, True]
         using_density_representation = True
@@ -805,9 +731,11 @@ if __name__ == '__main__':
         fig, axs = plt.subplots(2, 2, tight_layout=True)
         # Construct circuit
         circuit = swap_circuit(n, cirq.LineQubit.range(2 * n + 1), True)
-        fig.suptitle(f'{circuit_name} (#register qubits={n})', fontsize=16)
+        circuit_name = f'Swap-circuit using {"density matrix" if using_density_representation else "measurements"}'
+        fig.suptitle(f'{circuit_name} (#register qubits={n}, #mitigation circuits={noise_identifier_count})', fontsize=16)
         print(circuit)
 
+        mu_ideal = None
         for i, prob in enumerate(noise_probability):
             for j, error in enumerate(using_error_mitigation):
                 # if i + j != 2:  # Temp
@@ -822,14 +750,21 @@ if __name__ == '__main__':
                 # Calculate measurement values
                 manager.set_identifier_range(noise_identifier_count)
                 meas_values, mu = manager.get_mu_effective(error_mitigation=error, density_representation=using_density_representation, meas_reps=circuit_measurement_repetitions)
+                # Store ideal
+                if i == j == 0:
+                    mu_ideal = mu
 
                 # Plotting
                 plot_title = f'{circuit_name} measurement histogram.\n(Info: {noise_name}, p={prob}, error mitigation={error}, reps={circuit_measurement_repetitions})'
                 axs[i][j].title.set_text(plot_title)
-                axs[i][j].set_xlabel(f'(weighted) measurement outcome (avg: {mu})')  # X axis label
+                axs[i][j].set_xlabel(f'(unique circuit) measurement ratio [-1, +1]')  # X axis label
                 axs[i][j].set_xlim([-1, 1])  # X axis limit
                 axs[i][j].set_ylabel(f'Bin count')  # Y axis label
                 axs[i][j].hist(meas_values,  bins=n_bins)
+                if i != 0:
+                    axs[i][j].axvline(x=mu, linewidth=1, color='r', label=r'C E[$\mu_{eff}$] = ' + f'{np.round(mu, 5)}\n' + r'|$\epsilon$| = ' + f'{np.round(abs(mu - mu_ideal), 5)}')
+                    axs[i][j].axvline(x=mu_ideal, linewidth=1, color='g', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
+                    axs[i][j].legend()
 
     plot_shihonage()
 
