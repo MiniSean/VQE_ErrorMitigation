@@ -1,11 +1,15 @@
 # Random parameter sampling from probability distribution
 import cirq
 import numpy as np
+import matplotlib.pyplot as plt
 from tqdm import tqdm  # For displaying for-loop process to console
-from typing import Tuple, Union, Callable, Iterator, List, Dict, Sequence, Any
+from typing import Tuple, Union, Callable, Iterator, List, Dict, Sequence, Any, Optional
 from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseModel
 import itertools as it  # Temp
 from multiprocessing import Pool
+
+# WARNING uses multiprocessing
+MAX_MULTI_PROCESSING_COUNT = 6
 
 
 # Contains all 16 basis unitary operations
@@ -363,8 +367,11 @@ class IErrorMitigationManager:
             _simulated_result = _simulator.simulate(program=_circuit_to_run)  # Include final density matrix
 
             # Get final density matrix trace
-            _trace_out = np.kron(np.eye(16), np.array([[1, 0], [0, -1]]))  # Z o I o I o I o I
-            _trace = (_trace_out @ np.array(_simulated_result.final_density_matrix)).diagonal().sum()
+            _rho = np.array(_simulated_result.final_density_matrix)
+            _trace_out = np.kron(np.eye(int(_rho.shape[0]/2)), np.array([[1, 0], [0, -1]]))  # Z o I o I o I o I
+            if self._hamiltonian_objective is not None:
+                _trace_out = self._hamiltonian_objective
+            _trace = (_trace_out * _rho).diagonal().sum()
             _measurement = _trace.real
         else:
             # Setup simulator
@@ -391,14 +398,14 @@ class IErrorMitigationManager:
         self._meas_reps = meas_reps
 
         # Function for multiprocessing
-        with Pool(5) as p:
+        with Pool(MAX_MULTI_PROCESSING_COUNT) as p:
             multi_processing_output = p.map(self.process_circuit, tqdm(self._dict_identifiers.items(), desc='Processing identifier circuits'))
 
         def flatten(l: List[List[Any]]) -> List[Any]:
             return [item for sublist in l for item in sublist]
         raw_measurement_results = flatten(multi_processing_output)
 
-        weight_list = next(iter(self._dict_identifiers)).identifiers_weight  # All identifier weights are equal
+        weight_list = next(iter(self._dict_identifiers)).identifiers_weight if error_mitigation else [1]  # All identifier weights are equal
         weighted_effective_mean = np.prod(weight_list) * np.mean(raw_measurement_results)
         return raw_measurement_results, weighted_effective_mean
 
@@ -407,13 +414,14 @@ class IErrorMitigationManager:
         for id_class in self._dict_identifiers.keys():
             yield id_class.identifiers
 
-    def __init__(self, clean_circuit: cirq.Circuit, noise_model: INoiseModel):
+    def __init__(self, clean_circuit: cirq.Circuit, noise_model: INoiseModel, hamiltonian_objective: Optional[np.ndarray]):
         # Store properties
         self.circuit = clean_circuit
         self._noise_model = noise_model
         self._gate_lookup = IErrorMitigationManager.get_qp_lookup(clean_circuit, noise_model.get_effective_gate)
         self._dict_identifiers = {}
         # TEMP
+        self._hamiltonian_objective = hamiltonian_objective
         self._error_mitigation = False
         self._density_representation = True
         self._meas_reps = 1
@@ -454,7 +462,7 @@ class IErrorMitigationManager:
             clean_ptm_gate = BasisUnitarySet.pauli_transfer_matrix(clean_gate)
             noisy_ptm_gate = BasisUnitarySet.pauli_transfer_matrix(clean_gate, noise_wrapper=noise_wrapper)
             # Get inverse noise
-            N_inv = clean_ptm_gate.dot(np.linalg.inv(noisy_ptm_gate))
+            N_inv = clean_ptm_gate.dot(np.linalg.inv(noisy_ptm_gate))  # Inverse method
 
             basis_set = list(BasisUnitarySet.get_ptm_basis_set(dim=clean_gate.shape[0]))
             qp = BasisUnitarySet.get_quasiprobabilities(target=N_inv, basis_set=basis_set)
@@ -516,6 +524,63 @@ def reconstruct_from_basis(quasi_probabilities: List[float], basis_set: List[np.
     if len(quasi_probabilities) != len(basis_set):
         raise ValueError(f'Each basis should have a corresponding quasi-probability value')
     return sum(i[0] * i[1] for i in zip(quasi_probabilities, basis_set))  # Dot product of lists
+
+
+def simulate_error_mitigation(clean_circuit: cirq.Circuit, noise_model: INoiseModel, process_circuit_count: int, density_representation: bool, hamiltonian_objective: Optional[np.ndarray] = None):
+    """
+    Simulates error mitigation on noise infected circuit.
+    The four subplots consists of:
+    (1) Ideal circuit,
+    (2) Ideal with error mitigation,
+    (3) Ideal with noise channels,
+    (4) Ideal with noise channels and error mitigation.
+    :param clean_circuit: Noiseless quantum circuit to evaluate
+    :param noise_model: Noise model that holds information about the applied noise channels
+    :param process_circuit_count: Number of circuit identifiers produced to handle error mitigation
+    :type hamiltonian_objective: Enables to interpret final density matrix by hamiltonian objective
+    :return: None
+    """
+    # Settings
+    noise_probability = [False, True]
+    noise_identifier_count = process_circuit_count
+    circuit_measurement_repetitions = 1
+    using_error_mitigation = [False, True]
+    using_density_representation = density_representation if hamiltonian_objective is None else True
+    n_bins = 100
+    fig, axs = plt.subplots(2, 2, tight_layout=True)
+    # Construct circuit
+    circuit = clean_circuit
+    circuit_name = f'Circuit using {"density matrix" if using_density_representation else "measurements"}'
+    fig.suptitle(f'{circuit_name} (#mitigation circuits={noise_identifier_count})', fontsize=16)
+
+    mu_ideal = None
+    for i, prob in enumerate(noise_probability):
+        for j, error in enumerate(using_error_mitigation):
+            # Toggle noise
+            _noise_model = noise_model if prob else INoiseModel(noise_gates_1q=[], noise_gates_2q=[], description=noise_model.get_description())
+            # Error Mitigation Manager
+            manager = IErrorMitigationManager(clean_circuit=circuit, noise_model=_noise_model, hamiltonian_objective=hamiltonian_objective)
+            # Calculate measurement values
+            manager.set_identifier_range(noise_identifier_count)
+            meas_values, mu = manager.get_mu_effective(error_mitigation=error,
+                                                       density_representation=using_density_representation,
+                                                       meas_reps=circuit_measurement_repetitions)
+            # Store ideal
+            if i == j == 0:
+                mu_ideal = mu
+
+            # Plotting
+            plot_title = f'measurement histogram.\n(Info: {_noise_model.get_description()}, error mitigation={error}, reps={circuit_measurement_repetitions})'
+            axs[i][j].title.set_text(plot_title)
+            x_lim = [int(mu_ideal - 1), int(mu_ideal + 1)]
+            axs[i][j].set_xlabel(f'measurement ratio [{x_lim[0]}, {x_lim[1]}]')  # X axis label
+            axs[i][j].set_xlim(x_lim)  # X axis limit
+            axs[i][j].set_ylabel(f'Bin count')  # Y axis label
+            axs[i][j].hist(meas_values, bins=n_bins)
+            if i != 0:
+                axs[i][j].axvline(x=mu, linewidth=1, color='r', label=r'C E[$\mu_{eff}$] = ' + f'{np.round(mu, 5)}\n' + r'|$\epsilon$| = ' + f'{np.round(abs(mu - mu_ideal), 5)}')
+                axs[i][j].axvline(x=mu_ideal, linewidth=1, color='g', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
+                axs[i][j].legend()
 
 
 # Deprecated
@@ -592,8 +657,11 @@ def get_matrix_difference(A: np.ndarray, B: np.ndarray) -> float:
 
 def decomposition_time_test(gate: np.ndarray):
     start_time = time.time()
-    qp, basis = get_decomposition(gate=gate)
-    rcs_target = reconstruct_from_basis(qp, basis)
+    # Use correct basis
+    basis_dim = gate.shape[0]
+    basis_set = list(BasisUnitarySet.get_basis_set(basis_dim))
+    qp = BasisUnitarySet.get_quasiprobabilities(target=gate, basis_set=basis_set)
+    rcs_target = reconstruct_from_basis(qp, basis_set)
     print(f'Calculation time: {time.time() - start_time} sec.')
     print(f'Sum of quasi-probabilities: {sum(qp)}')
     ptm_target = BasisUnitarySet.pauli_transfer_matrix(gate=gate)  # For reference
@@ -618,10 +686,8 @@ class TwoQubitDepolarizingChannel(cirq.ops.gate_features.TwoQubitGate):
                                         cirq.protocols.unitary(cirq.ops.identity.I))),)
 
         for op_tup in it.product([cirq.protocols.unitary(cirq.ops.identity.I),
-                                  cirq.protocols.unitary(
-                                      cirq.ops.pauli_gates.X),
-                                  cirq.protocols.unitary(
-                                      cirq.ops.pauli_gates.Y),
+                                  cirq.protocols.unitary(cirq.ops.pauli_gates.X),
+                                  cirq.protocols.unitary(cirq.ops.pauli_gates.Y),
                                   cirq.protocols.unitary(cirq.ops.pauli_gates.Z)], repeat=2):
 
             tuple_2q += ((self._p, np.kron(*op_tup)),)
@@ -657,9 +723,124 @@ class TwoQubitDepolarizingChannel(cirq.ops.gate_features.TwoQubitGate):
     #     return protocols.obj_to_dict_helper(self, ['p'])
 
 
+class SingleQubitPauliChannel(cirq.SingleQubitGate):
+    def __init__(self, p_x: float, p_y: float, p_z: float) -> None:
+        self._p_i = 1 - p_x - p_y - p_z
+        self._p_x = p_x
+        self._p_y = p_y
+        self._p_z = p_z
+
+    def _mixture_(self) -> Sequence[Tuple[float, np.ndarray]]:
+        result = ((self._p_i, cirq.unitary(cirq.I)),
+                  (self._p_x, cirq.unitary(cirq.X)),
+                  (self._p_y, cirq.unitary(cirq.Y)),
+                  (self._p_z, cirq.unitary(cirq.Z)))
+        return result
+
+    @staticmethod
+    def _has_mixture_() -> bool:
+        return True
+
+    def __repr__(self) -> str:
+        return f'cirq.single_qubit_asymmetry_depolarize(p_x={self._p_x}, p_y={self._p_y}, p_z={self._p_z})'
+
+    def __str__(self) -> str:
+        return f'single_qubit_asymmetry_depolarize(p_x={self._p_x}, p_y={self._p_y}, p_z={self._p_z})'
+
+    def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs' ) -> 'cirq.CircuitDiagramInfo':
+        return cirq.protocols.CircuitDiagramInfo(wire_symbols=('D({:.3f})'.format(self._p_i), 'D({:.3f})'.format(self._p_i)))
+
+
+class TwoQubitPauliChannel(cirq.TwoQubitGate):
+    def __init__(self, p_x: float, p_y: float, p_z: float) -> None:
+        self._p_i = 1 - p_x - p_y - p_z
+        self._p_x = p_x
+        self._p_y = p_y
+        self._p_z = p_z
+
+    def _single_mixture_(self) -> Sequence[Tuple[float, np.ndarray]]:
+        result = ((self._p_i, cirq.unitary(cirq.I)),
+                  (self._p_x, cirq.unitary(cirq.X)),
+                  (self._p_y, cirq.unitary(cirq.Y)),
+                  (self._p_z, cirq.unitary(cirq.Z)))
+        return result
+
+    def _mixture_(self) -> Sequence[Tuple[float, np.ndarray]]:
+        result = ()
+        for p_A, matrix_A in self._single_mixture_():
+            for p_B, matrix_B in self._single_mixture_():
+                result += ((p_A * p_B, np.kron(matrix_A, matrix_B)),)
+        return result
+
+    @staticmethod
+    def _has_mixture_() -> bool:
+        return True
+
+    def __repr__(self) -> str:
+        return f'cirq.two_qubit_asymmetry_depolarize(p_x={self._p_x}, p_y={self._p_y}, p_z={self._p_z})'
+
+    def __str__(self) -> str:
+        return f'two_qubit_asymmetry_depolarize(p_x={self._p_x}, p_y={self._p_y}, p_z={self._p_z})'
+
+    def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs' ) -> 'cirq.CircuitDiagramInfo':
+        return cirq.protocols.CircuitDiagramInfo(wire_symbols=('D({:.3f})'.format(self._p_i), 'D({:.3f})'.format(self._p_i)))
+
+
+class SingleQubitLeakageChannel(cirq.SingleQubitGate):
+    def __init__(self, p: float) -> None:
+        self._p = p
+
+    def _mixture_(self) -> Sequence[Tuple[float, np.ndarray]]:
+        result = ((1, np.array([[1, 0], [0, 0]])),
+                  (np.sqrt(1 - self._p), np.array([[0, 0], [0, 1]])))
+        return result
+
+    @staticmethod
+    def _has_mixture_() -> bool:
+        return True
+
+    def __repr__(self) -> str:
+        return f'cirq.single_qubit_leakage(p={self._p})'
+
+    def __str__(self) -> str:
+        return f'single_qubit_leakage(p={self._p})'
+
+    def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs' ) -> 'cirq.CircuitDiagramInfo':
+        return cirq.protocols.CircuitDiagramInfo(wire_symbols=('L({:.3f})'.format(self._p), 'L({:.3f})'.format(self._p)))
+
+
+class TwoQubitLeakageChannel(cirq.TwoQubitGate):
+    def __init__(self, p: float) -> None:
+        self._p = p
+
+    def _single_mixture_(self) -> Sequence[Tuple[float, np.ndarray]]:
+        result = ((1, np.array([[1, 0], [0, 0]])),
+                  (np.sqrt(1 - self._p), np.array([[0, 0], [0, 1]])))
+        return result
+
+    def _mixture_(self) -> Sequence[Tuple[float, np.ndarray]]:
+        result = ()
+        for p_A, matrix_A in self._single_mixture_():
+            for p_B, matrix_B in self._single_mixture_():
+                result += ((p_A * p_B, np.kron(matrix_A, matrix_B)),)
+        return result
+
+    @staticmethod
+    def _has_mixture_() -> bool:
+        return True
+
+    def __repr__(self) -> str:
+        return f'cirq.two_qubit_leakage(p={self._p})'
+
+    def __str__(self) -> str:
+        return f'two_qubit_leakage(p={self._p})'
+
+    def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs' ) -> 'cirq.CircuitDiagramInfo':
+        return cirq.protocols.CircuitDiagramInfo(wire_symbols=('L({:.3f})'.format(self._p), 'L({:.3f})'.format(self._p)))
+
+
 if __name__ == '__main__':
     import time
-    import matplotlib.pyplot as plt
     from QP_QEM_lib import o_tilde_1q, basis_ops, apply_to_qubit, swap_circuit, noise_model
     from src.circuit_noise_extension import Noisify
     dummy_qubits = cirq.LineQubit.range(2)
@@ -669,8 +850,8 @@ if __name__ == '__main__':
     circuit_01 = cirq.Circuit()
     circuit_02 = cirq.Circuit()
     n_gate = noise_model(dim=2, error_type='depolarize', error=prob)
-    channel_1q = [cirq.depolarize(p=prob)]
-    channel_2q = [TwoQubitDepolarizingChannel(p=prob)]
+    channel_1q = [SingleQubitPauliChannel(p_x=1e-4, p_y=1e-4, p_z=6e-4), SingleQubitLeakageChannel(p=8e-4)]
+    channel_2q = [TwoQubitPauliChannel(p_x=1e-4, p_y=1e-4, p_z=6e-4), TwoQubitLeakageChannel(p=8e-4)]  # [TwoQubitDepolarizingChannel(p=prob)]
     n_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'depolarize (p={prob}')
 
     circuit_01.append(n_gate.on(*dummy_qubits))
@@ -722,11 +903,11 @@ if __name__ == '__main__':
         # Settings
         n = 2
         noise_name = 'depolar'
-        noise_probability = [0, 1e-2]
-        noise_identifier_count = 100
-        circuit_measurement_repetitions = 1000
+        noise_probability = [0, 1e-3]
+        noise_identifier_count = 10000
+        circuit_measurement_repetitions = 1
         using_error_mitigation = [False, True]
-        using_density_representation = True
+        using_density_representation = False
         n_bins = 100
         fig, axs = plt.subplots(2, 2, tight_layout=True)
         # Construct circuit
@@ -738,13 +919,13 @@ if __name__ == '__main__':
         mu_ideal = None
         for i, prob in enumerate(noise_probability):
             for j, error in enumerate(using_error_mitigation):
-                # if i + j != 2:  # Temp
+                # if i + j == 1:  # Temp
                 #     continue
 
                 # Construct noise wrapper
-                channel_1q = [cirq.depolarize(p=prob)]
-                channel_2q = [TwoQubitDepolarizingChannel(p=prob)]
-                noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'depolarize (p={prob})')
+                channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6*prob), SingleQubitLeakageChannel(p=8*prob)]  # [cirq.depolarize(p=prob)]
+                channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6*prob), TwoQubitLeakageChannel(p=8*prob)]  # [TwoQubitDepolarizingChannel(p=prob)]
+                noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'asymmetric depolarization (p={prob})')
                 # Error Mitigation Manager
                 manager = IErrorMitigationManager(clean_circuit=circuit, noise_model=noise_model)
                 # Calculate measurement values
@@ -755,7 +936,7 @@ if __name__ == '__main__':
                     mu_ideal = mu
 
                 # Plotting
-                plot_title = f'{circuit_name} measurement histogram.\n(Info: {noise_name}, p={prob}, error mitigation={error}, reps={circuit_measurement_repetitions})'
+                plot_title = f'{circuit_name} measurement histogram.\n(Info: {noise_name}, p={16 * prob}, error mitigation={error}, reps={circuit_measurement_repetitions})'
                 axs[i][j].title.set_text(plot_title)
                 axs[i][j].set_xlabel(f'(unique circuit) measurement ratio [-1, +1]')  # X axis label
                 axs[i][j].set_xlim([-1, 1])  # X axis limit
