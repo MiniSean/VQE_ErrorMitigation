@@ -65,6 +65,10 @@ class INoiseModel:
 
         return gate
 
+    @staticmethod
+    def empty() -> 'INoiseModel':
+        return INoiseModel(noise_gates_1q=[], noise_gates_2q=[], description='(p=0)')
+
 
 class INoiseWrapper(IWaveFunction, cirq.NoiseModel):
 
