@@ -397,17 +397,27 @@ class IErrorMitigationManager:
         self._density_representation = density_representation
         self._meas_reps = meas_reps
 
-        # Function for multiprocessing
-        with Pool(MAX_MULTI_PROCESSING_COUNT) as p:
-            multi_processing_output = p.map(self.process_circuit, tqdm(self._dict_identifiers.items(), desc='Processing identifier circuits'))
+        # Determine if it is advantageous to use multiprocessing
+        item_count = len(self._dict_identifiers)
+        process_iterator = tqdm(self._dict_identifiers.items(), desc='Processing identifier circuits')
+        processing_output = list()
+        if item_count < MAX_MULTI_PROCESSING_COUNT:
+            # Use normal iteration
+            for item in process_iterator:
+                processing_output.append(self.process_circuit(item))
+        else:
+            # Use multiprocessing
+            # Function for multiprocessing
+            with Pool(MAX_MULTI_PROCESSING_COUNT) as p:
+                processing_output = p.map(self.process_circuit, process_iterator)
 
-        def flatten(l: List[List[Any]]) -> List[Any]:
-            return [item for sublist in l for item in sublist]
-        raw_measurement_results = flatten(multi_processing_output)
+        def flatten(l: List[List[Any]]) -> np.ndarray:
+            return np.array([item for sublist in l for item in sublist])
+        raw_measurement_results = flatten(processing_output)  # Flatten output
 
         weight_list = next(iter(self._dict_identifiers)).identifiers_weight if error_mitigation else [1]  # All identifier weights are equal
         weighted_effective_mean = np.prod(weight_list) * np.mean(raw_measurement_results)
-        return raw_measurement_results, weighted_effective_mean
+        return np.prod(weight_list) * raw_measurement_results, weighted_effective_mean
 
     # Temp
     def get_identifiers(self) -> Iterator[List[int]]:
