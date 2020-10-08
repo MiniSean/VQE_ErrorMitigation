@@ -536,7 +536,7 @@ def reconstruct_from_basis(quasi_probabilities: List[float], basis_set: List[np.
     return sum(i[0] * i[1] for i in zip(quasi_probabilities, basis_set))  # Dot product of lists
 
 
-def simulate_error_mitigation(clean_circuit: cirq.Circuit, noise_model: INoiseModel, process_circuit_count: int, density_representation: bool, hamiltonian_objective: Optional[np.ndarray] = None):
+def simulate_error_mitigation(clean_circuit: cirq.Circuit, noise_model: INoiseModel, process_circuit_count: int, density_representation: bool, desc: str, hamiltonian_objective: Optional[np.ndarray] = None) -> Tuple[float, float, float]:
     """
     Simulates error mitigation on noise infected circuit.
     The four subplots consists of:
@@ -560,14 +560,17 @@ def simulate_error_mitigation(clean_circuit: cirq.Circuit, noise_model: INoiseMo
     fig, axs = plt.subplots(2, 2, tight_layout=True)
     # Construct circuit
     circuit = clean_circuit
-    circuit_name = f'Circuit using {"density matrix" if using_density_representation else "measurements"}'
+    circuit_name = f'{desc} using {"density matrix" if using_density_representation else "measurements"}'
     fig.suptitle(f'{circuit_name} (#mitigation circuits={noise_identifier_count})', fontsize=16)
 
     mu_ideal = None
+    mu_noisy = None
+    mu_effective = None
+
     for i, prob in enumerate(noise_probability):
         for j, error in enumerate(using_error_mitigation):
             # Toggle noise
-            _noise_model = noise_model if prob else INoiseModel(noise_gates_1q=[], noise_gates_2q=[], description=noise_model.get_description())
+            _noise_model = noise_model if prob else INoiseModel.empty()
             # Error Mitigation Manager
             manager = IErrorMitigationManager(clean_circuit=circuit, noise_model=_noise_model, hamiltonian_objective=hamiltonian_objective)
             # Calculate measurement values
@@ -578,19 +581,27 @@ def simulate_error_mitigation(clean_circuit: cirq.Circuit, noise_model: INoiseMo
             # Store ideal
             if i == j == 0:
                 mu_ideal = mu
+            # Store effective
+            if i == 1 and j == 0:
+                mu_noisy = mu
+            # Store effective
+            if i == j == 1:
+                mu_effective = mu
 
             # Plotting
-            plot_title = f'measurement histogram.\n(Info: {_noise_model.get_description()}, error mitigation={error}, reps={circuit_measurement_repetitions})'
+            show_meas_reps = '' if using_density_representation else f', reps={circuit_measurement_repetitions}'
+            plot_title = f'measurement histogram.\n(Info: {_noise_model.get_description()}, error mitigation={error}{show_meas_reps})'
             axs[i][j].title.set_text(plot_title)
-            x_lim = [int(mu_ideal - 1), int(mu_ideal + 1)]
-            axs[i][j].set_xlabel(f'measurement ratio [{x_lim[0]}, {x_lim[1]}]')  # X axis label
+            x_lim = [int(mu_ideal - 1), int(mu_ideal + 1)] if hamiltonian_objective is not None else [-1, 1]
+            axs[i][j].set_xlabel(f'relative measurement [{x_lim[0]}, {x_lim[1]}]')  # X axis label
             axs[i][j].set_xlim(x_lim)  # X axis limit
             axs[i][j].set_ylabel(f'Bin count')  # Y axis label
             axs[i][j].hist(meas_values, bins=n_bins)
             if i != 0:
                 axs[i][j].axvline(x=mu, linewidth=1, color='r', label=r'C E[$\mu_{eff}$] = ' + f'{np.round(mu, 5)}\n' + r'|$\epsilon$| = ' + f'{np.round(abs(mu - mu_ideal), 5)}')
-                axs[i][j].axvline(x=mu_ideal, linewidth=1, color='g', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
-                axs[i][j].legend()
+            axs[i][j].axvline(x=mu_ideal, linewidth=1, color='g', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
+            axs[i][j].legend()
+    return mu_ideal, mu_noisy, mu_effective
 
 
 # Deprecated
@@ -856,7 +867,7 @@ if __name__ == '__main__':
     dummy_qubits = cirq.LineQubit.range(2)
 
     # Example circuit
-    prob = 1e-2
+    prob = 1e-4
     circuit_01 = cirq.Circuit()
     circuit_02 = cirq.Circuit()
     n_gate = noise_model(dim=2, error_type='depolarize', error=prob)
@@ -874,89 +885,18 @@ if __name__ == '__main__':
 
     # --------------------------
 
-    def plot_single():
-        # Settings
-        n = 2
-        circuit_name = 'Swap-circuit'
-        noise_name = 'depolar'
-        noise_probability = 1e-2
-        noise_identifier_count = 50
-        circuit_measurement_repetitions = 1000
-        using_error_mitigation = True
-        using_density_representation = True
-        plot_title = f'{circuit_name} measurement histogram.\n(Info: {noise_name}, p={noise_probability}, error mitigation={using_error_mitigation}, reps={circuit_measurement_repetitions})'
+    # Settings
+    prob = 1e-4
+    n = 2
+    # Construct circuit
+    circuit = swap_circuit(n, cirq.LineQubit.range(2 * n + 1), True)
+    # Construct noise wrapper
+    channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]  # , SingleQubitLeakageChannel(p=8 * prob)]
+    channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]  # , TwoQubitLeakageChannel(p=8 * prob)]
+    noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q,
+                              description=f'asymmetric depolarization (p={prob})')
 
-        # Construct circuit and noise wrapper
-        circuit = swap_circuit(n, cirq.LineQubit.range(2 * n + 1), True)
-        channel_1q = [cirq.depolarize(p=noise_probability)]
-        channel_2q = [TwoQubitDepolarizingChannel(p=noise_probability)]
-        n_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'depolarize (p={noise_probability})')
-        print(f'Circuit used:')
-        print(circuit)
-
-        # Error Mitigation Manager
-        manager = IErrorMitigationManager(clean_circuit=circuit, noise_model=n_model)
-        manager.set_identifier_range(noise_identifier_count)
-        print(f'Start calculating raw mu from circuit identifiers_id')
-        mu_values, mu = manager.get_mu_effective(error_mitigation=using_error_mitigation, density_representation=using_density_representation, meas_reps=circuit_measurement_repetitions)
-        # Plotting for the lol
-        n_bins = 100
-        fig, ax = plt.subplots(1, 1, tight_layout=True)
-        ax.title.set_text(plot_title)
-        ax.set_xlabel(f'{circuit_name} measurement outcome (avg: {mu})')  # X axis label
-        ax.set_xlim([-1, 1])  # X axis limit
-        ax.set_ylabel(f'Bin count')  # Y axis label
-        # We can set the number of bins with the `bins` kwarg
-        ax.hist(mu_values, bins=n_bins)
-
-    def plot_shihonage():
-        # Settings
-        n = 2
-        noise_name = 'depolar'
-        noise_probability = [0, 1e-3]
-        noise_identifier_count = 10000
-        circuit_measurement_repetitions = 1
-        using_error_mitigation = [False, True]
-        using_density_representation = False
-        n_bins = 100
-        fig, axs = plt.subplots(2, 2, tight_layout=True)
-        # Construct circuit
-        circuit = swap_circuit(n, cirq.LineQubit.range(2 * n + 1), True)
-        circuit_name = f'Swap-circuit using {"density matrix" if using_density_representation else "measurements"}'
-        fig.suptitle(f'{circuit_name} (#register qubits={n}, #mitigation circuits={noise_identifier_count})', fontsize=16)
-        print(circuit)
-
-        mu_ideal = None
-        for i, prob in enumerate(noise_probability):
-            for j, error in enumerate(using_error_mitigation):
-                # if i + j == 1:  # Temp
-                #     continue
-
-                # Construct noise wrapper
-                channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6*prob), SingleQubitLeakageChannel(p=8*prob)]  # [cirq.depolarize(p=prob)]
-                channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6*prob), TwoQubitLeakageChannel(p=8*prob)]  # [TwoQubitDepolarizingChannel(p=prob)]
-                noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'asymmetric depolarization (p={prob})')
-                # Error Mitigation Manager
-                manager = IErrorMitigationManager(clean_circuit=circuit, noise_model=noise_model)
-                # Calculate measurement values
-                manager.set_identifier_range(noise_identifier_count)
-                meas_values, mu = manager.get_mu_effective(error_mitigation=error, density_representation=using_density_representation, meas_reps=circuit_measurement_repetitions)
-                # Store ideal
-                if i == j == 0:
-                    mu_ideal = mu
-
-                # Plotting
-                plot_title = f'{circuit_name} measurement histogram.\n(Info: {noise_name}, p={16 * prob}, error mitigation={error}, reps={circuit_measurement_repetitions})'
-                axs[i][j].title.set_text(plot_title)
-                axs[i][j].set_xlabel(f'(unique circuit) measurement ratio [-1, +1]')  # X axis label
-                axs[i][j].set_xlim([-1, 1])  # X axis limit
-                axs[i][j].set_ylabel(f'Bin count')  # Y axis label
-                axs[i][j].hist(meas_values,  bins=n_bins)
-                if i != 0:
-                    axs[i][j].axvline(x=mu, linewidth=1, color='r', label=r'C E[$\mu_{eff}$] = ' + f'{np.round(mu, 5)}\n' + r'|$\epsilon$| = ' + f'{np.round(abs(mu - mu_ideal), 5)}')
-                    axs[i][j].axvline(x=mu_ideal, linewidth=1, color='g', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
-                    axs[i][j].legend()
-
-    plot_shihonage()
-
+    # Plot error mitigation
+    mu_ideal, mu_noisy, mu_effective = simulate_error_mitigation(clean_circuit=circuit, noise_model=noise_model, process_circuit_count=1000, density_representation=True, desc='Swap-Circuit')
+    print(f'Operator expectation value (noisy): {mu_noisy}\nOperator expectation value (mitigated): {mu_effective}\nFinal difference error: {abs(mu_ideal - mu_effective)}')
     plt.show()

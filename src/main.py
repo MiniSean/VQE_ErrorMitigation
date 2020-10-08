@@ -79,7 +79,16 @@ if __name__ == '__main__':
     # Get Hamiltonian objective
     qubit_operator = QPU.get_hamiltonian_evaluation_operator(uccsd_ansatz)
     objective = openfermioncirq.HamiltonianObjective(qubit_operator)
-    H_operator = objective._hamiltonian_linear_op  # Observable
+    H_observable = objective._hamiltonian_linear_op  # Observable
+
+    # --------------------------
+
+    # # Plot error mitigation
+    # mu_ideal, mu_noisy, mu_effective = simulate_error_mitigation(clean_circuit=resolved_circuit, noise_model=noise_model, process_circuit_count=10000, density_representation=True, desc='Hydrogen Ansatz Circuit', hamiltonian_objective=H_observable)
+    # print(f'Operator expectation value (noisy): {mu_noisy}\nOperator expectation value (mitigated): {mu_effective}\nFinal difference error: {abs(mu_ideal - mu_effective)}')
+    # plt.show()
+
+    # --------------------------
 
     # Plot error mitigation
     simulate_error_mitigation(clean_circuit=resolved_circuit, noise_model=noise_model, process_circuit_count=10000, density_representation=True, hamiltonian_objective=H_operator)
