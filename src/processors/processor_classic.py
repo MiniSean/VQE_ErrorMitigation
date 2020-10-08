@@ -10,6 +10,7 @@ from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
 from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseWrapper
 from src.data_containers.helper_interfaces.i_parameter import IParameter
 from src.data_containers.helper_interfaces.i_collection import IContainer, IMeasurementCollection
+from src.error_mitigation import *
 
 
 class CPU:
@@ -84,3 +85,12 @@ class CPU:
         options = {'maxiter': max_iter}
         optimize_result = optimize.minimize(fun=optimize_func, x0=initial_values, method=method, options=options, tol=1e-4)
         return optimize_result.fun, optimize_result.x
+
+    @staticmethod
+    def get_mitigated_expectation(clean_circuit: cirq.Circuit, noise_model: INoiseModel, process_circuit_count: int, hamiltonian_objective: Optional[np.ndarray] = None) -> float:
+        # Setup mitigation manager
+        manager = IErrorMitigationManager(clean_circuit=clean_circuit, noise_model=noise_model, hamiltonian_objective=hamiltonian_objective)
+        manager.set_identifier_range(process_circuit_count)
+        # Calculate measurement values
+        meas_values, mu = manager.get_mu_effective(error_mitigation=True, density_representation=True, meas_reps=1)
+        return mu

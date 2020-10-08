@@ -5,6 +5,7 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import DensityMatrix
 from qiskit.visualization import plot_state_city, circuit_drawer, plot_state_hinton
 import cirq
+import openfermioncirq
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import Figure, Subplot
 from typing import List, Tuple, Union
@@ -14,6 +15,8 @@ from src.circuit_noise_extension import Noisify
 from src.data_containers.model_hydrogen import HydrogenAnsatz
 from src.processors.processor_quantum import QPU
 from src.processors.processor_classic import CPU
+from src.error_mitigation import SingleQubitPauliChannel, TwoQubitPauliChannel
+from src.main import get_log_experiment
 
 
 def get_density_matrix_plot(density_matrix: np.ndarray, title: str, **kwargs):
@@ -287,6 +290,7 @@ def hydrogen_model_transition_state():
     setup_before_after_density_plot(density_matrix=matrix_before, noise_matrix=matrix_after, circuit=None,
                                     title=f'Hydrogen Model (r = 0.7414) density state before and after evolution')
 
+
 def gst_hadamard_ideal():
     effective_unitary = np.array([[1, 0], [0, 0]])
     effective_unitary = cirq.unitary(cirq.H) @ (effective_unitary @ cirq.unitary(cirq.H).conj().transpose())  # rho under Hadamard
@@ -321,6 +325,63 @@ def gst_identity_ideal():
     print(qp)
 
 
+def sampling_noise_scaling():
+    """
+    Experiment: Sampling noise scaling.
+    :return:
+    """
+    # Plotting parameters
+
+    # Data
+    ansatz = HydrogenAnsatz()
+    parameters = ansatz.operator_parameters
+    p = 1e-4
+
+    # Construct noise model
+    channel_1q = [SingleQubitPauliChannel(p_x=p, p_y=p, p_z=6 * p)]
+    channel_2q = [TwoQubitPauliChannel(p_x=p, p_y=p, p_z=6 * p)]
+    noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q,
+                              description=f'asymmetric depolarization (p_tot={16 * p})')
+    noisy_ansatz = INoiseWrapper(ansatz, noise_model)
+
+    # Construct circuit
+    circuit = noisy_ansatz.get_clean_circuit()
+    # Get variational study
+    result = CPU.get_optimized_state(w=ansatz, max_iter=1000)
+    parameters.update(r=result)
+    resolved_circuit = QPU.get_resolved_circuit(circuit, parameters)
+
+    # Get Hamiltonian objective
+    qubit_operator = QPU.get_hamiltonian_evaluation_operator(ansatz)
+    objective = openfermioncirq.HamiltonianObjective(qubit_operator)
+    H_observable = objective._hamiltonian_linear_op  # Observable
+
+    def experiment_func(process_circuit_count: int) -> float:
+        return CPU.get_mitigated_expectation(clean_circuit=resolved_circuit, noise_model=noise_model,
+                                             process_circuit_count=process_circuit_count,
+                                             hamiltonian_objective=H_observable)
+
+    shot_list = [int(shot) for shot in np.logspace(1, 4, 10)]
+    experiments = get_log_experiment(shot_list=shot_list, expectation=result.optimal_value, experiment=experiment_func, reps=10)
+    # Values
+    y = np.array(list(experiments.values()))
+    x = np.log10(np.array(shot_list))
+    # Fit
+    try:
+        curve_fit = np.polyfit(x, y, 1)
+        y_data = curve_fit[0] * x + curve_fit[1]
+        plt.plot(x, y_data, '--', label='Linear fit log(y) = {}log(x) + {}'.format(curve_fit[0].round(4), curve_fit[1].round(4)))
+    except np.linalg.LinAlgError:
+        pass
+
+    plt.plot(x, np.array(list(experiments.values())), 'o', label='Average error')
+    plt.title('H2 ansatz circuit with asymmetric depolarizing noise and error mitigation')
+    plt.xlabel('log10(sampling circuit count)')
+    plt.ylabel('Error in H2 ground state estimation')
+
+    plt.legend(frameon=False)
+
+
 def testing():
     """Show variety of tests"""
     # single_qubit_identity_circuit()
@@ -336,7 +397,8 @@ def testing():
     # hydrogen_model_transition_state()
 
     # gst_hadamard_ideal()
-    gst_identity_ideal()
+    # gst_identity_ideal()
+    sampling_noise_scaling()
 
 
 if __name__ == '__main__':

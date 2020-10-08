@@ -1,4 +1,6 @@
 import cirq
+import numpy as np
+from typing import Callable, Dict
 
 from src.data_containers.model_hydrogen import HydrogenAnsatz
 from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseWrapper, INoiseModel
@@ -48,6 +50,18 @@ def custom_ansatz():
     print(resolved_circuit)
 
 
+def get_log_experiment(shot_list: [int], expectation: float, experiment: Callable[[int], float], reps: int = 1) -> Dict[int, float]:
+    """Returns information about the experiment error at logarithmically spaced iterations"""
+    result_dict = {}
+    for shots in shot_list:
+        aux = []
+        for _ in range(reps):
+            mu = experiment(shots)
+            aux.append(np.abs(mu - expectation))
+        result_dict.update({shots: np.average(aux)})
+    return result_dict
+
+
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import openfermioncirq
@@ -90,6 +104,10 @@ if __name__ == '__main__':
 
     # --------------------------
 
-    # Plot error mitigation
-    simulate_error_mitigation(clean_circuit=resolved_circuit, noise_model=noise_model, process_circuit_count=10000, density_representation=True, hamiltonian_objective=H_operator)
-    plt.show()
+    mu_ideal = CPU.get_mitigated_expectation(clean_circuit=resolved_circuit, noise_model=INoiseModel.empty(), process_circuit_count=1, hamiltonian_objective=H_observable)
+
+    def experiment_func(process_circuit_count: int) -> float:
+        return CPU.get_mitigated_expectation(clean_circuit=resolved_circuit, noise_model=noise_model, process_circuit_count=process_circuit_count, hamiltonian_objective=H_observable)
+    shot_list = [int(shot) for shot in np.logspace(1, 3, 3)]
+    data = get_log_experiment(shot_list=shot_list, expectation=mu_ideal, experiment=experiment_func)
+    print(data)
