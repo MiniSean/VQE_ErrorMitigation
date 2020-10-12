@@ -23,7 +23,6 @@ class QPU:
     def get_simulated_noisy_expectation_value(w: IWaveFunction, r_c: cirq.circuits.circuit, r: cirq.study.resolver) -> float:
         simulator = cirq.DensityMatrixSimulator(ignore_measurement_results=False)  # Mixed state simulator
         simulated_result = simulator.simulate(program=r_c, param_resolver=r)  # Include final density matrix
-        print('The wavefunction of the resolved circuit is: ', simulated_result.dirac_notation())
 
         qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
         objective = openfermioncirq.HamiltonianObjective(qubit_operator)

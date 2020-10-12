@@ -2,11 +2,24 @@ import cirq
 import numpy as np
 import openfermion as of
 from random import uniform
-from typing import List, Callable
+from typing import List, Callable, Tuple
 
 
 # Allows the modification of QubitOperator lists by introducing arbitrary or white noise-channels
 class Noisify:
+
+    @staticmethod
+    def wrap_noise_type(op_tree: cirq.OP_TREE, noise_wrapper: Callable[[Tuple[cirq.Qid]], List[cirq.Operation]]) -> cirq.OP_TREE:
+        result = []
+        for op_list in op_tree:
+            for gate_op in op_list:
+                new_gate_list = [gate_op]
+                for noise_op in noise_wrapper(*gate_op.qubits):
+                    new_gate_list.append(noise_op)
+                # Append to new moment
+                result.append(new_gate_list)
+        result = [val for sublist in result for val in sublist]  # Flatten list of list of cirq.Moments
+        return result
 
     @staticmethod
     def introduce_noise_type(op_tree: cirq.OP_TREE, noise_func: Callable[[], List[cirq.Gate]]) -> cirq.OP_TREE:

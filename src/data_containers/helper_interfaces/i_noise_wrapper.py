@@ -77,10 +77,10 @@ class INoiseWrapper(IWaveFunction, cirq.NoiseModel):
         return self._ideal_wave_function._generate_qubits()
 
     def operations(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
-        yield Noisify.introduce_noise_type(self._ideal_wave_function.operations(qubits=qubits), self._noise_channel)
+        yield Noisify.wrap_noise_type(self._ideal_wave_function.operations(qubits=qubits), self._noise_channel)
 
     def initial_state(self, qubits: Sequence[cirq.Qid]) -> cirq.OP_TREE:
-        yield Noisify.introduce_noise_type(self._ideal_wave_function.initial_state(qubits=qubits), self._noise_channel)
+        yield Noisify.wrap_noise_type(self._ideal_wave_function.initial_state(qubits=qubits), self._noise_channel)
 
     def _generate_molecule(self, p: IParameter) -> of.MolecularData:
         return self._ideal_wave_function._generate_molecule(p=p)
@@ -93,15 +93,15 @@ class INoiseWrapper(IWaveFunction, cirq.NoiseModel):
         :param noise_channel: List of cirq noise channel(s)
         """
         self._ideal_wave_function = w_class
-        self._noise_channel = noise_channel.get_callable()  # Callable[[], List[cirq.Gate]]
+        self._noise_channel = noise_channel.get_operators  # Callable[[List[cirq.Qid]], List[cirq.Operation]]
         IWaveFunction.__init__(self, w_class.operator_parameters, w_class.molecule_parameters)
         cirq.NoiseModel.__init__(self)
 
     # cirq.NoiseModel
     def noisy_operation(self, op):
         result = [op]
-        for gates in self._noise_channel():
-            result.append(gates.on(op.qubits[0]))
+        for gates in self._noise_channel(op.qubits):
+            result.append(gates)
         return result
 
     # quick access
