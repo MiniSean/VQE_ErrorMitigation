@@ -17,6 +17,11 @@ class QPU:
         objective = openfermioncirq.HamiltonianObjective(qubit_operator)
         return objective.value(t_r.measurements['x'])
 
+    @staticmethod
+    def get_hamiltonian_objective_operator(w: IWaveFunction) -> np.ndarray:
+        qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
+        return openfermioncirq.HamiltonianObjective(qubit_operator)._hamiltonian_linear_op
+
     # How to calculate an Expected Value of some operator acting on qubits?
     # https://quantumcomputing.stackexchange.com/questions/6940/how-to-calculate-an-expected-value-of-some-operator-acting-on-qubits
     @staticmethod
