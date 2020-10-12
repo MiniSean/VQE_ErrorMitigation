@@ -1,8 +1,8 @@
 import cirq
 import numpy as np
-from typing import Callable, Dict
+from typing import Callable, Dict, List, Tuple
 
-from src.data_containers.model_hydrogen import HydrogenAnsatz
+from src.data_containers.model_hydrogen import HydrogenAnsatz, hydrogen_observable_measurement
 from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseWrapper, INoiseModel
 from src.error_mitigation import SingleQubitPauliChannel, TwoQubitPauliChannel, simulate_error_mitigation
 from src.processors.processor_quantum import QPU
@@ -65,6 +65,9 @@ def get_log_experiment(shot_list: [int], expectation: float, experiment: Callabl
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import openfermioncirq
+    import openfermion
+    import itertools
+    from src.data_containers.helper_interfaces.i_wave_function import IGeneralizedUCCSD
     uccsd_ansatz = HydrogenAnsatz()
     parameters = uccsd_ansatz.operator_parameters
 
@@ -104,10 +107,16 @@ if __name__ == '__main__':
 
     # --------------------------
 
-    mu_ideal = CPU.get_mitigated_expectation(clean_circuit=resolved_circuit, noise_model=INoiseModel.empty(), process_circuit_count=1, hamiltonian_objective=H_observable)
+    # mu_ideal = CPU.get_mitigated_expectation(clean_circuit=resolved_circuit, noise_model=INoiseModel.empty(), process_circuit_count=1, hamiltonian_objective=H_observable)
+    #
+    # def experiment_func(process_circuit_count: int) -> float:
+    #     return CPU.get_mitigated_expectation(clean_circuit=resolved_circuit, noise_model=noise_model, process_circuit_count=process_circuit_count, hamiltonian_objective=H_observable)
+    # shot_list = [int(shot) for shot in np.logspace(1, 3, 3)]
+    # data = get_log_experiment(shot_list=shot_list, expectation=mu_ideal, experiment=experiment_func)
+    # print(data)
 
-    def experiment_func(process_circuit_count: int) -> float:
-        return CPU.get_mitigated_expectation(clean_circuit=resolved_circuit, noise_model=noise_model, process_circuit_count=process_circuit_count, hamiltonian_objective=H_observable)
-    shot_list = [int(shot) for shot in np.logspace(1, 3, 3)]
-    data = get_log_experiment(shot_list=shot_list, expectation=mu_ideal, experiment=experiment_func)
-    print(data)
+    # --------------------------
+
+    observable_process, circuit_cost = hydrogen_observable_measurement(qubit_operator)
+    measurement = observable_process(resolved_circuit, noise_model.get_operators, uccsd_ansatz.qubits, 10000)
+    print(f'Total measurement value: {measurement}')
