@@ -769,7 +769,7 @@ class SingleQubitPauliChannel(cirq.SingleQubitGate):
         return f'single_qubit_asymmetry_depolarize(p_x={self._p_x}, p_y={self._p_y}, p_z={self._p_z})'
 
     def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs' ) -> 'cirq.CircuitDiagramInfo':
-        return cirq.protocols.CircuitDiagramInfo(wire_symbols=('D({:.3f})'.format(self._p_i), 'D({:.3f})'.format(self._p_i)))
+        return cirq.protocols.CircuitDiagramInfo(wire_symbols=('D({:.3f})'.format(self._p_i),))
 
 
 class TwoQubitPauliChannel(cirq.TwoQubitGate):
@@ -827,7 +827,7 @@ class SingleQubitLeakageChannel(cirq.SingleQubitGate):
         return f'single_qubit_leakage(p={self._p})'
 
     def _circuit_diagram_info_(self, args: 'cirq.CircuitDiagramInfoArgs' ) -> 'cirq.CircuitDiagramInfo':
-        return cirq.protocols.CircuitDiagramInfo(wire_symbols=('L({:.3f})'.format(self._p), 'L({:.3f})'.format(self._p)))
+        return cirq.protocols.CircuitDiagramInfo(wire_symbols=('L({:.3f})'.format(self._p),))
 
 
 class TwoQubitLeakageChannel(cirq.TwoQubitGate):
