@@ -415,7 +415,7 @@ def hamiltonian_density_vs_measure():
         fidelity_list.append(exp_fidelity)
         # Measurement approach
         resolved_circuit = QPU.get_resolved_circuit(circuit, parameters)
-        exp_measure = np.array([observable_process(resolved_circuit, noise_model.get_operators, ansatz.qubits, meas) for i in range(count)])
+        exp_measure = np.array([observable_process(resolved_circuit, noise_model.get_operators, meas) for i in range(count)])
         measure_list.append(exp_measure)
 
     fidelity_n_list = []
@@ -429,7 +429,7 @@ def hamiltonian_density_vs_measure():
         fidelity_n_list.append(exp_fidelity)
         # Measurement approach
         resolved_circuit = QPU.get_resolved_circuit(circuit, parameters)
-        exp_measure = np.array([observable_process(resolved_circuit, noise_model.get_operators, ansatz.qubits, meas) for i in range(count)])
+        exp_measure = np.array([observable_process(resolved_circuit, noise_model.get_operators, meas) for i in range(count)])
         measure_n_list.append(exp_measure)
 
     # Values

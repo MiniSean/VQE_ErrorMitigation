@@ -77,7 +77,7 @@ class IWaveFunction(VariationalAnsatz, IMolecule):
         yield []
 
     @abstractmethod
-    def observable_measurement(self) -> Tuple[Callable[[cirq.Circuit, Callable[[List[cirq.Qid]], List[cirq.Operation]], List[cirq.Qid], int], float], int]:
+    def observable_measurement(self) -> Tuple[Callable[[cirq.Circuit, Callable[[List[cirq.Qid]], List[cirq.Operation]], int], float], int]:
         """
         Prepares an observable measurement function.
         Not yet general but specific for the H2 Hamiltonian objective.

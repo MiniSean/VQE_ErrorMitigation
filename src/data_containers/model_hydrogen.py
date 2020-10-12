@@ -80,7 +80,7 @@ class HydrogenAnsatz(IGeneralizedUCCSD):
         yield [cirq.rx(np.pi).on(qubits[0]),
                cirq.rx(np.pi).on(qubits[1])]
 
-    def observable_measurement(self) -> Tuple[Callable[[cirq.Circuit, Callable[[List[cirq.Qid]], List[cirq.Operation]], List[cirq.Qid], int], float], int]:
+    def observable_measurement(self) -> Tuple[Callable[[cirq.Circuit, Callable[[List[cirq.Qid]], List[cirq.Operation]], int], float], int]:
         """
         Prepares an observable measurement function.
         Not yet general but specific for the H2 Hamiltonian objective.
@@ -89,6 +89,7 @@ class HydrogenAnsatz(IGeneralizedUCCSD):
         """
         # Hamiltonian observable in the form of qubit operators.
         q_op = jordan_wigner(self.molecule.get_molecular_hamiltonian())
+        qubits = self.qubits  # ordered_qubits
         pauli_term_size_lookup = {}
         pauli_weight_lookup = {}
         for term_pauli, term_weight in q_op.terms.items():
@@ -110,7 +111,7 @@ class HydrogenAnsatz(IGeneralizedUCCSD):
             else:
                 return 1 - 2 * probability
 
-        def measure_observable(base_circuit: cirq.Circuit, noise_wrapper: Callable[[List[cirq.Qid]], List[cirq.Operation]], ordered_qubits: List[cirq.Qid], meas_reps: int) -> float:
+        def measure_observable(base_circuit: cirq.Circuit, noise_wrapper: Callable[[List[cirq.Qid]], List[cirq.Operation]], meas_reps: int) -> float:  # , ordered_qubits: List[cirq.Qid]
             """
             Constructs multiple quantum circuits to measure the expectation value of a given observable.
             :param base_circuit: Base circuit to measure (can be noisy)
@@ -121,7 +122,6 @@ class HydrogenAnsatz(IGeneralizedUCCSD):
             """
             result = 0
             basis_map = IGeneralizedUCCSD.pauli_basis_map()  # Consistent qubit mapping
-            qubits = ordered_qubits  # List of circuit qubits
             labels = ['Z' + str(i) for i in range(len(qubits))]  # Computational measurement labels
             simulator = cirq.DensityMatrixSimulator()
             expectation_lookup = QubitOperator(' ', 1.0)  # Base term
