@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Iterable, Sequence, Dict, Callable
+from typing import Iterable, Sequence, Dict, Callable, Tuple, List
 import os
 import cirq
 import sympy
@@ -75,6 +75,16 @@ class IWaveFunction(VariationalAnsatz, IMolecule):
         of the ansatz.
         """
         yield []
+
+    @abstractmethod
+    def observable_measurement(self) -> Tuple[Callable[[cirq.Circuit, Callable[[List[cirq.Qid]], List[cirq.Operation]], List[cirq.Qid], int], float], int]:
+        """
+        Prepares an observable measurement function.
+        Not yet general but specific for the H2 Hamiltonian objective.
+        :return: Measurement function that: (Input) the circuit, ordered qubits and #measurement repetitions,
+        (Output) expectation value. Also returns the circuit cost (number of circuits) required to calculate the expectation value.
+        """
+        raise NotImplemented
 
 
 class IGeneralizedUCCSD(IWaveFunction):

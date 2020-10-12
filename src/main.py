@@ -2,7 +2,7 @@ import cirq
 import numpy as np
 from typing import Callable, Dict, List, Tuple
 
-from src.data_containers.model_hydrogen import HydrogenAnsatz, hydrogen_observable_measurement
+from src.data_containers.model_hydrogen import HydrogenAnsatz
 from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseWrapper, INoiseModel
 from src.error_mitigation import SingleQubitPauliChannel, TwoQubitPauliChannel, simulate_error_mitigation
 from src.processors.processor_quantum import QPU
@@ -117,6 +117,6 @@ if __name__ == '__main__':
 
     # --------------------------
 
-    observable_process, circuit_cost = hydrogen_observable_measurement(qubit_operator)
+    observable_process, circuit_cost = uccsd_ansatz.observable_measurement()
     measurement = observable_process(resolved_circuit, noise_model.get_operators, uccsd_ansatz.qubits, 10000)
     print(f'Total measurement value: {measurement}')

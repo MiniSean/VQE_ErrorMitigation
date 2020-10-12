@@ -13,7 +13,7 @@ from typing import List, Tuple, Union
 from src.error_mitigation import BasisUnitarySet, IBasisGateSingle, reconstruct_from_basis
 from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseModel, INoiseWrapper
 from src.circuit_noise_extension import Noisify
-from src.data_containers.model_hydrogen import HydrogenAnsatz, hydrogen_observable_measurement
+from src.data_containers.model_hydrogen import HydrogenAnsatz
 from src.processors.processor_quantum import QPU
 from src.processors.processor_classic import CPU
 from src.error_mitigation import SingleQubitPauliChannel, TwoQubitPauliChannel
@@ -391,10 +391,8 @@ def hamiltonian_density_vs_measure():
     result = CPU.get_optimized_state(w=ansatz, max_iter=1000)
     parameters = ansatz.operator_parameters
     parameters.update(r=result)
-    # Get Hamiltonian objective
-    qubit_operator = QPU.get_hamiltonian_evaluation_operator(ansatz)
     # Get Measurement function
-    observable_process, circuit_cost = hydrogen_observable_measurement(qubit_operator)
+    observable_process, circuit_cost = ansatz.observable_measurement()
 
     def get_noise_model(_p: float) -> INoiseModel:
         channel_1q = [SingleQubitPauliChannel(p_x=_p, p_y=_p, p_z=6 * _p)]
