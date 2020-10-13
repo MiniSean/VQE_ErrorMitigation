@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm  # For displaying for-loop process to console
 from typing import Tuple, Union, Callable, Iterator, List, Dict, Sequence, Any, Optional
 from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseModel
+from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
+from src.processors.processor_quantum import QPU
 import itertools as it  # Temp
 from multiprocessing import Pool
 
@@ -358,7 +360,7 @@ class IErrorMitigationManager:
         _circuit_to_run = self.get_updated_circuit(clean_circuit=self.circuit,
                                                    noise_wrapper=self._noise_model.get_operators,
                                                    circuit_identifier=_identifier_list,
-                                                   include_measurements=(not self._density_representation))
+                                                   include_measurements=(not self._density_representation and self._wave_function is None))
 
         _simulator = cirq.DensityMatrixSimulator(ignore_measurement_results=False)  # Mixed state simulator
         # Repeat measurement for every occurrence of identical circuit identifier
@@ -374,13 +376,17 @@ class IErrorMitigationManager:
             _trace = (_trace_out * _rho).diagonal().sum()
             _measurement = _trace.real
         else:
-            # Setup simulator
-            _simulated_result = _simulator.run(program=_circuit_to_run, repetitions=(self._meas_reps * _value))  # Include final measurement values
+            if self._wave_function is not None:
+                _func, _cost = self._wave_function.observable_measurement()
+                _measurement = _func(_circuit_to_run, self._noise_model.get_operators, self._meas_reps * _value)
+            else:
+                # Setup simulator
+                _simulated_result = _simulator.run(program=_circuit_to_run, repetitions=(self._meas_reps * _value))  # Include final measurement values
 
-            # Get final measurement value
-            _hist = _simulated_result.histogram(key='M')  # Hist (0: x, 1: meas_reps - x)
-            _measurement = _hist[0] / (self._meas_reps * _value)  # Normalized measurement [0, 1]
-            _measurement = 2 * _measurement - 1  # Rescaled measurement [-1, 1]
+                # Get final measurement value
+                _hist = _simulated_result.histogram(key='M')  # Hist (0: x, 1: meas_reps - x)
+                _measurement = _hist[0] / (self._meas_reps * _value)  # Normalized measurement [0, 1]
+                _measurement = 2 * _measurement - 1  # Rescaled measurement [-1, 1]
 
         return [_sign_weight * _measurement] * _value
 
@@ -424,14 +430,25 @@ class IErrorMitigationManager:
         for id_class in self._dict_identifiers.keys():
             yield id_class.identifiers
 
-    def __init__(self, clean_circuit: cirq.Circuit, noise_model: INoiseModel, hamiltonian_objective: Optional[np.ndarray]):
+    def __init__(self, clean_circuit: cirq.Circuit, noise_model: INoiseModel, hamiltonian_objective: Union[np.ndarray, IWaveFunction, None]):
         # Store properties
         self.circuit = clean_circuit
         self._noise_model = noise_model
         self._gate_lookup = IErrorMitigationManager.get_qp_lookup(clean_circuit, noise_model.get_effective_gate)
         self._dict_identifiers = {}
-        # TEMP
-        self._hamiltonian_objective = hamiltonian_objective
+
+        # For realistic hamiltonian objective calculation
+        self._objective_measure_cost = 1
+        if isinstance(hamiltonian_objective, IWaveFunction):
+            # Collect hamiltonian objective operator direct or through IWaveFunction
+            self._hamiltonian_objective = QPU.get_hamiltonian_objective_operator(hamiltonian_objective)
+            self._wave_function = hamiltonian_objective
+            _func_objective_measure, self._objective_measure_cost = self._wave_function.observable_measurement()
+        else:
+            self._hamiltonian_objective = hamiltonian_objective
+            self._wave_function = None
+
+        # Additional settings
         self._error_mitigation = False
         self._density_representation = True
         self._meas_reps = 1
@@ -439,6 +456,7 @@ class IErrorMitigationManager:
     # Magic function, adds range of 'QuasiCircuitIdentifier' to dictionary of identifiers_id
     def set_identifier_range(self, count: int):
         self._dict_identifiers = {}
+        count = int(count / self._objective_measure_cost)  # Take extra circuits for realistic hamiltonian objective calculation into account
         for i in range(count):
             self.add_circuit_identifier()
 
@@ -536,7 +554,7 @@ def reconstruct_from_basis(quasi_probabilities: List[float], basis_set: List[np.
     return sum(i[0] * i[1] for i in zip(quasi_probabilities, basis_set))  # Dot product of lists
 
 
-def simulate_error_mitigation(clean_circuit: cirq.Circuit, noise_model: INoiseModel, process_circuit_count: int, density_representation: bool, desc: str, hamiltonian_objective: Optional[np.ndarray] = None) -> Tuple[float, float, float]:
+def simulate_error_mitigation(clean_circuit: cirq.Circuit, noise_model: INoiseModel, process_circuit_count: int, desc: str, hamiltonian_objective: Union[np.ndarray, IWaveFunction, None] = None) -> Tuple[float, float, float]:
     """
     Simulates error mitigation on noise infected circuit.
     The four subplots consists of:
@@ -555,7 +573,7 @@ def simulate_error_mitigation(clean_circuit: cirq.Circuit, noise_model: INoiseMo
     noise_identifier_count = process_circuit_count
     circuit_measurement_repetitions = 1
     using_error_mitigation = [False, True]
-    using_density_representation = density_representation if hamiltonian_objective is None else True
+    using_density_representation = not isinstance(hamiltonian_objective, IWaveFunction)
     n_bins = 100
     fig, axs = plt.subplots(2, 2, tight_layout=True)
     # Construct circuit
@@ -576,7 +594,7 @@ def simulate_error_mitigation(clean_circuit: cirq.Circuit, noise_model: INoiseMo
             # Calculate measurement values
             manager.set_identifier_range(noise_identifier_count)
             meas_values, mu = manager.get_mu_effective(error_mitigation=error,
-                                                       density_representation=using_density_representation,
+                                                       density_representation=True if j == 0 else using_density_representation,
                                                        meas_reps=circuit_measurement_repetitions)
             # Store ideal
             if i == j == 0:

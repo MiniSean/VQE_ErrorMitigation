@@ -100,10 +100,10 @@ if __name__ == '__main__':
 
     # --------------------------
 
-    # # Plot error mitigation
-    # mu_ideal, mu_noisy, mu_effective = simulate_error_mitigation(clean_circuit=resolved_circuit, noise_model=noise_model, process_circuit_count=10000, density_representation=True, desc='Hydrogen Ansatz Circuit', hamiltonian_objective=H_observable)
-    # print(f'Operator expectation value (noisy): {mu_noisy}\nOperator expectation value (mitigated): {mu_effective}\nFinal difference error: {abs(mu_ideal - mu_effective)}')
-    # plt.show()
+    # Plot error mitigation
+    mu_ideal, mu_noisy, mu_effective = simulate_error_mitigation(clean_circuit=resolved_circuit, noise_model=noise_model, process_circuit_count=10000, desc='Hydrogen Ansatz Circuit (Realistic expectation calculation)', hamiltonian_objective=uccsd_ansatz)
+    print(f'Operator expectation value (ideal): {mu_ideal}\nOperator expectation value (noisy): {mu_noisy}\nOperator expectation value (mitigated): {mu_effective}\nFinal difference error: {abs(mu_ideal - mu_effective)}')
+    plt.show()
 
     # --------------------------
 
@@ -117,6 +117,9 @@ if __name__ == '__main__':
 
     # --------------------------
 
-    observable_process, circuit_cost = uccsd_ansatz.observable_measurement()
-    measurement = observable_process(resolved_circuit, noise_model.get_operators, uccsd_ansatz.qubits, 10000)
-    print(f'Total measurement value: {measurement}')
+    # observable_process, circuit_cost = uccsd_ansatz.observable_measurement()
+    # measurement = observable_process(resolved_circuit, noise_model.get_operators, 10000)
+    # print(f'Total measurement value: {measurement}')
+    #
+    # mu = CPU.get_mitigated_expectation(clean_circuit=resolved_circuit, noise_model=noise_model, process_circuit_count=1000, hamiltonian_objective=uccsd_ansatz, meas_reps=100)
+    # print(mu)
