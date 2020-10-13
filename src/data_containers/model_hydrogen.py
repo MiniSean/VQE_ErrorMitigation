@@ -116,7 +116,6 @@ class HydrogenAnsatz(IGeneralizedUCCSD):
             Constructs multiple quantum circuits to measure the expectation value of a given observable.
             :param base_circuit: Base circuit to measure (can be noisy)
             :param noise_wrapper: Noise wrapper function that generates single or two qubit noise operations
-            :param ordered_qubits: Ordered qubits (top to bottom) since Hamiltonian requires consistent qubit ordering.
             :param meas_reps: Number of measurement repetitions for each circuit (higher means more accurate) [1, +inf).
             :return: (Approximation of) Hamiltonian observable expectation value.
             """

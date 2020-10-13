@@ -1,7 +1,7 @@
 import cirq
 import numpy as np
 import openfermion as of
-from typing import Sequence, List, Callable, Union
+from typing import Sequence, List, Callable, Union, Tuple
 
 from src.data_containers.helper_interfaces.i_parameter import IParameter
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
@@ -71,6 +71,9 @@ class INoiseModel:
 
 
 class INoiseWrapper(IWaveFunction, cirq.NoiseModel):
+
+    def observable_measurement(self) -> Tuple[Callable[[cirq.Circuit, Callable[[List[cirq.Qid]], List[cirq.Operation]], int], float], int]:
+        return self._ideal_wave_function.observable_measurement()
 
     # Implement abstract functions
     def _generate_qubits(self) -> Sequence[cirq.Qid]:
