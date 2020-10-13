@@ -9,15 +9,17 @@ import cirq
 import openfermioncirq
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import Figure, Subplot
-from typing import List, Tuple, Union
-from src.error_mitigation import BasisUnitarySet, IBasisGateSingle, reconstruct_from_basis
+from typing import List, Tuple, Union, Callable, Dict
+from src.error_mitigation import BasisUnitarySet, IBasisGateSingle, reconstruct_from_basis, MAX_MULTI_PROCESSING_COUNT
 from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseModel, INoiseWrapper
+from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
 from src.circuit_noise_extension import Noisify
 from src.data_containers.model_hydrogen import HydrogenAnsatz
 from src.processors.processor_quantum import QPU
 from src.processors.processor_classic import CPU
 from src.error_mitigation import SingleQubitPauliChannel, TwoQubitPauliChannel
 from src.main import get_log_experiment
+from multiprocessing import Pool
 
 
 def get_density_matrix_plot(density_matrix: np.ndarray, title: str, **kwargs):
@@ -383,6 +385,18 @@ def sampling_noise_scaling():
     plt.legend(frameon=False)
 
 
+class ObservableMeasureClass:
+    def __init__(self, w: IWaveFunction, c: cirq.Circuit, n_op: Callable[[Tuple[cirq.Qid]], List[cirq.Operation]], m: int):
+        self._w = w
+        self._c = c
+        self._n_op = n_op
+        self._m = m
+
+    def exp_measure(self, index: int):
+        func, cost = self._w.observable_measurement()
+        return func(self._c, self._n_op, self._m)
+
+
 def hamiltonian_density_vs_measure():
     """Plots the H2 expectation value at ground state for different noise models"""
     # Hydrogen ansatz
@@ -399,58 +413,78 @@ def hamiltonian_density_vs_measure():
         channel_2q = [TwoQubitPauliChannel(p_x=_p, p_y=_p, p_z=6 * _p)]
         return INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'asymmetric depolarization (p_tot={16 * _p})')
 
-    # p_list = [float(1/shot) for shot in np.logspace(1, 4, 4)]
-    p = 1e-4
+    prob_list = [float(1/shot) for shot in np.logspace(1, 4, 4)]
     meas_reps = [int(shot) for shot in np.logspace(0, 4, 10)]
-    count = 30
+    count = 50
 
+    error_list = np.ndarray(shape=(len(prob_list), len(meas_reps)))
+    error_var_list = np.ndarray(shape=(len(prob_list), len(meas_reps)))
     fidelity_list = []
     measure_list = []
-    for meas in tqdm(meas_reps):
-        noise_model = get_noise_model(_p=0)
+    print(f'Start measuring. For {len(prob_list)} probabilities')
+    for i, prob in enumerate(prob_list):
+        noise_model = get_noise_model(_p=prob)
         noisy_ansatz = INoiseWrapper(ansatz, noise_model)
         circuit = noisy_ansatz.get_noisy_circuit()
         # Density matrix approach
         exp_fidelity = QPU.get_simulated_noisy_expectation_value(w=noisy_ansatz, r_c=circuit, r=parameters.get_resolved())
-        fidelity_list.append(exp_fidelity)
-        # Measurement approach
-        resolved_circuit = QPU.get_resolved_circuit(circuit, parameters)
-        exp_measure = np.array([observable_process(resolved_circuit, noise_model.get_operators, meas) for i in range(count)])
-        measure_list.append(exp_measure)
+        # fidelity_list.append(exp_fidelity)
+        for j, meas in enumerate(tqdm(meas_reps)):
+            # Measurement approach
+            resolved_circuit = QPU.get_resolved_circuit(circuit, parameters)
+            process_measure = ObservableMeasureClass(ansatz, resolved_circuit, noise_model.get_operators, meas)
+            with Pool(MAX_MULTI_PROCESSING_COUNT) as p:
+                exp_measure = p.map(process_measure.exp_measure, range(count))
+            # exp_measure = np.array([observable_process(resolved_circuit, noise_model.get_operators, meas) for i in range(count)])
+            # measure_list.append(exp_measure)
 
-    fidelity_n_list = []
-    measure_n_list = []
-    for meas in tqdm(meas_reps):
-        noise_model = get_noise_model(_p=p)
-        noisy_ansatz = INoiseWrapper(ansatz, noise_model)
-        circuit = noisy_ansatz.get_noisy_circuit()
-        # Density matrix approach
-        exp_fidelity = QPU.get_simulated_noisy_expectation_value(w=noisy_ansatz, r_c=circuit, r=parameters.get_resolved())
-        fidelity_n_list.append(exp_fidelity)
-        # Measurement approach
-        resolved_circuit = QPU.get_resolved_circuit(circuit, parameters)
-        exp_measure = np.array([observable_process(resolved_circuit, noise_model.get_operators, meas) for i in range(count)])
-        measure_n_list.append(exp_measure)
+            error_list[i][j] = abs(exp_fidelity - np.mean(exp_measure))
+            error_var_list[i][j] = abs(np.std(exp_measure))
+    print('Measuring complete')
+
+    # fidelity_n_list = []
+    # measure_n_list = []
+    # for meas in tqdm(meas_reps):
+    #     noise_model = get_noise_model(_p=p)
+    #     noisy_ansatz = INoiseWrapper(ansatz, noise_model)
+    #     circuit = noisy_ansatz.get_noisy_circuit()
+    #     # Density matrix approach
+    #     exp_fidelity = QPU.get_simulated_noisy_expectation_value(w=noisy_ansatz, r_c=circuit, r=parameters.get_resolved())
+    #     fidelity_n_list.append(exp_fidelity)
+    #     # Measurement approach
+    #     resolved_circuit = QPU.get_resolved_circuit(circuit, parameters)
+    #     exp_measure = np.array([observable_process(resolved_circuit, noise_model.get_operators, meas) for i in range(count)])
+    #     measure_n_list.append(exp_measure)
 
     # Values
-    x = np.log10(np.array(meas_reps))
-    y = [np.mean(measure) for measure in measure_list]
-    y_var = [np.std(measure) for measure in measure_list]
-    y_n = [np.mean(measure) for measure in measure_n_list]
-    y_var_n = [np.std(measure) for measure in measure_n_list]
+    # x = np.log10(np.array(meas_reps))
+    # y = [np.mean(measure) for measure in measure_list]
+    # y_var = [np.std(measure) for measure in measure_list]
+    # y_n = [np.mean(measure) for measure in measure_n_list]
+    # y_var_n = [np.std(measure) for measure in measure_n_list]
 
-    min_diff = abs(y[-1] - fidelity_list[-1])
-    min_diff_n = abs(y_n[-1] - fidelity_n_list[-1])
+    # min_diff = abs(y[-1] - fidelity_list[-1])
+    # min_diff_n = abs(y_n[-1] - fidelity_n_list[-1])
 
-    plt.plot(x, fidelity_list, 'o', label='Density matrix approach')
-    plt.errorbar(x, y, yerr=y_var, linestyle='-', marker='^', label=f'Measurement approach')  #  e={round(min_diff,6)}
-    plt.plot(x, fidelity_n_list, 'o', label='Density matrix approach (noisy)')
-    plt.errorbar(x, y_n, yerr=y_var_n, linestyle='-', marker='^', label=f'Measurement approach (noisy)')  #  e={round(min_diff_n,6)}
-    plt.title(f'H2 ansatz circuit comparing density matrix vs measurement observable (Asymmetric Pauli noise p={p})')
-    plt.xlabel('log10(average measurement repetition)')
-    plt.ylabel('Expectation value for H2 ground state')
+    fig = plt.figure()
+    ax = plt.axes()
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    for k, prob_meas in enumerate(error_list):
+        # ax.errorbar(meas_reps, prob_meas, yerr=error_var_list[k], fmt='b', label=f'Difference Error (p={prob_list[k]})')
+        ax.loglog(meas_reps, prob_meas, label=f'Difference Error (p={prob_list[k]})')
 
-    plt.legend(frameon=False)
+    # plt.plot(x, fidelity_list, 'o', label='Density matrix approach')
+    # plt.errorbar(x, y, yerr=y_var, linestyle='-', marker='^', label=f'Measurement approach')  #  e={round(min_diff,6)}
+    # plt.plot(x, fidelity_n_list, 'o', label='Density matrix approach (noisy)')
+    # plt.errorbar(x, y_n, yerr=y_var_n, linestyle='-', marker='^', label=f'Measurement approach (noisy)')  #  e={round(min_diff_n,6)}
+    plt.title(f'H2 ansatz circuit comparing density matrix vs measurement observable (Asymmetric Pauli noise)')
+    plt.xlabel('Measurement repetition')
+    plt.ylabel('Error in expectation value at ground state')
+    # Display grid
+    plt.grid(True, which="both")
+
+    plt.legend(frameon=True)
 
 
 def testing():
