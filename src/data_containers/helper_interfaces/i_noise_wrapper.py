@@ -88,15 +88,15 @@ class INoiseWrapper(IWaveFunction, cirq.NoiseModel):
     def _generate_molecule(self, p: IParameter) -> of.MolecularData:
         return self._ideal_wave_function._generate_molecule(p=p)
 
-    def __init__(self, w_class: IWaveFunction, noise_channel: INoiseModel):  # List[cirq.Gate]
+    def __init__(self, w_class: IWaveFunction, noise_model: INoiseModel):  # List[cirq.Gate]
         """
         Noise Wrapper Constructor.
         Extents functionality of IWaveFunction class by introducing noise channels on both initial state preparation as ansatz operations.
         :param w_class: any class that inherits directly or indirectly from IWaveFunction
-        :param noise_channel: List of cirq noise channel(s)
+        :param noise_model: List of cirq noise channel(s)
         """
         self._ideal_wave_function = w_class
-        self._noise_channel = noise_channel.get_operators  # Callable[[List[cirq.Qid]], List[cirq.Operation]]
+        self._noise_channel = noise_model.get_operators  # Callable[[List[cirq.Qid]], List[cirq.Operation]]
         IWaveFunction.__init__(self, w_class.operator_parameters, w_class.molecule_parameters)
         cirq.NoiseModel.__init__(self)
 

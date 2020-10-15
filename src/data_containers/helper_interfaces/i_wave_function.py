@@ -4,10 +4,9 @@ import os
 import cirq
 import sympy
 import numpy as np
-from openfermioncirq import VariationalAnsatz
+# from openfermioncirq import VariationalAnsatz
 import openfermion as of
-from openfermionpsi4 import run_psi4
-# from openfermionpyscf import run_pyscf
+# from openfermionpsi4 import run_psi4
 
 from src.data_containers.helper_interfaces.i_parameter import IParameter
 
@@ -36,7 +35,7 @@ class IMolecule:
         return self.molecule
 
 
-class IWaveFunction(VariationalAnsatz, IMolecule):
+class IWaveFunction(IMolecule):  # VariationalAnsatz,
 
     def get_operator_params(self) -> IParameter:
         """Produce parameters used to define the operations in the ansatz circuit."""
@@ -51,7 +50,8 @@ class IWaveFunction(VariationalAnsatz, IMolecule):
     def __init__(self, operator_params: IParameter, molecule_params: IParameter):
         self._params_operator = operator_params
         IMolecule.__init__(self, molecule_params)
-        VariationalAnsatz.__init__(self)
+        # VariationalAnsatz.__init__(self)
+        self.qubits = self._generate_qubits()
 
     # VariationalAnsatz
     @abstractmethod
@@ -115,7 +115,8 @@ class IGeneralizedUCCSD(IWaveFunction):
         parameter_count = int(.5 * len(self._get_fermionic_operators()))
         self._params_operator = IParameter({f'alpha{i}': 0.0 for i in range(parameter_count)})
         self._fermionic_operators = self._get_fermionic_operators()
-        VariationalAnsatz.__init__(self)
+        # VariationalAnsatz.__init__(self)
+        self.qubits = self._generate_qubits()
 
     @abstractmethod
     def _generate_molecule(self, p: IParameter) -> of.MolecularData:
