@@ -349,7 +349,12 @@ class QuasiCircuitIdentifier:
 class IErrorMitigationManager:
     """Manages family of circuits to be measured"""
 
-    def process_circuit(self, process_settings: Tuple[QuasiCircuitIdentifier, int]) -> List[float]:
+    def process_circuit(self, process_settings: Tuple[QuasiCircuitIdentifier, int]) -> List[float]:  # , signed weight
+        """
+        Per unique circuit needing the be processed x-times.
+        :param process_settings: Tuple containing unique circuit identifier and the amount of this circuit occurrences.
+        :return: Measurement list
+        """
         _key, _value = process_settings
         # Possible toggle to use error mitigation or not
         _identifier_list = _key.identifiers_id if self._error_mitigation else _key.identity
@@ -370,25 +375,28 @@ class IErrorMitigationManager:
 
             # Get final density matrix trace
             _rho = np.array(_simulated_result.final_density_matrix)
-            _trace_out = np.kron(np.eye(int(_rho.shape[0]/2)), np.array([[1, 0], [0, -1]]))  # Z o I o I o I o I
             if self._hamiltonian_objective is not None:
                 _trace_out = self._hamiltonian_objective
+            else:
+                _trace_out = np.kron(np.eye(int(_rho.shape[0] / 2)), np.array([[1, 0], [0, -1]]))  # Z o I o I o I o I
             _trace = (_trace_out * _rho).diagonal().sum()
             _measurement = _trace.real
         else:
+            _unique_meas_reps = self._meas_reps * _value
             if self._wave_function is not None:
                 _func, _cost = self._wave_function.observable_measurement()
-                _measurement = _func(_circuit_to_run, self._noise_model.get_operators, self._meas_reps * _value)
+                _measurement = _func(_circuit_to_run, self._noise_model.get_operators, _unique_meas_reps)
             else:
                 # Setup simulator
-                _simulated_result = _simulator.run(program=_circuit_to_run, repetitions=(self._meas_reps * _value))  # Include final measurement values
+                _simulated_result = _simulator.run(program=_circuit_to_run, repetitions=_unique_meas_reps)  # Include final measurement values
 
                 # Get final measurement value
                 _hist = _simulated_result.histogram(key='M')  # Hist (0: x, 1: meas_reps - x)
-                _measurement = _hist[0] / (self._meas_reps * _value)  # Normalized measurement [0, 1]
+                _measurement = _hist[0] / _unique_meas_reps  # Normalized measurement [0, 1]
                 _measurement = 2 * _measurement - 1  # Rescaled measurement [-1, 1]
 
-        return [_sign_weight * _measurement] * _value
+        # Artificially increase measurement population
+        return [_sign_weight * np.prod(_weight_list) * _measurement] * _value  # [_sign_weight * _measurement] * _value
 
     def get_mu_effective(self, error_mitigation: bool, density_representation: bool, meas_reps: int = 1) -> Tuple[List[float], float]:
         """
@@ -404,26 +412,44 @@ class IErrorMitigationManager:
         self._meas_reps = meas_reps
 
         # Determine if it is advantageous to use multiprocessing
-        item_count = len(self._dict_identifiers)
-        process_iterator = tqdm(self._dict_identifiers.items(), desc='Processing identifier circuits')
         processing_output = list()
-        if item_count < MAX_MULTI_PROCESSING_COUNT:
-            # Use normal iteration
-            for item in process_iterator:
-                processing_output.append(self.process_circuit(item))
+        if self._error_mitigation:
+            item_count = len(self._dict_identifiers)
+            process_iterator = tqdm(self._dict_identifiers.items(), desc='Processing identifier circuits')
+            if item_count < MAX_MULTI_PROCESSING_COUNT:
+                # Use normal iteration
+                for item in process_iterator:
+                    processing_output.append(self.process_circuit(item))
+            else:
+                # Use multiprocessing
+                # Function for multiprocessing
+                with Pool(MAX_MULTI_PROCESSING_COUNT) as p:
+                    processing_output = p.map(self.process_circuit, process_iterator)
         else:
-            # Use multiprocessing
-            # Function for multiprocessing
-            with Pool(MAX_MULTI_PROCESSING_COUNT) as p:
-                processing_output = p.map(self.process_circuit, process_iterator)
+            # Without error mitigation
+            circuit_identifier = QuasiCircuitIdentifier(circuit=self.circuit, gate_lookup=self._gate_lookup)
+            # Set to identity
+            circuit_identifier.identifiers_id = circuit_identifier.identity
+            circuit_identifier.sign = 1
+            circuit_identifier.identifiers_weight = [1]
+            item = (circuit_identifier, self._identifier_count * self._meas_reps)
+            processing_output.append(self.process_circuit(item))
 
         def flatten(l: List[List[Any]]) -> np.ndarray:
             return np.array([item for sublist in l for item in sublist])
-        raw_measurement_results = flatten(processing_output)  # Flatten output
+        weighted_measurement_results = flatten(processing_output)  # Flatten output
 
-        weight_list = next(iter(self._dict_identifiers)).identifiers_weight if error_mitigation else [1]  # All identifier weights are equal
-        weighted_effective_mean = np.prod(weight_list) * np.mean(raw_measurement_results)
-        return np.prod(weight_list) * raw_measurement_results, weighted_effective_mean
+        # weight_list = next(iter(self._dict_identifiers)).identifiers_weight if error_mitigation else [1]  # All identifier weights are equal
+        # c = np.prod(weight_list)  # constant
+
+        # def separate_measurement_weight(l: List[Tuple[List[Any], float]]) -> Tuple[np.ndarray, np.ndarray]:
+        #     return np.array([item for sublist in l for item in sublist[0]]), np.array([sublist[1] for sublist in l for item in sublist[0]])
+        # raw_measurement_results, weights = separate_measurement_weight(processing_output)  # Flatten output
+
+        # weighted_effective_mean = c * np.mean(raw_measurement_results)
+        # return raw_measurement_results, weighted_effective_mean
+        weighted_effective_mean = np.mean(weighted_measurement_results)
+        return weighted_measurement_results, weighted_effective_mean
 
     # Temp
     def get_identifiers(self) -> Iterator[List[int]]:
@@ -452,11 +478,13 @@ class IErrorMitigationManager:
         self._error_mitigation = False
         self._density_representation = True
         self._meas_reps = 1
+        self._identifier_count = 0
 
     # Magic function, adds range of 'QuasiCircuitIdentifier' to dictionary of identifiers_id
     def set_identifier_range(self, count: int):
         self._dict_identifiers = {}
         count = int(count / self._objective_measure_cost)  # Take extra circuits for realistic hamiltonian objective calculation into account
+        self._identifier_count = count
         for i in range(count):
             self.add_circuit_identifier()
 
@@ -573,20 +601,23 @@ def simulate_error_mitigation(clean_circuit: cirq.Circuit, noise_model: INoiseMo
     noise_identifier_count = process_circuit_count
     circuit_measurement_repetitions = 1
     using_error_mitigation = [False, True]
-    using_density_representation = not isinstance(hamiltonian_objective, IWaveFunction)
-    n_bins = 100
+    using_density_representation = isinstance(hamiltonian_objective, np.ndarray)  # not isinstance(hamiltonian_objective, IWaveFunction)
+    n_bins = 20
     fig, axs = plt.subplots(2, 2, tight_layout=True)
     # Construct circuit
     circuit = clean_circuit
     circuit_name = f'{desc} using {"density matrix" if using_density_representation else "measurements"}'
     fig.suptitle(f'{circuit_name} (#mitigation circuits={noise_identifier_count})', fontsize=16)
 
-    mu_ideal = None
-    mu_noisy = None
-    mu_effective = None
+    mu_ideal = .5  # -1.137
+    mu_noisy = 0
+    mu_effective = 0
 
     for i, prob in enumerate(noise_probability):
         for j, error in enumerate(using_error_mitigation):
+            # if i == 0 or j == 0:  # TEMP
+            #     continue
+
             # Toggle noise
             _noise_model = noise_model if prob else INoiseModel.empty()
             # Error Mitigation Manager
@@ -610,9 +641,10 @@ def simulate_error_mitigation(clean_circuit: cirq.Circuit, noise_model: INoiseMo
             show_meas_reps = '' if using_density_representation else f', reps={circuit_measurement_repetitions}'
             plot_title = f'measurement histogram.\n(Info: {_noise_model.get_description()}, error mitigation={error}{show_meas_reps})'
             axs[i][j].title.set_text(plot_title)
-            x_lim = [int(mu_ideal - 1), int(mu_ideal + 1)] if hamiltonian_objective is not None else [-1, 1]
-            axs[i][j].set_xlabel(f'relative measurement [{x_lim[0]}, {x_lim[1]}]')  # X axis label
-            axs[i][j].set_xlim(x_lim)  # X axis limit
+            x_range = 5
+            x_lim = [int(mu_ideal - x_range), int(mu_ideal + x_range)] if hamiltonian_objective is not None else [-1.5, 1.5]
+            axs[i][j].set_xlabel(f'relative measurement')  # [{x_lim[0]}, {x_lim[1]}] X axis label
+            # axs[i][j].set_xlim(x_lim)  # X axis limit
             axs[i][j].set_ylabel(f'Bin count')  # Y axis label
             axs[i][j].hist(meas_values, bins=n_bins)
             if i != 0:
@@ -893,28 +925,28 @@ if __name__ == '__main__':
     channel_2q = [TwoQubitPauliChannel(p_x=1e-4, p_y=1e-4, p_z=6e-4), TwoQubitLeakageChannel(p=8e-4)]  # [TwoQubitDepolarizingChannel(p=prob)]
     n_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'depolarize (p={prob}')
 
-    circuit_01.append(n_gate.on(*dummy_qubits))
-    circuit_02.append(n_model.get_operators(*dummy_qubits))
-
-    density_01 = cirq.DensityMatrixSimulator().simulate(circuit_01).final_density_matrix
-    density_02 = cirq.DensityMatrixSimulator().simulate(circuit_02).final_density_matrix
-
-    print(f'Following density matrices should be identical:\n{density_01}\n{density_02}\n')
+    # circuit_01.append(n_gate.on(*dummy_qubits))
+    # circuit_02.append(n_model.get_operators(*dummy_qubits))
+    #
+    # density_01 = cirq.DensityMatrixSimulator().simulate(circuit_01).final_density_matrix
+    # density_02 = cirq.DensityMatrixSimulator().simulate(circuit_02).final_density_matrix
+    #
+    # print(f'Following density matrices should be identical:\n{density_01}\n{density_02}\n')
 
     # --------------------------
 
     # Settings
     prob = 1e-4
-    n = 2
+    n = 3
     # Construct circuit
     circuit = swap_circuit(n, cirq.LineQubit.range(2 * n + 1), True)
     # Construct noise wrapper
-    channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]  # , SingleQubitLeakageChannel(p=8 * prob)]
-    channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]  # , TwoQubitLeakageChannel(p=8 * prob)]
+    channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6*prob)]  # , SingleQubitLeakageChannel(p=8 * prob)]
+    channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6*prob)]  # , TwoQubitLeakageChannel(p=8 * prob)]
     noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q,
                               description=f'asymmetric depolarization (p={prob})')
 
     # Plot error mitigation
-    mu_ideal, mu_noisy, mu_effective = simulate_error_mitigation(clean_circuit=circuit, noise_model=noise_model, process_circuit_count=1000, density_representation=True, desc='Swap-Circuit')
+    mu_ideal, mu_noisy, mu_effective = simulate_error_mitigation(clean_circuit=circuit, noise_model=noise_model, process_circuit_count=10000, desc='Swap-Circuit')
     print(f'Operator expectation value (noisy): {mu_noisy}\nOperator expectation value (mitigated): {mu_effective}\nFinal difference error: {abs(mu_ideal - mu_effective)}')
     plt.show()
