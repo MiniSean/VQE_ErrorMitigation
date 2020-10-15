@@ -1,4 +1,5 @@
 # Holds data for every iteration of optimization
+import numpy as np
 from cirq import Gate
 from typing import List, Iterable, Iterator, Tuple
 from statistics import stdev, mean
@@ -92,3 +93,31 @@ class IMeasurementCollection:
 
     def __iter__(self):
         return self.container.__iter__()
+
+
+class IHistogramCollection:
+
+    @property
+    def get_data(self) -> List[float]:
+        return self._measurements
+
+    @property
+    def get_mean(self) -> float:
+        return self._mean
+
+    def __init__(self, measurements: List[float]):
+        self._measurements = measurements
+        self._mean = float(np.mean(self._measurements))
+
+
+class ISimilarityCollection:
+
+    def __init__(self, data_noisy: List[float], data_mitigated: List[float], mu_ideal: float, settings: str):
+        self.data_noisy = IHistogramCollection(measurements=data_noisy)
+        self.data_mitigated = IHistogramCollection(measurements=data_mitigated)
+        self.mu_ideal = mu_ideal
+        self._settings = settings
+
+    @staticmethod
+    def get_settings(probability: float, measure_count: int, identifier_count: int) -> str:
+        return f'P{probability.__str__()}_R{measure_count}_C{identifier_count}'

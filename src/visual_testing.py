@@ -11,13 +11,16 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import Figure, Subplot
 from typing import List, Tuple, Union, Callable, Dict
 from src.error_mitigation import BasisUnitarySet, IBasisGateSingle, reconstruct_from_basis, MAX_MULTI_PROCESSING_COUNT
+from src.calculate_minimisation import read_object, write_object
 from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseModel, INoiseWrapper
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
+from src.data_containers.helper_interfaces.i_collection import IHistogramCollection, ISimilarityCollection
 from src.circuit_noise_extension import Noisify
 from src.data_containers.model_hydrogen import HydrogenAnsatz
 from src.processors.processor_quantum import QPU
 from src.processors.processor_classic import CPU
-from src.error_mitigation import SingleQubitPauliChannel, TwoQubitPauliChannel
+from src.error_mitigation import SingleQubitPauliChannel, TwoQubitPauliChannel, IErrorMitigationManager
+from QP_QEM_lib import swap_circuit
 from src.main import get_log_experiment
 from multiprocessing import Pool
 
@@ -487,6 +490,127 @@ def hamiltonian_density_vs_measure():
     plt.legend(frameon=True)
 
 
+def similarity_plot_swap_circuit(overwrite: bool, prob: float = 1e-4, measure_count: int = 100, identifier_count: int = 1000):
+    # Construct noise wrapper
+    channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6*prob)]  # , SingleQubitLeakageChannel(p=8 * prob)]
+    channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6*prob)]  # , TwoQubitLeakageChannel(p=8 * prob)]
+    noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'asymmetric depolarization (p_tot={16 * prob})')
+
+    if overwrite:
+        # Settings
+        # prob = 1e-4
+        # measure_count = 100
+        # identifier_count = 1000
+        n = 3
+        # Construct circuit
+        circuit = swap_circuit(n, cirq.LineQubit.range(2 * n + 1), True)
+        # Error Mitigation Manager
+        manager = IErrorMitigationManager(clean_circuit=circuit, noise_model=INoiseModel.empty(), hamiltonian_objective=None)
+        manager.set_identifier_range(identifier_count)
+        mu_ideal = manager.get_mu_effective(error_mitigation=False, density_representation=True, meas_reps=1)[1]
+        manager = IErrorMitigationManager(clean_circuit=circuit, noise_model=noise_model, hamiltonian_objective=None)
+
+        result_noisy = []
+        result_mitigated = []
+        for i in tqdm(range(measure_count), desc='Processing error mitigation functions'):
+            manager.set_identifier_range(identifier_count)
+            result_noisy.append(manager.get_mu_effective(error_mitigation=False, density_representation=False, meas_reps=1)[1])
+            result_mitigated.append(manager.get_mu_effective(error_mitigation=True, density_representation=False, meas_reps=1)[1])
+
+        # Store Collection
+        settings = ISimilarityCollection.get_settings(probability=prob, measure_count=measure_count, identifier_count=identifier_count)
+        data = ISimilarityCollection(data_noisy=result_noisy, data_mitigated=result_mitigated, mu_ideal=mu_ideal, settings=settings)
+        write_object(data, f'SWAP_Similarity_{settings}')
+    else:
+        settings = ISimilarityCollection.get_settings(probability=prob, measure_count=measure_count, identifier_count=identifier_count)
+        data = read_object(f'SWAP_Similarity_{settings}')
+
+    # Plotting Histogram
+    n_bins = 20
+    fig, axs = plt.subplots(1, 1, tight_layout=True)
+    circuit_name = f'Swap circuit using measurements'
+    fig.suptitle(f'{circuit_name} (#mitigation circuits={identifier_count})', fontsize=16)
+    plot_title = f'(Info: {noise_model.get_description()})'
+    axs.title.set_text(plot_title)
+    axs.set_xlabel(f'Expectation value after {identifier_count} experiments')  # [{x_lim[0]}, {x_lim[1]}] X axis label
+    axs.set_ylabel(f'Frequency of obtaining this result')  # Y axis label
+
+    # Data
+    mu_noisy = data.data_noisy.get_mean  # np.mean(result_noisy)
+    mu_mitigated = data.data_mitigated.get_mean  # np.mean(result_mitigated)
+    mu_ideal = data.mu_ideal
+    axs.hist(data.data_noisy.get_data, bins=n_bins, edgecolor='black', alpha=0.7, color='#fc9003', label=f'No error mitigation')
+    axs.hist(data.data_mitigated.get_data, bins=n_bins, edgecolor='black', alpha=0.7, color='#1ee300', label=f'Quasiprobability')
+    axs.axvline(x=mu_ideal, linewidth=1, color='r', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
+    axs.axvline(x=mu_noisy, linewidth=1, color='#fc9003', label=r'$E[\mu_{noisy}$] = ' + f'{np.round(mu_noisy, 5)}')
+    axs.axvline(x=mu_mitigated, linewidth=1, color='#1ee300', label=r'E[$\mu_{mitigated}$] = ' + f'{np.round(mu_mitigated, 5)}\n' + r'|$\epsilon$| = ' + f'{np.round(abs(mu_mitigated - mu_ideal), 5)}')
+    axs.legend()
+
+
+def similarity_plot_hydrogen_circuit(overwrite: bool, prob: float = 1e-4, measure_count: int = 100, identifier_count: int = 1000):
+    # Construct noise wrapper
+    channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]  # , SingleQubitLeakageChannel(p=8 * prob)]
+    channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]  # , TwoQubitLeakageChannel(p=8 * prob)]
+    noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'asymmetric depolarization (p_tot={16 * prob})')
+
+    if overwrite:
+        # Settings
+        # prob = 1e-4
+        # measure_count = 100
+        # identifier_count = 1000
+        # Hydrogen ansatz
+        ansatz = HydrogenAnsatz()
+        # Get optimization
+        result = CPU.get_optimized_state(w=ansatz, max_iter=1000)
+        parameters = ansatz.operator_parameters
+        parameters.update(r=result)
+        # Construct circuit
+        circuit = INoiseWrapper(w_class=ansatz, noise_channel=noise_model).get_clean_circuit()
+        circuit = QPU.get_resolved_circuit(c=circuit, p=parameters)
+
+        # Error Mitigation Manager
+        manager = IErrorMitigationManager(clean_circuit=circuit, noise_model=INoiseModel.empty(), hamiltonian_objective=ansatz)
+        manager.set_identifier_range(identifier_count)
+        mu_ideal = manager.get_mu_effective(error_mitigation=False, density_representation=True, meas_reps=1)[1]
+        manager = IErrorMitigationManager(clean_circuit=circuit, noise_model=noise_model, hamiltonian_objective=ansatz)
+
+        result_noisy = []
+        result_mitigated = []
+        for i in tqdm(range(measure_count), desc='Processing error mitigation functions'):
+            manager.set_identifier_range(identifier_count)
+            result_noisy.append(manager.get_mu_effective(error_mitigation=False, density_representation=False, meas_reps=1)[1])
+            result_mitigated.append(manager.get_mu_effective(error_mitigation=True, density_representation=False, meas_reps=1)[1])
+
+        # Store Collection
+        settings = ISimilarityCollection.get_settings(probability=prob, measure_count=measure_count, identifier_count=identifier_count)
+        data = ISimilarityCollection(data_noisy=result_noisy, data_mitigated=result_mitigated, mu_ideal=mu_ideal, settings=settings)
+        write_object(data, f'H2_Similarity_{settings}')
+    else:
+        settings = ISimilarityCollection.get_settings(probability=prob, measure_count=measure_count, identifier_count=identifier_count)
+        data = read_object(f'H2_Similarity_{settings}')
+
+    # Plotting Histogram
+    n_bins = 20
+    fig, axs = plt.subplots(1, 1, tight_layout=True)
+    circuit_name = f'H2 ansatz circuit using realistic measurements'
+    fig.suptitle(f'{circuit_name} (#mitigation circuits={identifier_count})', fontsize=16)
+    plot_title = f'(Info: {noise_model.get_description()})'
+    axs.title.set_text(plot_title)
+    axs.set_xlabel(f'Expectation value after {identifier_count} experiments')  # [{x_lim[0]}, {x_lim[1]}] X axis label
+    axs.set_ylabel(f'Frequency of obtaining this result')  # Y axis label
+
+    # Data
+    mu_noisy = data.data_noisy.get_mean  # np.mean(result_noisy)
+    mu_mitigated = data.data_mitigated.get_mean  #  np.mean(result_mitigated)
+    mu_ideal = data.mu_ideal
+    axs.hist(data.data_noisy.get_data, bins=n_bins, edgecolor='black', alpha=0.7, color='#fc9003', label=f'No error mitigation')
+    axs.hist(data.data_mitigated.get_data, bins=n_bins, edgecolor='black', alpha=0.7, color='#1ee300', label=f'Quasiprobability')
+    axs.axvline(x=mu_ideal, linewidth=1, color='r', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
+    axs.axvline(x=mu_noisy, linewidth=1, color='#fc9003', label=r'$E[\mu_{noisy}$] = ' + f'{np.round(mu_noisy, 5)}')
+    axs.axvline(x=mu_mitigated, linewidth=1, color='#1ee300', label=r'E[$\mu_{mitigated}$] = ' + f'{np.round(mu_mitigated, 5)}\n' + r'|$\epsilon$| = ' + f'{np.round(abs(mu_mitigated - mu_ideal), 5)}')
+    axs.legend()
+
+
 def testing():
     """Show variety of tests"""
     # single_qubit_identity_circuit()
@@ -505,11 +629,16 @@ def testing():
     # gst_identity_ideal()
 
     # sampling_noise_scaling()
-    hamiltonian_density_vs_measure()
+    # hamiltonian_density_vs_measure()
+
+    # Build data
+    master_overwrite = True
+    similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
+    similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
+    similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
+    similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
 
 
 if __name__ == '__main__':
-    print('Hello World')
-
     testing()
-    plt.show()
+    # plt.show()
