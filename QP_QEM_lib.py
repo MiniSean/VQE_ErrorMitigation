@@ -847,3 +847,18 @@ class QPSamp():
             # np.save('data/test_data/exp_noisy_test.npy', self.exp_noisy)
             # np.save('data/test_data/exp_sampled_test.npy',
             #         [self.cost, self.exp_sampled])
+
+        print(self.exp_sampled)
+
+        import matplotlib.pyplot as plt
+        # Plotting for the lol
+        n_bins = 100
+        fig, ax = plt.subplots(1, 1, tight_layout=True)
+        ax.title.set_text('Reference code')
+        ax.set_xlabel(f'measurement outcome (avg: {np.prod(self.cost)*np.mean(self.exp_sampled)})')  # X axis label
+        ax.set_xlim([-1, 1])  # X axis limit
+        ax.set_ylabel(f'Bin count')  # Y axis label
+        # We can set the number of bins with the `bins` kwarg
+        ax.hist(self.exp_sampled, bins=n_bins)
+
+        plt.show()
