@@ -467,7 +467,7 @@ class IErrorMitigationManager:
         self._objective_measure_cost = 1
         if isinstance(hamiltonian_objective, IWaveFunction):
             # Collect hamiltonian objective operator direct or through IWaveFunction
-            self._hamiltonian_objective = QPU.get_hamiltonian_objective_operator(hamiltonian_objective)
+            self._hamiltonian_objective = None  # QPU.get_hamiltonian_objective_operator(hamiltonian_objective)
             self._wave_function = hamiltonian_objective
             _func_objective_measure, self._objective_measure_cost = self._wave_function.observable_measurement()
         else:

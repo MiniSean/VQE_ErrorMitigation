@@ -6,7 +6,7 @@ from qiskit.quantum_info import DensityMatrix
 from qiskit.visualization import plot_state_city, circuit_drawer, plot_state_hinton
 from tqdm import tqdm  # For displaying for-loop process to console
 import cirq
-import openfermioncirq
+# import openfermioncirq
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import Figure, Subplot
 from typing import List, Tuple, Union, Callable, Dict
@@ -705,4 +705,4 @@ def testing():
 
 if __name__ == '__main__':
     testing()
-    plt.show()
+    # plt.show()
