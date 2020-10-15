@@ -48,16 +48,40 @@ def calculate_and_write_collection(collection: IMeasurementCollection, filename:
         wf.write(jsonpickle.encode(value=container_obj, indent=4))
 
 
+def write_object(obj: object, filename: str):
+    create_dir(DATA_DIR)  # If non existing -> create
+    file_path = f'{DATA_DIR}/{filename}'
+    # Writing JSON object
+    with open(file_path, 'w') as wf:
+        wf.write(jsonpickle.encode(value=obj, indent=4))
+
+
+def read_object(filename: str) -> object:
+    # Read stored json format and express as a good old matlab plot
+    file_path = f'{DATA_DIR}/{filename}'
+    try:
+        if check_dir(file_path):
+            # Read JSON object
+            with open(file_path, 'r') as rf:
+                obj = jsonpickle.decode(rf.read())
+        else:
+            raise FileNotFoundError()
+        return obj
+    except FileNotFoundError:
+        raise Exception(f'Indicated file path does not exist: {file_path}')
+
+
 if __name__ == '__main__':
     import cirq
     import numpy as np
+    from src.error_mitigation import SingleQubitPauliChannel, TwoQubitPauliChannel
     from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseModel
     from src.plot_minimisation import read_and_plot
     # Calculate noise models near ground state energy
     clean_ansatz = HydrogenAnsatz()
     filename = 'H2_temptest6'
     parameter_space = [.7414]  # np.round(np.linspace(0.1, 3.0, 15), 1)  # [.6, .7, .7414, .8, .9]
-    noise_space = [INoiseModel(noise_gates_1q=[cirq.depolarize(p=p)], noise_gates_2q=[], description=f'Depolarize (p={p})') for p in [0.000, 0.005, .5]]  # , 0.010, 0.015, 0.020, 0.030, 0.040, 0.050]]
+    noise_space = [INoiseModel(noise_gates_1q=[SingleQubitPauliChannel(p_x=p, p_y=p, p_z=6 * p)], noise_gates_2q=[TwoQubitPauliChannel(p_x=p, p_y=p, p_z=6 * p)], description=f'asymmetric depolarization (p_tot={16 * p})') for p in [0.000, 1e-4]]
     measure_collection = IMeasurementCollection(w=clean_ansatz, p_space=parameter_space, n_space=noise_space)
     calculate_and_write_collection(collection=measure_collection, filename=filename)
 
