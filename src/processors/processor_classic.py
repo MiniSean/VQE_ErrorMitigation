@@ -87,6 +87,39 @@ class CPU:
         return optimize_result.fun, optimize_result.x
 
     @staticmethod
+    def get_mitigated_optimized_state(w: IWaveFunction, n: INoiseModel, max_optimization_iter: int, max_mitigation_count: int) -> float:
+        """
+        Super function for optimizing circuit parameters and calculating the (error) mitigated expectation value.
+        :param w: IWaveFunction class containing the molecular data and hamiltonian objective calculation.
+        :param n: INoiseModel class containing the noise-channels applied on each operation in the quantum circuit.
+        :param max_optimization_iter: Number of iterations for the classical circuit parameter optimization.
+        :param max_mitigation_count: Number of varying circuits used during error mitigation (Literature 10.000).
+        :return: Energy expectation value based on in-circuit approximation of the hamiltonian expectation value.
+        """
+        # Original circuit parameters
+        circuit_parameters = w.operator_parameters
+        noisy_ansatz = INoiseWrapper(w_class=w, noise_channel=n)
+
+        # Optimization
+        clean_optimization = True
+        if clean_optimization:
+            # Prepare clean ansatz optimization
+            result = CPU.get_optimized_state(w=w, max_iter=max_optimization_iter)
+            circuit_parameters.update(r=result)
+        else:
+            # Prepare noisy ansatz optimization
+            values, params = CPU.get_custom_optimized_state(n_w=noisy_ansatz, max_iter=max_optimization_iter)
+            for i, key in enumerate(circuit_parameters.dict.keys()):  # Dirty set parameter values
+                circuit_parameters[key] = params[i]
+        # (noisy) optimized circuit parameters for a clean circuit
+        resolved_circuit = QPU.get_resolved_circuit(noisy_ansatz.get_clean_circuit(), circuit_parameters)
+
+        # Error mitigation
+        unique_circuit_reps = 1  # Amount of sampling each unique circuit
+        expectation_value = CPU.get_mitigated_expectation(clean_circuit=resolved_circuit, noise_model=n, process_circuit_count=max_mitigation_count, hamiltonian_objective=w, meas_reps=unique_circuit_reps)
+        return expectation_value
+
+    @staticmethod
     def get_mitigated_expectation(clean_circuit: cirq.Circuit, noise_model: INoiseModel, process_circuit_count: int, hamiltonian_objective: Union[np.ndarray, IWaveFunction, None], meas_reps: int) -> float:
         # Setup mitigation manager
         manager = IErrorMitigationManager(clean_circuit=clean_circuit, noise_model=noise_model, hamiltonian_objective=hamiltonian_objective)

@@ -86,10 +86,15 @@ if __name__ == '__main__':
     # Construct circuit
     circuit = noisy_ansatz.get_clean_circuit()
     print(circuit)
-    # Get variational study
-    result = CPU.get_optimized_state(w=uccsd_ansatz, max_iter=1000)
-    print(f'Operator expectation value: {result.optimal_value}\nOperator parameters: {result.optimal_parameters}')
-    parameters.update(r=result)
+    # # Get variational study
+    # result = CPU.get_optimized_state(w=uccsd_ansatz, max_iter=1000)
+    # print(f'Operator expectation value: {result.optimal_value}\nOperator parameters: {result.optimal_parameters}')
+    # parameters.update(r=result)
+    # Prepare noisy ansatz optimization
+    values, params = CPU.get_custom_optimized_state(n_w=noisy_ansatz, max_iter=1000)
+    for i, key in enumerate(parameters.dict.keys()):  # Dirty set parameter values
+        parameters[key] = params[i]
+    # Get resolved circuit
     resolved_circuit = QPU.get_resolved_circuit(circuit, parameters)
     print(resolved_circuit)
 
@@ -117,9 +122,7 @@ if __name__ == '__main__':
 
     # --------------------------
 
-    # observable_process, circuit_cost = uccsd_ansatz.observable_measurement()
-    # measurement = observable_process(resolved_circuit, noise_model.get_operators, 10000)
-    # print(f'Total measurement value: {measurement}')
-    #
-    # mu = CPU.get_mitigated_expectation(clean_circuit=resolved_circuit, noise_model=noise_model, process_circuit_count=1000, hamiltonian_objective=uccsd_ansatz, meas_reps=100)
-    # print(mu)
+    # # Get error mitigated optimized state
+    # mitigated_expectation = CPU.get_mitigated_optimized_state(w=uccsd_ansatz, n=noise_model, max_optimization_iter=1000, max_mitigation_count=10000)
+    # print(mitigated_expectation)
+
