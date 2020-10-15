@@ -491,6 +491,8 @@ def hamiltonian_density_vs_measure():
 
 
 def similarity_plot_swap_circuit(overwrite: bool, prob: float = 1e-4, measure_count: int = 100, identifier_count: int = 1000):
+    """Performs a multitude of error mitigation protocols at a certain noise probability.
+    Plots histogram of results versus the respective noisy simulations."""
     # Construct noise wrapper
     channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6*prob)]  # , SingleQubitLeakageChannel(p=8 * prob)]
     channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6*prob)]  # , TwoQubitLeakageChannel(p=8 * prob)]
@@ -538,16 +540,19 @@ def similarity_plot_swap_circuit(overwrite: bool, prob: float = 1e-4, measure_co
     # Data
     mu_noisy = data.data_noisy.get_mean  # np.mean(result_noisy)
     mu_mitigated = data.data_mitigated.get_mean  # np.mean(result_mitigated)
+    std_mitigated = data.data_mitigated.get_std
     mu_ideal = data.mu_ideal
     axs.hist(data.data_noisy.get_data, bins=n_bins, edgecolor='black', alpha=0.7, color='#fc9003', label=f'No error mitigation')
     axs.hist(data.data_mitigated.get_data, bins=n_bins, edgecolor='black', alpha=0.7, color='#1ee300', label=f'Quasiprobability')
     axs.axvline(x=mu_ideal, linewidth=1, color='r', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
     axs.axvline(x=mu_noisy, linewidth=1, color='#fc9003', label=r'$E[\mu_{noisy}$] = ' + f'{np.round(mu_noisy, 5)}')
-    axs.axvline(x=mu_mitigated, linewidth=1, color='#1ee300', label=r'E[$\mu_{mitigated}$] = ' + f'{np.round(mu_mitigated, 5)}\n' + r'|$\epsilon$| = ' + f'{np.round(abs(mu_mitigated - mu_ideal), 5)}')
+    axs.axvline(x=mu_mitigated, linewidth=1, color='#1ee300', label=r'E[$\mu_{mitigated}$] = ' + f'{np.round(mu_mitigated, 5)}\n' + r'|$\epsilon$| = ' + f'{np.round(abs(mu_mitigated - mu_ideal), 5)}\n' + r'$\sigma$ = ' + f'{np.round(std_mitigated, 5)}')
     axs.legend()
 
 
 def similarity_plot_hydrogen_circuit(overwrite: bool, prob: float = 1e-4, measure_count: int = 100, identifier_count: int = 1000):
+    """Performs a multitude of error mitigation protocols at a certain noise probability.
+    Plots histogram of results versus the respective noisy simulations."""
     # Construct noise wrapper
     channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]  # , SingleQubitLeakageChannel(p=8 * prob)]
     channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]  # , TwoQubitLeakageChannel(p=8 * prob)]
@@ -558,25 +563,38 @@ def similarity_plot_hydrogen_circuit(overwrite: bool, prob: float = 1e-4, measur
         # prob = 1e-4
         # measure_count = 100
         # identifier_count = 1000
+        # Get optimization
+        # result = CPU.get_optimized_state(w=ansatz, max_iter=1000)
+
         # Hydrogen ansatz
         ansatz = HydrogenAnsatz()
-        # Get optimization
-        result = CPU.get_optimized_state(w=ansatz, max_iter=1000)
-        parameters = ansatz.operator_parameters
-        parameters.update(r=result)
-        # Construct circuit
-        circuit = INoiseWrapper(w_class=ansatz, noise_channel=noise_model).get_clean_circuit()
-        circuit = QPU.get_resolved_circuit(c=circuit, p=parameters)
+        noisy_parameters = ansatz.operator_parameters
+        noisy_ansatz = INoiseWrapper(w_class=ansatz, noise_model=noise_model)
 
-        # Error Mitigation Manager
-        manager = IErrorMitigationManager(clean_circuit=circuit, noise_model=INoiseModel.empty(), hamiltonian_objective=ansatz)
-        manager.set_identifier_range(identifier_count)
-        mu_ideal = manager.get_mu_effective(error_mitigation=False, density_representation=True, meas_reps=1)[1]
-        manager = IErrorMitigationManager(clean_circuit=circuit, noise_model=noise_model, hamiltonian_objective=ansatz)
+        # Construct circuit
+        circuit = noisy_ansatz.get_clean_circuit()
+
+        # Ideal manager
+        # manager = IErrorMitigationManager(clean_circuit=circuit_ideal_param, noise_model=INoiseModel.empty(), hamiltonian_objective=ansatz)
+        # manager.set_identifier_range(identifier_count)
+        # mu_ideal = manager.get_mu_effective(error_mitigation=False, density_representation=True, meas_reps=1)[1]
+        mu_ideal = -1.13727  # Hardcoded
 
         result_noisy = []
         result_mitigated = []
         for i in tqdm(range(measure_count), desc='Processing error mitigation functions'):
+            # Calculate Ideal and noisy circuit parameters
+            # opt_result = CPU.get_optimized_state(w=ansatz, max_iter=1000)
+            # Realistically calculate ideal circuit parameters under noisy environment
+            exp_value, opt_params = CPU.get_custom_optimized_state(n_w=noisy_ansatz, max_cpu_iter=10, max_qpu_iter=10000)
+            noisy_parameters.update(v=opt_params)
+
+            # circuit_ideal_param = QPU.get_resolved_circuit(c=circuit, p=opt_result.optimized_parameter)
+            circuit_noisy_param = QPU.get_resolved_circuit(c=circuit, p=noisy_parameters)
+
+            # Error Mitigation Manager
+            # Noisy manager
+            manager = IErrorMitigationManager(clean_circuit=circuit_noisy_param, noise_model=noise_model, hamiltonian_objective=ansatz)
             manager.set_identifier_range(identifier_count)
             result_noisy.append(manager.get_mu_effective(error_mitigation=False, density_representation=False, meas_reps=1)[1])
             result_mitigated.append(manager.get_mu_effective(error_mitigation=True, density_representation=False, meas_reps=1)[1])
@@ -602,13 +620,57 @@ def similarity_plot_hydrogen_circuit(overwrite: bool, prob: float = 1e-4, measur
     # Data
     mu_noisy = data.data_noisy.get_mean  # np.mean(result_noisy)
     mu_mitigated = data.data_mitigated.get_mean  #  np.mean(result_mitigated)
+    std_mitigated = data.data_mitigated.get_std
     mu_ideal = data.mu_ideal
     axs.hist(data.data_noisy.get_data, bins=n_bins, edgecolor='black', alpha=0.7, color='#fc9003', label=f'No error mitigation')
     axs.hist(data.data_mitigated.get_data, bins=n_bins, edgecolor='black', alpha=0.7, color='#1ee300', label=f'Quasiprobability')
     axs.axvline(x=mu_ideal, linewidth=1, color='r', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
     axs.axvline(x=mu_noisy, linewidth=1, color='#fc9003', label=r'$E[\mu_{noisy}$] = ' + f'{np.round(mu_noisy, 5)}')
-    axs.axvline(x=mu_mitigated, linewidth=1, color='#1ee300', label=r'E[$\mu_{mitigated}$] = ' + f'{np.round(mu_mitigated, 5)}\n' + r'|$\epsilon$| = ' + f'{np.round(abs(mu_mitigated - mu_ideal), 5)}')
+    axs.axvline(x=mu_mitigated, linewidth=1, color='#1ee300', label=r'E[$\mu_{mitigated}$] = ' + f'{np.round(mu_mitigated, 5)}\n' + r'|$\epsilon$| = ' + f'{np.round(abs(mu_mitigated - mu_ideal), 5)}\n' + r'$\sigma$ = ' + f'{np.round(std_mitigated, 5)}')
     axs.legend()
+
+
+class ParameterOptimizerClass:
+    def __init__(self, n_w: INoiseWrapper):
+        self._n_w = n_w
+
+    def optimize(self, index: int):
+        return CPU.get_custom_optimized_state(n_w=self._n_w, max_cpu_iter=10, max_qpu_iter=10000)
+
+
+def circuit_parameter_optimization():
+    # Optimize circuit using realistic measurements
+    prob = 0  # 1e-4
+    # Construct noise wrapper
+    channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]
+    channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]
+    noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'asymmetric depolarization (p_tot={16 * prob})')
+    # Hydrogen ansatz
+    ansatz = HydrogenAnsatz()
+    noisy_ansatz = INoiseWrapper(w_class=ansatz, noise_model=noise_model)
+
+    exp_list = []
+    opt_list = []
+    # Get optimization
+    count = 10
+    process_measure = ParameterOptimizerClass(n_w=noisy_ansatz)
+    print(f'Start calculation')
+    with Pool(MAX_MULTI_PROCESSING_COUNT) as p:
+        results = p.map(process_measure.optimize, tqdm(range(count), desc=f'Optimizing circuits'))
+
+    for value, params in results:
+        exp_list.append(value)
+        opt_list.append(params[0])
+
+    fig, axs = plt.subplots(1, 1, tight_layout=True)
+    plot_title = f'Optimized circuit parameters using realistic measurements'
+    axs.title.set_text(plot_title)
+    axs.set_xlabel(f'Expectation value after optimization')  # X axis label
+    axs.set_ylabel(f'Optimized circuit parameter value')  # Y axis label
+    axs.plot(exp_list, opt_list, '.', label=f'Optimized parameters (no noise)')
+    axs.set_yscale("log")
+    # Display grid
+    plt.grid(True, which="both")
 
 
 def testing():
@@ -638,7 +700,9 @@ def testing():
     similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
     similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
 
+    # circuit_parameter_optimization()
+
 
 if __name__ == '__main__':
     testing()
-    # plt.show()
+    plt.show()

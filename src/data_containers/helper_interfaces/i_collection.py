@@ -105,6 +105,10 @@ class IHistogramCollection:
     def get_mean(self) -> float:
         return self._mean
 
+    @property
+    def get_std(self) -> float:
+        return float(np.std(self._measurements))
+
     def __init__(self, measurements: List[float]):
         self._measurements = measurements
         self._mean = float(np.mean(self._measurements))
