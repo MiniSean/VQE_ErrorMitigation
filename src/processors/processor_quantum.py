@@ -3,7 +3,7 @@ import cirq
 # from openfermioncirq import HamiltonianObjective, VariationalStudy
 from scipy.sparse import csc_matrix
 # from openfermioncirq.optimization import ScipyOptimizationAlgorithm, OptimizationParams, OptimizationTrialResult
-from openfermion import jordan_wigner, QubitOperator
+from openfermion import jordan_wigner, QubitOperator, get_sparse_operator
 
 from src.data_containers.helper_interfaces.i_wave_function import IWaveFunction
 from src.data_containers.helper_interfaces.i_parameter import IParameter
@@ -18,10 +18,10 @@ class QPU:
     #     objective = HamiltonianObjective(qubit_operator)
     #     return objective.value(t_r.measurements['x'])
 
-    # @staticmethod
-    # def get_hamiltonian_objective_operator(w: IWaveFunction) -> np.ndarray:
-    #     qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
-    #     return HamiltonianObjective(qubit_operator)._hamiltonian_linear_op
+    @staticmethod
+    def get_hamiltonian_objective_operator(w: IWaveFunction) -> np.ndarray:
+        qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
+        return get_sparse_operator(qubit_operator)
 
     # How to calculate an Expected Value of some operator acting on qubits?
     # https://quantumcomputing.stackexchange.com/questions/6940/how-to-calculate-an-expected-value-of-some-operator-acting-on-qubits
