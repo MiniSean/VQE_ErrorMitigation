@@ -6,10 +6,10 @@ from qiskit.quantum_info import DensityMatrix
 from qiskit.visualization import plot_state_city, circuit_drawer, plot_state_hinton
 from tqdm import tqdm  # For displaying for-loop process to console
 import cirq
-# import openfermioncirq
+from openfermion import get_sparse_operator
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import Figure, Subplot
-from typing import List, Tuple, Union, Callable, Dict
+from typing import List, Tuple, Union, Callable, Dict, Any
 from src.error_mitigation import BasisUnitarySet, IBasisGateSingle, reconstruct_from_basis, MAX_MULTI_PROCESSING_COUNT
 from src.calculate_minimisation import read_object, write_object
 from src.data_containers.helper_interfaces.i_noise_wrapper import INoiseModel, INoiseWrapper
@@ -359,8 +359,7 @@ def sampling_noise_scaling():
 
     # Get Hamiltonian objective
     qubit_operator = QPU.get_hamiltonian_evaluation_operator(ansatz)
-    objective = openfermioncirq.HamiltonianObjective(qubit_operator)
-    H_observable = objective._hamiltonian_linear_op  # Observable
+    H_observable = get_sparse_operator(qubit_operator)  # Observable
 
     def experiment_func(process_circuit_count: int) -> float:
         return CPU.get_mitigated_expectation(clean_circuit=resolved_circuit, noise_model=noise_model,
@@ -638,39 +637,198 @@ class ParameterOptimizerClass:
         return CPU.get_custom_optimized_state(n_w=self._n_w, max_cpu_iter=10, max_qpu_iter=10000)
 
 
-def circuit_parameter_optimization():
-    # Optimize circuit using realistic measurements
-    prob = 0  # 1e-4
-    # Construct noise wrapper
-    channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]
-    channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]
-    noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'asymmetric depolarization (p_tot={16 * prob})')
+def circuit_parameter_optimization(overwrite: bool):
     # Hydrogen ansatz
     ansatz = HydrogenAnsatz()
-    noisy_ansatz = INoiseWrapper(w_class=ansatz, noise_model=noise_model)
-
-    exp_list = []
-    opt_list = []
     # Get optimization
-    count = 10
-    process_measure = ParameterOptimizerClass(n_w=noisy_ansatz)
-    print(f'Start calculation')
-    with Pool(MAX_MULTI_PROCESSING_COUNT) as p:
-        results = p.map(process_measure.optimize, tqdm(range(count), desc=f'Optimizing circuits'))
+    count = 20
+    mu_ideal = -1.13727  # Hardcoded
+    # mu_ideal, opt_ideal = ParameterOptimizerClass(INoiseWrapper(ansatz, INoiseModel.empty())).optimize(0)
+    opt_ideal = 0.015625  # Hardcoded opt_ideal[0]
 
-    for value, params in results:
-        exp_list.append(value)
-        opt_list.append(params[0])
+    if overwrite:
+        exp_list = []
+        opt_list = []
+        # Optimize circuit using realistic measurements
+        # prob_list = [0, 1e-4, 5e-4, 1e-3, 5e-3]
+        prob_list = [1 / shot for shot in np.logspace(2, 5, 14)]
+        # prob_list.append(0)
+        prob_list = np.flip(np.array(prob_list))
+        for prob in prob_list:
+            # Construct noise wrapper
+            channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]
+            channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]
+            noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'asymmetric depolarization (p_tot={16 * prob})')
+            noisy_ansatz = INoiseWrapper(w_class=ansatz, noise_model=noise_model)
+
+            process_measure = ParameterOptimizerClass(n_w=noisy_ansatz)
+            # print(f'Start calculation')
+            with Pool(MAX_MULTI_PROCESSING_COUNT) as p:
+                results = p.map(process_measure.optimize, tqdm(range(count), desc=f'Optimizing circuits'))
+
+            new_exp_list = []
+            new_opt_list = []
+            for value, params in results:
+                new_exp_list.append(value)
+                new_opt_list.append(params[0])
+            exp_list.append(new_exp_list)
+            opt_list.append(new_opt_list)
+        # Store data
+        data = (exp_list, opt_list, prob_list)
+        write_object(data, f'H2_Optimizing_Parameters_02')
+    else:
+        data = read_object(f'H2_Optimizing_Parameters_02')
+    exp_list, opt_list, prob_list = data
 
     fig, axs = plt.subplots(1, 1, tight_layout=True)
+    # plot_title = f'Optimized circuit parameters using realistic measurements'
+    # axs.title.set_text(plot_title)
+    # axs.set_xlabel(f'Expectation value after optimization')  # X axis label
+    # axs.set_ylabel(f'Optimized circuit parameter value '+r'[$\frac{1}{2} \pi$]')  # Y axis label
+    # # Rescale to multiples of pi
+    # opt_list = np.array(opt_list) / (0.5 * np.pi)  # Parameters have a range of [0, pi]
+    # axs.set_ylim([-1, 1])
+    # for i in range(len(exp_list)):
+    #     axs.plot(exp_list[i], opt_list[i], '.', label=f'Optimized parameters (noise p={prob_list[i]})')
+    # axs.axvline(x=mu_ideal, linewidth=1, color='r', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
+
     plot_title = f'Optimized circuit parameters using realistic measurements'
     axs.title.set_text(plot_title)
-    axs.set_xlabel(f'Expectation value after optimization')  # X axis label
-    axs.set_ylabel(f'Optimized circuit parameter value')  # Y axis label
-    axs.plot(exp_list, opt_list, '.', label=f'Optimized parameters (no noise)')
+    axs.set_xlabel(f'Noise magnitude (Asymmetric Pauli noise)')  # X axis label
+    # axs.set_ylabel(f'Optimized circuit parameter value '+r'[$\frac{1}{2} \pi$]')  # Y axis label
+    axs.set_ylabel(f'Absolute difference error compared to noiseless parameter: '+r'|$\epsilon$|=|$par - par_{ideal}$| [$\frac{1}{2} \pi$]')  # Y axis label
+
+    # Rescale to multiples of pi
+    opt_list = np.array(opt_list) / (0.5 * np.pi)  # Parameters have a range of [0, pi]
+    # Set log scale difference
+    vfunc = np.vectorize(lambda x: abs(x - opt_ideal))
+    opt_list = vfunc(opt_list)
+    # Mean
+    mean_opt_list = [np.mean(np.array(opt)) for opt in opt_list]
+    # Standard deviation
+    std_opt_list = [np.std(np.array(opt)) for opt in opt_list]
+
+    # axs.set_ylim([-1, 1])
+    for i in range(len(exp_list)):
+        x = [prob_list[i] for j in exp_list[i]]
+        axs.plot(x, opt_list[i], '.')  # , label=f'Eigenvalue: {np.round(np.mean(np.array(exp_list[i])), 2)}'
+    axs.errorbar(prob_list, mean_opt_list, yerr=std_opt_list, fmt='o', alpha=0.5, ecolor='black', capsize=10)  # , label=f'Difference Error (p={prob_list[k]})'
+    axs.axhline(y=0, linewidth=1, color='r', label=r'$par_{ideal}$ = ' + f'{np.round(opt_ideal, 5)}')
+    axs.set_xscale("log")
     axs.set_yscale("log")
+
     # Display grid
     plt.grid(True, which="both")
+    axs.legend()
+
+
+class RawAndMitigatedClass:
+    def __init__(self, n_w: INoiseWrapper, noise_model: INoiseModel, max_qpu_iter: int):
+        self._n_w = n_w
+        self._circuit = n_w.get_clean_circuit()
+        self._n_model = noise_model
+        self._iter = max_qpu_iter
+
+    def process(self):
+        # Realistically calculate ideal circuit parameters under noisy environment
+        exp_noisy_value, opt_params = CPU.get_custom_optimized_state(n_w=self._n_w, max_cpu_iter=10, max_qpu_iter=self._iter)
+        ansatz_parameters = self._n_w.operator_parameters
+        ansatz_parameters.update(v=opt_params)
+
+        # circuit_ideal_param = QPU.get_resolved_circuit(c=circuit, p=opt_result.optimized_parameter)
+        circuit_noisy_param = QPU.get_resolved_circuit(c=self._circuit, p=ansatz_parameters)
+
+        # Error Mitigation Manager
+        # Noisy manager
+        manager = IErrorMitigationManager(clean_circuit=circuit_noisy_param, noise_model=self._n_model, hamiltonian_objective=self._n_w)
+        manager.set_identifier_range(self._iter)
+        exp_mitig_value = manager.get_mu_effective(error_mitigation=True, density_representation=False, meas_reps=1)[1]
+        return exp_noisy_value, exp_mitig_value
+
+
+def flatten(l: List[List[Any]]) -> np.ndarray:
+    return np.array([item for sublist in l for item in sublist])
+
+
+def full_raw_vs_mitigation_per_noise(overwrite: bool, measure_count: int, identifier_count: int):
+    # Get optimization
+    mu_ideal = -1.13727  # Hardcoded
+    if overwrite:
+        # Hydrogen ansatz
+        ansatz = HydrogenAnsatz()
+
+        exp_noisy_list = []
+        exp_mitig_list = []
+        # Optimize circuit using realistic measurements
+        prob_list = [1 / shot for shot in np.logspace(3, 5, 5)]
+        # prob_list.append(0)
+        prob_list = np.flip(np.array(prob_list))
+        for prob in prob_list:
+            # Construct noise wrapper
+            channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]
+            channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]
+            noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'asymmetric depolarization (p_tot={16 * prob})')
+            noisy_ansatz = INoiseWrapper(w_class=ansatz, noise_model=noise_model)
+
+            process_measure = RawAndMitigatedClass(n_w=noisy_ansatz, noise_model=noise_model, max_qpu_iter=identifier_count)
+            results = []
+            for i in tqdm(range(measure_count), desc='Processing error mitigation functions'):
+                results.append(process_measure.process())
+            # Results: List[Tuple[noisy exp value, mitigated exp value]]
+
+            new_exp_noisy_list = []
+            new_exp_mitig_list = []
+            for noisy_exp, mitigated_exp in results:
+                new_exp_noisy_list.append(noisy_exp)
+                new_exp_mitig_list.append(mitigated_exp)
+            exp_noisy_list.append(new_exp_noisy_list)
+            exp_mitig_list.append(new_exp_mitig_list)
+        # Store data
+        data = (exp_noisy_list, exp_mitig_list, prob_list)
+        write_object(data, f'H2_Measure_Raw_vs_Mitigated')  # _Detailed
+    else:
+        data = read_object(f'H2_Measure_Raw_vs_Mitigated')  # _Detailed
+    exp_noisy_list, exp_mitig_list, prob_list = data
+
+    fig, axs = plt.subplots(1, 1, tight_layout=True)
+
+    plot_title = f'Energy expectation value using realistic measurements (#mitigation circuits={identifier_count})'  #  depending on noise magnitude
+    axs.title.set_text(plot_title)
+    axs.set_xlabel(f'Noise magnitude (Asymmetric Pauli noise)')  # X axis label
+    # axs.set_ylabel(f'Expectation value after optimization')  # Y axis label
+    axs.set_ylabel(f'Absolute difference error compared to noiseless optimization: '+r'|$\epsilon$|=|$\mu - \mu_{ideal}$|')  # Y axis label
+
+    # Set log scale difference
+    abs_diff = np.vectorize(lambda x: abs(x - mu_ideal))
+    exp_noisy_list = abs_diff(exp_noisy_list)
+    exp_mitig_list = abs_diff(exp_mitig_list)
+
+    using_mean = len(exp_noisy_list[0]) > 2
+
+    y_noisy = flatten(exp_noisy_list)
+    y_mitig = flatten(exp_mitig_list)
+
+    x_prob = [[prob_list[i]]*len(sublist) for i, sublist in enumerate(exp_noisy_list)]
+    x_prob = flatten(x_prob)
+
+    axs.plot(x_prob, y_noisy, '.', color='blue', label=f'Noisy Energy expectation')
+    axs.plot(x_prob, y_mitig, '.', color='green', label=f'Mitigated Energy expectation')
+
+    if using_mean:
+        y_noisy_mean = [np.mean(sublist) for sublist in exp_noisy_list]
+        y_noisy_std = [np.std(sublist) for sublist in exp_noisy_list]
+        y_mitig_mean = [np.mean(sublist) for sublist in exp_mitig_list]
+        y_mitig_std = [np.std(sublist) for sublist in exp_mitig_list]
+        axs.errorbar(prob_list, y_noisy_mean, yerr=y_noisy_std, fmt='o', alpha=0.5, color='blue', ecolor='blue', capsize=10)
+        axs.errorbar(prob_list, y_mitig_mean, yerr=y_mitig_std, fmt='o', alpha=0.5, color='green', ecolor='green', capsize=10)
+
+    axs.axhline(y=0, linewidth=1, color='r', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
+    axs.set_xscale("log")
+    axs.set_yscale("log")
+
+    # Display grid
+    plt.grid(True, which="both")
+    axs.legend()
 
 
 def testing():
@@ -694,15 +852,16 @@ def testing():
     # hamiltonian_density_vs_measure()
 
     # Build data
-    master_overwrite = True
-    similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
-    similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
-    similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
-    similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
+    # master_overwrite = False
+    # similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
+    # similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
+    # similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
+    # similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
 
-    # circuit_parameter_optimization()
+    circuit_parameter_optimization(False)
+    full_raw_vs_mitigation_per_noise(False, 1, 1000)
 
 
 if __name__ == '__main__':
     testing()
-    # plt.show()
+    plt.show()
