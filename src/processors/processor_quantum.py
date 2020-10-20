@@ -12,11 +12,11 @@ from src.data_containers.helper_interfaces.i_parameter import IParameter
 
 class QPU:
 
-    # @staticmethod
-    # def get_expectation_value(t_r: cirq.TrialResult, w: IWaveFunction):
-    #     qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
-    #     objective = HamiltonianObjective(qubit_operator)
-    #     return objective.value(t_r.measurements['x'])
+    @staticmethod
+    def get_expectation_value(t_r: cirq.TrialResult, w: IWaveFunction):
+        qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
+        objective = get_sparse_operator(qubit_operator)
+        return objective.value(t_r.measurements['x'])
 
     @staticmethod
     def get_hamiltonian_objective_operator(w: IWaveFunction) -> np.ndarray:
@@ -25,19 +25,18 @@ class QPU:
 
     # How to calculate an Expected Value of some operator acting on qubits?
     # https://quantumcomputing.stackexchange.com/questions/6940/how-to-calculate-an-expected-value-of-some-operator-acting-on-qubits
-    # @staticmethod
-    # def get_simulated_noisy_expectation_value(w: IWaveFunction, r_c: cirq.circuits.circuit, r: cirq.study.resolver) -> float:
-    #     simulator = cirq.DensityMatrixSimulator(ignore_measurement_results=False)  # Mixed state simulator
-    #     simulated_result = simulator.simulate(program=r_c, param_resolver=r)  # Include final density matrix
-    #
-    #     qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
-    #     objective = HamiltonianObjective(qubit_operator)
-    #     # Perform trace between Hamiltonian operator and final state density matrix
-    #     H_operator = objective._hamiltonian_linear_op  # Observable
-    #     sparse_density_matrix = csc_matrix(simulated_result.final_density_matrix)
-    #     # Tr( rho * H )
-    #     trace = (sparse_density_matrix * H_operator).diagonal().sum()  # Complex stored value that should always be real
-    #     return trace.real  # objective.value(simulated_result)  # If simulation result is cirq.WaveFunctionTrialResult
+    @staticmethod
+    def get_simulated_noisy_expectation_value(w: IWaveFunction, r_c: cirq.circuits.circuit, r: cirq.study.resolver) -> float:
+        simulator = cirq.DensityMatrixSimulator(ignore_measurement_results=False)  # Mixed state simulator
+        simulated_result = simulator.simulate(program=r_c, param_resolver=r)  # Include final density matrix
+
+        qubit_operator = QPU.get_hamiltonian_evaluation_operator(w)
+        H_operator = get_sparse_operator(qubit_operator)  # Observable
+        # Perform trace between Hamiltonian operator and final state density matrix
+        sparse_density_matrix = csc_matrix(simulated_result.final_density_matrix)
+        # Tr( rho * H )
+        trace = (sparse_density_matrix * H_operator).diagonal().sum()  # Complex stored value that should always be real
+        return trace.real  # objective.value(simulated_result)  # If simulation result is cirq.WaveFunctionTrialResult
 
     @staticmethod
     def get_realistic_noisy_expectation_value(n_w: 'INoiseWrapper', c: cirq.Circuit, p: IParameter, max_iter: int) -> float:
