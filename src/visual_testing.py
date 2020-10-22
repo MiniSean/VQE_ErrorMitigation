@@ -852,14 +852,14 @@ def testing():
     # hamiltonian_density_vs_measure()
 
     # Build data
-    # master_overwrite = False
-    # similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
-    # similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
+    master_overwrite = False
+    similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
+    similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
     # similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
     # similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
 
-    circuit_parameter_optimization(False)
-    full_raw_vs_mitigation_per_noise(False, 1, 1000)
+    # circuit_parameter_optimization(False)
+    # full_raw_vs_mitigation_per_noise(False, 1, 1000)
 
 
 if __name__ == '__main__':
