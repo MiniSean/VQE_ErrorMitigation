@@ -68,7 +68,7 @@ def read_object(filename: str) -> object:
             raise FileNotFoundError()
         return obj
     except FileNotFoundError:
-        raise Exception(f'Indicated file path does not exist: {file_path}')
+        raise FileNotFoundError(f'Indicated file path does not exist: {file_path}')
 
 
 if __name__ == '__main__':
