@@ -78,29 +78,32 @@ if __name__ == '__main__':
     # --------------------------
 
     # print(f'Circuit optimized without noise. Evaluated with noise.')
-    # # Perform error mitigation on Hydrogen ansatz
-    # p = 1e-4
-    #
-    # # Construct noise model
+    # Perform error mitigation on Hydrogen ansatz
+    # p = 0  # 1e-4
+
+    # Construct noise model
     # channel_1q = [SingleQubitPauliChannel(p_x=p, p_y=p, p_z=6 * p)]
     # channel_2q = [TwoQubitPauliChannel(p_x=p, p_y=p, p_z=6 * p)]
     # noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'asymmetric depolarization (p_tot={16 * p})')
     # noisy_ansatz = INoiseWrapper(uccsd_ansatz, noise_model)
-    #
-    # # Construct circuit
+
+    # Construct circuit
     # circuit = noisy_ansatz.get_clean_circuit()
     # print(circuit)
-    # # # Get variational study
-    # # result = CPU.get_optimized_state(w=uccsd_ansatz, max_iter=1000)
-    # # print(f'Operator expectation value: {result.optimal_value}\nOperator parameters: {result.optimal_parameters}')
-    # # parameters.update(r=result)
-    # # Prepare noisy ansatz optimization
-    # values, params = CPU.get_custom_optimized_state(n_w=noisy_ansatz, max_iter=1000)
+    # # Get variational study
+    # result = CPU.get_optimized_state(w=uccsd_ansatz, max_iter=1000)
+    # print(f'Operator expectation value: {result.optimal_value}\nOperator parameters: {result.optimal_parameters}')
+    # parameters.update(r=result)
+    # Prepare noisy ansatz optimization
+    # values, params = CPU.get_custom_optimized_state(n_w=noisy_ansatz, max_cpu_iter=10, max_qpu_iter=1000)
     # for i, key in enumerate(parameters.dict.keys()):  # Dirty set parameter values
     #     parameters[key] = params[i]
     # # Get resolved circuit
     # resolved_circuit = QPU.get_resolved_circuit(circuit, parameters)
     # print(resolved_circuit)
+    #
+    # observable_function, _ = noisy_ansatz.observable_measurement()
+    # observable = observable_function(resolved_circuit, noise_model.get_operators, 1)
     #
     # # Get Hamiltonian objective
     # qubit_operator = QPU.get_hamiltonian_evaluation_operator(uccsd_ansatz)

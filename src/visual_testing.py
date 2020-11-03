@@ -831,6 +831,102 @@ def full_raw_vs_mitigation_per_noise(overwrite: bool, measure_count: int, identi
     axs.legend()
 
 
+def hydrogen_energy_spectrum(overwrite: bool, measure_count: int, identifier_count: int):
+    # Get optimization
+    mu_ideal = -1.13727  # Hardcoded
+    if overwrite:
+        depth = 10
+        # Try read data
+        try:
+            data = read_object(f'H2_Full_Spectrum_C{identifier_count}')
+        except FileNotFoundError:
+            data = ([[] for j in range(depth)], [[] for j in range(depth)], [], [], [])
+
+        fci_energy = []
+        hf_energy = []
+        exp_noisy_list = data[0]
+        exp_mitig_list = data[1]
+        # Optimize circuit using realistic measurements
+        prob = 1e-4
+        # Construct noise wrapper
+        channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]
+        channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]
+        noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'asymmetric depolarization (p_tot={16 * prob})')
+
+        atomic_distance_list = np.linspace(.1, 2.8, depth)
+        for i, atomic_distance in enumerate(atomic_distance_list):
+            # Hydrogen ansatz
+            print(round(atomic_distance, 2))
+            ansatz = HydrogenAnsatz(mol_param=round(atomic_distance, 2))
+            noisy_ansatz = INoiseWrapper(w_class=ansatz, noise_model=noise_model)
+
+            process_measure = RawAndMitigatedClass(n_w=noisy_ansatz, noise_model=noise_model, max_qpu_iter=identifier_count)
+            results = []
+            for j in tqdm(range(measure_count), desc='Processing error mitigation functions'):
+                results.append(process_measure.process())
+            # Results: List[Tuple[noisy exp value, mitigated exp value]]
+
+            new_exp_noisy_list = []
+            new_exp_mitig_list = []
+            for noisy_exp, mitigated_exp in results:
+                new_exp_noisy_list.append(noisy_exp)
+                new_exp_mitig_list.append(mitigated_exp)
+            exp_noisy_list[i].extend(new_exp_noisy_list)
+            exp_mitig_list[i].extend(new_exp_mitig_list)
+            fci_energy.append(float(ansatz.molecule.fci_energy))
+            hf_energy.append(float(ansatz.molecule.hf_energy))
+        # Store data
+
+        data = (exp_noisy_list, exp_mitig_list, atomic_distance_list, fci_energy, hf_energy)
+        write_object(data, f'H2_Full_Spectrum_C{identifier_count}')  # _Detailed
+    else:
+        data = read_object(f'H2_Full_Spectrum_C{identifier_count}')  # _Detailed
+    exp_noisy_list, exp_mitig_list, atomic_distance_list, fci_energy, hf_energy = data
+
+    fig, axs = plt.subplots(1, 1, tight_layout=True)
+
+    plot_title = f'Hydrogen energy spectrum (#mitigation circuits={identifier_count})'  #  depending on noise magnitude
+    axs.title.set_text(plot_title)
+    axs.set_xlabel(f'Interatomic Distance [$\AA$]')  # X axis label
+    # axs.set_ylabel(f'Expectation value after optimization')  # Y axis label
+    axs.set_ylabel(f'Energy (Hartree) [$a.u.$]')  # Y axis label
+
+    # Set log scale difference
+    abs_diff = np.vectorize(lambda x: abs(x - mu_ideal))
+    # exp_noisy_list = abs_diff(exp_noisy_list)
+    # exp_mitig_list = abs_diff(exp_mitig_list)
+
+    using_mean = len(exp_noisy_list[0]) > 2
+
+    y_noisy = flatten(exp_noisy_list)
+    y_mitig = flatten(exp_mitig_list)
+
+    x_prob = [[atomic_distance_list[i]]*len(sublist) for i, sublist in enumerate(exp_noisy_list)]
+    x_prob = flatten(x_prob)
+
+    axs.plot(x_prob, y_noisy, '.', color='blue', label=f'Noisy Energy expectation')
+    axs.plot(x_prob, y_mitig, '.', color='green', label=f'Mitigated Energy expectation')
+
+    axs.plot(atomic_distance_list, fci_energy, '.', color='black', label=f'FCI Energy')
+    axs.plot(atomic_distance_list, hf_energy, '.', color='yellow', label=f'HF Energy')
+
+    if using_mean:
+        y_noisy_mean = [np.mean(sublist) for sublist in exp_noisy_list]
+        y_noisy_std = [np.std(sublist) for sublist in exp_noisy_list]
+        y_mitig_mean = [np.mean(sublist) for sublist in exp_mitig_list]
+        y_mitig_std = [np.std(sublist) for sublist in exp_mitig_list]
+        axs.errorbar(atomic_distance_list, y_noisy_mean, yerr=y_noisy_std, fmt='o', alpha=0.5, color='blue', ecolor='blue', capsize=10)
+        axs.errorbar(atomic_distance_list, y_mitig_mean, yerr=y_mitig_std, fmt='o', alpha=0.5, color='green', ecolor='green', capsize=10)
+
+    # axs.axhline(y=0, linewidth=1, color='r', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
+    # axs.set_xscale("log")
+    # axs.set_yscale("log")
+
+    # Display grid
+    plt.grid(True, which="both")
+    axs.legend()
+
+
 def testing():
     """Show variety of tests"""
     # single_qubit_identity_circuit()
@@ -853,13 +949,14 @@ def testing():
 
     # Build data
     master_overwrite = False
-    similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
-    similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
+    # similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
+    # similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
     # similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
     # similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
 
     # circuit_parameter_optimization(False)
     # full_raw_vs_mitigation_per_noise(False, 1, 1000)
+    hydrogen_energy_spectrum(True, 10, 10000)
 
 
 if __name__ == '__main__':
