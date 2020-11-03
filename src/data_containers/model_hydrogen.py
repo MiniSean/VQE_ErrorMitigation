@@ -12,8 +12,8 @@ from src.data_containers.helper_interfaces.i_parameter import IParameter
 
 class HydrogenAnsatz(IGeneralizedUCCSD):
 
-    def __init__(self):
-        molecule_params = IParameter({'r0': .7414})  # .7414, 'r1': 1.
+    def __init__(self, mol_param: float = .7414):
+        molecule_params = IParameter({'r0': mol_param})  # .7414, 'r1': 1.
         super().__init__(molecule_params)
 
     def _generate_molecule(self, p: IParameter) -> MolecularData:
