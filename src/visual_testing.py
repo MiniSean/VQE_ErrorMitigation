@@ -528,13 +528,17 @@ def similarity_plot_swap_circuit(overwrite: bool, prob: float = 1e-4, measure_co
 
     # Plotting Histogram
     n_bins = 20
-    fig, axs = plt.subplots(1, 1, tight_layout=True)
-    circuit_name = f'Swap circuit using measurements'
-    fig.suptitle(f'{circuit_name} (#mitigation circuits={identifier_count})', fontsize=16)
-    plot_title = f'(Info: {noise_model.get_description()})'
-    axs.title.set_text(plot_title)
-    axs.set_xlabel(f'Expectation value after {identifier_count} experiments')  # [{x_lim[0]}, {x_lim[1]}] X axis label
-    axs.set_ylabel(f'Frequency of obtaining this result')  # Y axis label
+    fig, axs = plt.subplots(1, 1, tight_layout=True, figsize=FIGSIZE)
+    # We change the fontsize of minor ticks label
+    axs.tick_params(axis='both', which='major', labelsize=TICKSIZE)
+    axs.tick_params(axis='both', which='minor', labelsize=TICKSIZE)
+
+    # circuit_name = f'Swap circuit using measurements'
+    # fig.suptitle(f'{circuit_name} (#mitigation circuits={identifier_count})', fontsize=16)
+    # plot_title = f'(Info: {noise_model.get_description()})'
+    # axs.title.set_text(plot_title)
+    axs.set_xlabel(f'Expectation value after {identifier_count} experiments', fontsize=FONTSIZE)  # [{x_lim[0]}, {x_lim[1]}] X axis label
+    axs.set_ylabel(f'Frequency of obtaining this result', fontsize=FONTSIZE)  # Y axis label
 
     # Data
     mu_noisy = data.data_noisy.get_mean  # np.mean(result_noisy)
@@ -545,8 +549,14 @@ def similarity_plot_swap_circuit(overwrite: bool, prob: float = 1e-4, measure_co
     axs.hist(data.data_mitigated.get_data, bins=n_bins, edgecolor='black', alpha=0.7, color='#1ee300', label=f'Quasiprobability')
     axs.axvline(x=mu_ideal, linewidth=1, color='r', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
     axs.axvline(x=mu_noisy, linewidth=1, color='#fc9003', label=r'$E[\mu_{noisy}$] = ' + f'{np.round(mu_noisy, 5)}')
-    axs.axvline(x=mu_mitigated, linewidth=1, color='#1ee300', label=r'E[$\mu_{mitigated}$] = ' + f'{np.round(mu_mitigated, 5)}\n' + r'|$\epsilon$| = ' + f'{np.round(abs(mu_mitigated - mu_ideal), 5)}\n' + r'$\sigma$ = ' + f'{np.round(std_mitigated, 5)}')
-    axs.legend()
+    variance = np.round(abs(mu_mitigated - mu_ideal), 5)
+    axs.axvline(x=mu_mitigated, linewidth=1, color='green', label=r'E[$\mu_{mitigated}$] = ' + f'{np.round(mu_mitigated, 5)}\n' + r'|$\epsilon$| = ' + f'{variance}\n' + r'$\sigma$ = ' + f'{np.round(std_mitigated, 5)}')
+    # axs.axhline(y=16, xmax=mu_mitigated + variance, xmin=mu_mitigated - variance, color='#1ee300')
+    axs.errorbar(x=mu_mitigated, y=16, xerr=variance, fmt='.', alpha=1, color='green', ecolor='green', capsize=10, elinewidth=2)
+    axs.legend(prop={"size":LABELSIZE})
+    # Display grid
+    plt.grid(True, which="both")
+    axs.set_axisbelow(True)
 
 
 def similarity_plot_hydrogen_circuit(overwrite: bool, prob: float = 1e-4, measure_count: int = 100, identifier_count: int = 1000):
@@ -608,13 +618,17 @@ def similarity_plot_hydrogen_circuit(overwrite: bool, prob: float = 1e-4, measur
 
     # Plotting Histogram
     n_bins = 20
-    fig, axs = plt.subplots(1, 1, tight_layout=True)
-    circuit_name = f'H2 ansatz circuit using realistic measurements'
-    fig.suptitle(f'{circuit_name} (#mitigation circuits={identifier_count})', fontsize=16)
-    plot_title = f'(Info: {noise_model.get_description()})'
-    axs.title.set_text(plot_title)
-    axs.set_xlabel(f'Expectation value after {identifier_count} experiments')  # [{x_lim[0]}, {x_lim[1]}] X axis label
-    axs.set_ylabel(f'Frequency of obtaining this result')  # Y axis label
+    fig, axs = plt.subplots(1, 1, tight_layout=True, figsize=FIGSIZE)
+    # We change the fontsize of minor ticks label
+    axs.tick_params(axis='both', which='major', labelsize=TICKSIZE)
+    axs.tick_params(axis='both', which='minor', labelsize=TICKSIZE)
+
+    # circuit_name = f'H2 ansatz circuit using realistic measurements'
+    # fig.suptitle(f'{circuit_name} (#mitigation circuits={identifier_count})', fontsize=16)
+    # plot_title = f'(Info: {noise_model.get_description()})'
+    # axs.title.set_text(plot_title)
+    axs.set_xlabel(f'Expectation value after {identifier_count} experiments', fontsize=FONTSIZE)  # [{x_lim[0]}, {x_lim[1]}] X axis label
+    axs.set_ylabel(f'Frequency of obtaining this result', fontsize=FONTSIZE)  # Y axis label
 
     # Data
     mu_noisy = data.data_noisy.get_mean  # np.mean(result_noisy)
@@ -625,8 +639,14 @@ def similarity_plot_hydrogen_circuit(overwrite: bool, prob: float = 1e-4, measur
     axs.hist(data.data_mitigated.get_data, bins=n_bins, edgecolor='black', alpha=0.7, color='#1ee300', label=f'Quasiprobability')
     axs.axvline(x=mu_ideal, linewidth=1, color='r', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
     axs.axvline(x=mu_noisy, linewidth=1, color='#fc9003', label=r'$E[\mu_{noisy}$] = ' + f'{np.round(mu_noisy, 5)}')
-    axs.axvline(x=mu_mitigated, linewidth=1, color='#1ee300', label=r'E[$\mu_{mitigated}$] = ' + f'{np.round(mu_mitigated, 5)}\n' + r'|$\epsilon$| = ' + f'{np.round(abs(mu_mitigated - mu_ideal), 5)}\n' + r'$\sigma$ = ' + f'{np.round(std_mitigated, 5)}')
-    axs.legend()
+    variance = np.round(abs(mu_mitigated - mu_ideal), 5)
+    axs.axvline(x=mu_mitigated, linewidth=1, color='green', label=r'E[$\mu_{mitigated}$] = ' + f'{np.round(mu_mitigated, 5)}\n' + r'|$\epsilon$| = ' + f'{variance}\n' + r'$\sigma$ = ' + f'{np.round(std_mitigated, 5)}')
+    # axs.axhline(y=12, xmax=mu_mitigated + variance, xmin=mu_mitigated - variance, color='#1ee300')
+    axs.errorbar(x=mu_mitigated, y=12, xerr=variance, fmt='.', alpha=1, color='green', ecolor='green', capsize=10, elinewidth=2)
+    axs.legend(prop={"size":LABELSIZE})
+    # Display grid
+    plt.grid(True, which="both")
+    axs.set_axisbelow(True)
 
 
 class ParameterOptimizerClass:
@@ -680,7 +700,10 @@ def circuit_parameter_optimization(overwrite: bool):
         data = read_object(f'H2_Optimizing_Parameters_02')
     exp_list, opt_list, prob_list = data
 
-    fig, axs = plt.subplots(1, 1, tight_layout=True)
+    fig, axs = plt.subplots(1, 1, tight_layout=True, figsize=FIGSIZE)
+    # We change the fontsize of minor ticks label
+    axs.tick_params(axis='both', which='major', labelsize=TICKSIZE)
+    axs.tick_params(axis='both', which='minor', labelsize=TICKSIZE)
     # plot_title = f'Optimized circuit parameters using realistic measurements'
     # axs.title.set_text(plot_title)
     # axs.set_xlabel(f'Expectation value after optimization')  # X axis label
@@ -692,11 +715,11 @@ def circuit_parameter_optimization(overwrite: bool):
     #     axs.plot(exp_list[i], opt_list[i], '.', label=f'Optimized parameters (noise p={prob_list[i]})')
     # axs.axvline(x=mu_ideal, linewidth=1, color='r', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
 
-    plot_title = f'Optimized circuit parameters using realistic measurements'
-    axs.title.set_text(plot_title)
-    axs.set_xlabel(f'Noise magnitude (Asymmetric Pauli noise)')  # X axis label
+    # plot_title = f'Optimized circuit parameters using realistic measurements'
+    # axs.title.set_text(plot_title)
+    axs.set_xlabel(f'Noise intensity (Asymmetric Pauli noise)', fontsize=FONTSIZE)  # X axis label
     # axs.set_ylabel(f'Optimized circuit parameter value '+r'[$\frac{1}{2} \pi$]')  # Y axis label
-    axs.set_ylabel(f'Absolute difference error compared to noiseless parameter: '+r'|$\epsilon$|=|$par - par_{ideal}$| [$\frac{1}{2} \pi$]')  # Y axis label
+    axs.set_ylabel(r'Absolute error '+r'|$\epsilon$|=|$\theta - \theta_{ideal}$| [$\frac{1}{2} \pi$]', fontsize=FONTSIZE)  # Y axis label
 
     # Rescale to multiples of pi
     opt_list = np.array(opt_list) / (0.5 * np.pi)  # Parameters have a range of [0, pi]
@@ -711,15 +734,17 @@ def circuit_parameter_optimization(overwrite: bool):
     # axs.set_ylim([-1, 1])
     for i in range(len(exp_list)):
         x = [prob_list[i] for j in exp_list[i]]
-        axs.plot(x, opt_list[i], '.')  # , label=f'Eigenvalue: {np.round(np.mean(np.array(exp_list[i])), 2)}'
+        axs.plot(x, opt_list[i], 'o')  # , label=f'Eigenvalue: {np.round(np.mean(np.array(exp_list[i])), 2)}'
     axs.errorbar(prob_list, mean_opt_list, yerr=std_opt_list, fmt='o', alpha=0.5, ecolor='black', capsize=10)  # , label=f'Difference Error (p={prob_list[k]})'
-    axs.axhline(y=0, linewidth=1, color='r', label=r'$par_{ideal}$ = ' + f'{np.round(opt_ideal, 5)}')
+    # axs.axhline(y=0, linewidth=1, color='r', label=r'$par_{ideal}$ = ' + f'{np.round(opt_ideal, 5)}')
     axs.set_xscale("log")
     axs.set_yscale("log")
+    axs.axhline(y=0, linewidth=1, color='r', label=r'$\theta_{ideal}$ = ' + f'{np.round(opt_ideal, 5)}')
 
     # Display grid
     plt.grid(True, which="both")
-    axs.legend()
+    axs.set_axisbelow(True)
+    axs.legend(prop={"size":LABELSIZE})
 
 
 class RawAndMitigatedClass:
@@ -790,18 +815,21 @@ def full_raw_vs_mitigation_per_noise(overwrite: bool, measure_count: int, identi
         data = read_object(f'H2_Measure_Raw_vs_Mitigated')  # _Detailed
     exp_noisy_list, exp_mitig_list, prob_list = data
 
-    fig, axs = plt.subplots(1, 1, tight_layout=True)
+    fig, axs = plt.subplots(1, 1, tight_layout=True, figsize=FIGSIZE)
+    # We change the fontsize of minor ticks label
+    axs.tick_params(axis='both', which='major', labelsize=TICKSIZE)
+    axs.tick_params(axis='both', which='minor', labelsize=TICKSIZE)
 
-    plot_title = f'Energy expectation value using realistic measurements (#mitigation circuits={identifier_count})'  #  depending on noise magnitude
-    axs.title.set_text(plot_title)
-    axs.set_xlabel(f'Noise magnitude (Asymmetric Pauli noise)')  # X axis label
-    # axs.set_ylabel(f'Expectation value after optimization')  # Y axis label
-    axs.set_ylabel(f'Absolute difference error compared to noiseless optimization: '+r'|$\epsilon$|=|$\mu - \mu_{ideal}$|')  # Y axis label
+    # plot_title = f'Energy expectation value using realistic measurements (#mitigation circuits={identifier_count})'  #  depending on noise magnitude
+    # axs.title.set_text(plot_title)
+    axs.set_xlabel(f'Noise intensity (Asymmetric Pauli noise)', fontsize=FONTSIZE)  # X axis label
+    axs.set_ylabel(f'Expectation value after optimization', fontsize=FONTSIZE)  # Y axis label
+    # axs.set_ylabel(f'Absolute difference error compared to noiseless optimization: '+r'|$\epsilon$|=|$\mu - \mu_{ideal}$|', fontsize=FONTSIZE)  # Y axis label
 
     # Set log scale difference
-    abs_diff = np.vectorize(lambda x: abs(x - mu_ideal))
-    exp_noisy_list = abs_diff(exp_noisy_list)
-    exp_mitig_list = abs_diff(exp_mitig_list)
+    # abs_diff = np.vectorize(lambda x: abs(x - mu_ideal))
+    # exp_noisy_list = abs_diff(exp_noisy_list)
+    # exp_mitig_list = abs_diff(exp_mitig_list)
 
     using_mean = len(exp_noisy_list[0]) > 2
 
@@ -811,7 +839,7 @@ def full_raw_vs_mitigation_per_noise(overwrite: bool, measure_count: int, identi
     x_prob = [[prob_list[i]]*len(sublist) for i, sublist in enumerate(exp_noisy_list)]
     x_prob = flatten(x_prob)
 
-    axs.plot(x_prob, y_noisy, '.', color='blue', label=f'Noisy Energy expectation')
+    axs.plot(x_prob, y_noisy, '.', color='orange', label=f'Noisy Energy expectation')
     axs.plot(x_prob, y_mitig, '.', color='green', label=f'Mitigated Energy expectation')
 
     if using_mean:
@@ -819,21 +847,21 @@ def full_raw_vs_mitigation_per_noise(overwrite: bool, measure_count: int, identi
         y_noisy_std = [np.std(sublist) for sublist in exp_noisy_list]
         y_mitig_mean = [np.mean(sublist) for sublist in exp_mitig_list]
         y_mitig_std = [np.std(sublist) for sublist in exp_mitig_list]
-        axs.errorbar(prob_list, y_noisy_mean, yerr=y_noisy_std, fmt='o', alpha=0.5, color='blue', ecolor='blue', capsize=10)
+        axs.errorbar(prob_list, y_noisy_mean, yerr=y_noisy_std, fmt='o', alpha=0.5, color='orange', ecolor='orange', capsize=10)
         axs.errorbar(prob_list, y_mitig_mean, yerr=y_mitig_std, fmt='o', alpha=0.5, color='green', ecolor='green', capsize=10)
 
-    axs.axhline(y=0, linewidth=1, color='r', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
+    axs.axhline(y=mu_ideal, linewidth=1, color='r', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
     axs.set_xscale("log")
-    axs.set_yscale("log")
+    # axs.set_yscale("log")
 
     # Display grid
     plt.grid(True, which="both")
-    axs.legend()
+    axs.set_axisbelow(True)
+    axs.legend(prop={"size":LABELSIZE})
 
 
 def hydrogen_energy_spectrum(overwrite: bool, measure_count: int, identifier_count: int):
     # Get optimization
-    mu_ideal = -1.13727  # Hardcoded
     if overwrite:
         depth = 10
         # Try read data
@@ -887,12 +915,12 @@ def hydrogen_energy_spectrum(overwrite: bool, measure_count: int, identifier_cou
 
     plot_title = f'Hydrogen energy spectrum (#mitigation circuits={identifier_count})'  #  depending on noise magnitude
     axs.title.set_text(plot_title)
-    axs.set_xlabel(f'Interatomic Distance [$\AA$]')  # X axis label
+    axs.set_xlabel(f'Interatomic Distance [$\AA$]', fontsize=FONTSIZE)  # X axis label
     # axs.set_ylabel(f'Expectation value after optimization')  # Y axis label
-    axs.set_ylabel(f'Energy (Hartree) [$a.u.$]')  # Y axis label
+    axs.set_ylabel(f'Energy (Hartree) [$a.u.$]', fontsize=FONTSIZE)  # Y axis label
 
     # Set log scale difference
-    abs_diff = np.vectorize(lambda x: abs(x - mu_ideal))
+    # abs_diff = np.vectorize(lambda x: abs(x - mu_ideal))
     # exp_noisy_list = abs_diff(exp_noisy_list)
     # exp_mitig_list = abs_diff(exp_mitig_list)
 
@@ -904,19 +932,19 @@ def hydrogen_energy_spectrum(overwrite: bool, measure_count: int, identifier_cou
     x_prob = [[atomic_distance_list[i]]*len(sublist) for i, sublist in enumerate(exp_noisy_list)]
     x_prob = flatten(x_prob)
 
-    axs.plot(x_prob, y_noisy, '.', color='blue', label=f'Noisy Energy expectation')
-    axs.plot(x_prob, y_mitig, '.', color='green', label=f'Mitigated Energy expectation')
+    # axs.plot(x_prob, y_noisy, '.', color='blue', label=f'Noisy Energy expectation')
+    # axs.plot(x_prob, y_mitig, '.', color='green', label=f'Mitigated Energy expectation')
 
-    axs.plot(atomic_distance_list, fci_energy, '.', color='black', label=f'FCI Energy')
-    axs.plot(atomic_distance_list, hf_energy, '.', color='yellow', label=f'HF Energy')
+    axs.plot(atomic_distance_list, fci_energy, '-.', color='black', label=f'FCI Energy')
+    axs.plot(atomic_distance_list, hf_energy, '-.', color='yellow', label=f'HF Energy')
 
     if using_mean:
         y_noisy_mean = [np.mean(sublist) for sublist in exp_noisy_list]
         y_noisy_std = [np.std(sublist) for sublist in exp_noisy_list]
         y_mitig_mean = [np.mean(sublist) for sublist in exp_mitig_list]
         y_mitig_std = [np.std(sublist) for sublist in exp_mitig_list]
-        axs.errorbar(atomic_distance_list, y_noisy_mean, yerr=y_noisy_std, fmt='o', alpha=0.5, color='blue', ecolor='blue', capsize=10)
-        axs.errorbar(atomic_distance_list, y_mitig_mean, yerr=y_mitig_std, fmt='o', alpha=0.5, color='green', ecolor='green', capsize=10)
+        axs.errorbar(atomic_distance_list, y_noisy_mean, yerr=y_noisy_std, fmt='o', alpha=0.5, color='blue', ecolor='blue', capsize=10, label=f'Noisy Energy expectation')
+        axs.errorbar(atomic_distance_list, y_mitig_mean, yerr=y_mitig_std, fmt='o', alpha=0.5, color='green', ecolor='green', capsize=10, label=f'Mitigated Energy expectation')
 
     # axs.axhline(y=0, linewidth=1, color='r', label=r'$\mu_{ideal}$ = ' + f'{np.round(mu_ideal, 5)}')
     # axs.set_xscale("log")
@@ -924,7 +952,153 @@ def hydrogen_energy_spectrum(overwrite: bool, measure_count: int, identifier_cou
 
     # Display grid
     plt.grid(True, which="both")
-    axs.legend()
+    axs.legend(prop={"size":LABELSIZE})
+
+
+def hydrogen_fci_energy(overwrite: bool):
+    # Get optimization
+    if overwrite:
+        depth = 31
+
+        fci_energy = []
+        hf_energy = []
+        measured_energy = []
+        # Optimize circuit using realistic measurements
+        prob = 0  #1e-4
+        # Construct noise wrapper
+        channel_1q = [SingleQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]
+        channel_2q = [TwoQubitPauliChannel(p_x=prob, p_y=prob, p_z=6 * prob)]
+        noise_model = INoiseModel(noise_gates_1q=channel_1q, noise_gates_2q=channel_2q, description=f'asymmetric depolarization (p_tot={16 * prob})')
+
+        atomic_distance_list = np.linspace(0.0, 3.0, depth)
+        for i, atomic_distance in enumerate(atomic_distance_list):
+            # Hydrogen ansatz
+            try:
+                ansatz = HydrogenAnsatz(mol_param=round(atomic_distance, 2))
+                noisy_ansatz = INoiseWrapper(ansatz, noise_model)
+                # exp_noisy_value, opt_params = CPU.get_custom_optimized_state(n_w=noisy_ansatz, max_cpu_iter=10, max_qpu_iter=1000)[0]
+                measured_energy.append([CPU.get_custom_optimized_state(n_w=noisy_ansatz, max_cpu_iter=10, max_qpu_iter=1000)[0] for i in tqdm(range(10), desc='Processing VQE Optimization')])
+                fci_energy.append(float(ansatz.molecule.fci_energy))
+                hf_energy.append(float(ansatz.molecule.hf_energy))
+            except:
+                measured_energy.append([float('NaN') for i in range(10)])
+                fci_energy.append(float('NaN'))
+                hf_energy.append(float('NaN'))
+
+        # Store data
+
+        data = (atomic_distance_list, fci_energy, hf_energy, measured_energy)
+        write_object(data, f'H2_FCI_Spectrum_Detailed')  # _Detailed
+    else:
+        data = read_object(f'H2_FCI_Spectrum_Detailed')  # _Detailed
+
+    atomic_distance_list, fci_energy, hf_energy, measured_energy = data
+
+    fig, axs = plt.subplots(1, 1, tight_layout=True, figsize=FIGSIZE)
+    # We change the fontsize of minor ticks label
+    axs.tick_params(axis='both', which='major', labelsize=TICKSIZE)
+    axs.tick_params(axis='both', which='minor', labelsize=TICKSIZE)
+
+    # plot_title = f'Hydrogen energy spectrum'  #  depending on noise magnitude
+    # axs.title.set_text(plot_title)
+    axs.set_xlabel(f'Interatomic Distance [$\AA$]', fontsize=FONTSIZE)  # X axis label
+    # axs.set_ylabel(f'Expectation value after optimization')  # Y axis label
+    axs.set_ylabel(f'Energy (Hartree) [$a.u.$]', fontsize=FONTSIZE)  # Y axis label
+
+    axs.plot(atomic_distance_list, fci_energy, '-o', color='black', label=f'FCI Energy')
+    axs.plot(atomic_distance_list, hf_energy, '.', color='blue', label=f'HF Energy')
+
+    y_clean_mean = [np.mean(sublist) for sublist in measured_energy]
+    y_clean_std = [np.std(sublist) for sublist in measured_energy]
+    axs.errorbar(atomic_distance_list, y_clean_mean, yerr=y_clean_std, fmt='.', alpha=1, color='lightgreen', ecolor='lightgreen', capsize=10, label=f'Noise-Free Energy expectation')
+    # axs.plot(atomic_distance_list, measured_energy, '.', color='green', label=f'VQE result')
+
+    # Display grid
+    plt.grid(True, which="both")
+    axs.set_axisbelow(True)
+    axs.legend(prop={"size":LABELSIZE})
+
+
+def hydrogen_combine():
+    identifier_count = 10000
+    data_fci = read_object(f'H2_FCI_Spectrum_Detailed')  # _Detailed
+    atomic_distance_list, fci_energy, hf_energy, measured_energy = data_fci
+    data_meas = read_object(f'H2_Full_Spectrum_C{identifier_count}')  # _Detailed
+    exp_noisy_list, exp_mitig_list, measured_list, _, _ = data_meas
+    data_ground = read_object(f'H2_Similarity_P0.0001_R100_C10000')  # _Detailed
+
+    #Plotting
+    fig, axs = plt.subplots(1, 1, tight_layout=True, figsize=FIGSIZE)
+    # We change the fontsize of minor ticks label
+    axs.tick_params(axis='both', which='major', labelsize=TICKSIZE)
+    axs.tick_params(axis='both', which='minor', labelsize=TICKSIZE)
+
+    # plot_title = f'Hydrogen energy spectrum (#mitigation circuits={identifier_count}, Inh.Pauli Noise p=1e-4)'  #  depending on noise magnitude
+    # axs.title.set_text(plot_title)
+    axs.set_xlabel(f'Interatomic Distance [$\AA$]', fontsize=FONTSIZE)  # X axis label
+    # axs.set_ylabel(f'Expectation value after optimization')  # Y axis label
+    axs.set_ylabel(r'$\Delta$ Energy (Hartree) [a.u.]', fontsize=FONTSIZE)  # Y axis label
+
+    measured_list = np.round(measured_list, 2)
+    # Set log scale difference
+    for i, fci_index in enumerate(atomic_distance_list):
+        fci_index = round(fci_index, 2)
+        fci_value = fci_energy[i]
+        abs_diff = np.vectorize(lambda x: abs(x - fci_value))
+        hf_energy[i] = abs(hf_energy[i] - fci_value)
+        measured_energy[i] = abs_diff(measured_energy[i])
+        # print(fci_index)
+        # if fci_index == 1.0:
+        #     fci_index = 1.
+        if fci_index in measured_list:
+            # print(fci_index)
+            j = measured_list.tolist().index(fci_index)
+            print(j)
+            # j = np.where(atomic_distance_list == fci_index)[0][0]
+            exp_noisy_list[j] = abs_diff(exp_noisy_list[j])
+            exp_mitig_list[j] = abs_diff(exp_mitig_list[j])
+
+    using_mean = len(exp_noisy_list[0]) > 2
+
+    x_prob = [[measured_list[i]]*len(sublist) for i, sublist in enumerate(exp_noisy_list)]
+    x_prob = flatten(x_prob)
+
+    y_noisy = flatten(exp_noisy_list)
+    y_mitig = flatten(exp_mitig_list)
+    # axs.plot(x_prob, y_noisy, '.', color='blue', label=f'Noisy Energy expectation')
+    # axs.plot(x_prob, y_mitig, '.', color='green', label=f'Mitigated Energy expectation')
+
+    # axs.plot(atomic_distance_list, fci_energy, '.', color='black', label=f'FCI Energy')
+    axs.plot(atomic_distance_list, hf_energy, '.', color='blue', label=f'HF Energy')
+    # axs.plot(atomic_distance_list, measured_energy, '.', color='green', label=f'VQE result')
+
+    alpha = 1
+    capsize = 5
+    if using_mean:
+        y_noisy_mean = [np.mean(sublist) for sublist in exp_noisy_list]
+        y_noisy_std = [np.std(sublist) for sublist in exp_noisy_list]
+        y_mitig_mean = [np.mean(sublist) for sublist in exp_mitig_list]
+        y_mitig_std = [np.std(sublist) for sublist in exp_mitig_list]
+        y_clean_mean = [np.mean(sublist) for sublist in measured_energy]
+        y_clean_std = [np.std(sublist) for sublist in measured_energy]
+        axs.errorbar(measured_list, y_noisy_mean, yerr=y_noisy_std, fmt='o', alpha=alpha, color='orange', ecolor='orange', capsize=capsize, label=f'Noisy Energy expectation')
+        axs.errorbar(measured_list, y_mitig_mean, yerr=y_mitig_std, fmt='o', alpha=alpha, color='green', ecolor='green', capsize=capsize, label=f'Mitigated Energy expectation')
+        axs.errorbar(atomic_distance_list, y_clean_mean, yerr=y_clean_std, fmt='o', alpha=alpha, color='lightgreen', ecolor='lightgreen', capsize=capsize, label=f'Noise-Free Energy expectation')
+
+    ground_value = .7414
+    mu_ideal = -1.13727  # Hardcoded
+    abs_diff = np.vectorize(lambda x: abs(x - mu_ideal))
+    noisy_log = abs_diff(data_ground.data_noisy.get_data)
+    mitigated_log = abs_diff(data_ground.data_mitigated.get_data)
+    axs.errorbar(ground_value, np.mean(noisy_log), yerr=np.std(noisy_log), fmt='o', alpha=alpha, color='orange', ecolor='orange', capsize=capsize)  # , label=f'Noisy Energy expectation'
+    axs.errorbar(ground_value, np.mean(mitigated_log), yerr=np.std(mitigated_log), fmt='o', alpha=alpha, color='green', ecolor='green', capsize=capsize)  # , label=f'Mitigated Energy expectation'
+
+    axs.set_yscale("log")
+
+    # Display grid
+    plt.grid(True, which="both")
+    axs.set_axisbelow(True)
+    axs.legend(prop={"size":LABELSIZE})
 
 
 def testing():
@@ -949,16 +1123,23 @@ def testing():
 
     # Build data
     master_overwrite = False
-    # similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
-    # similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-4, measure_count=100, identifier_count=10000)
+    # similarity_plot_swap_circuit(overwrite=False, prob=1e-4, measure_count=100, identifier_count=10000)
+    # similarity_plot_hydrogen_circuit(overwrite=False, prob=1e-4, measure_count=100, identifier_count=10000)
     # similarity_plot_swap_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
     # similarity_plot_hydrogen_circuit(overwrite=master_overwrite, prob=1e-3, measure_count=100, identifier_count=10000)
 
     # circuit_parameter_optimization(False)
     # full_raw_vs_mitigation_per_noise(False, 1, 1000)
-    hydrogen_energy_spectrum(True, 10, 10000)
+    # hydrogen_energy_spectrum(False, 10, 10000)
+    # hydrogen_fci_energy(False)
+    # hydrogen_combine()
 
 
 if __name__ == '__main__':
+    FONTSIZE = 20
+    FIGSIZE = (10, 6)
+    LABELSIZE = 13
+    TICKSIZE = 15
     testing()
+    plt.tight_layout()
     plt.show()
