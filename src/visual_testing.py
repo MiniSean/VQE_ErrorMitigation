@@ -1103,24 +1103,6 @@ def hydrogen_combine():
 
 def testing():
     """Show variety of tests"""
-    # single_qubit_identity_circuit()
-    # single_qubit_hadamard_circuit()
-    # single_qubit_depolar_noise()
-    # single_qubit_dephase_noise()
-    # single_qubit_ampdamp_noise()
-
-    # two_qubit_H_CNOT_H()
-
-    # hydrogen_model_initial_state()
-    # hydrogen_model_density_state()
-    # hydrogen_model_transition_state()
-
-    # gst_hadamard_ideal()
-    # gst_identity_ideal()
-
-    # sampling_noise_scaling()
-    # hamiltonian_density_vs_measure()
-
     # Build data
     master_overwrite = False
     # similarity_plot_swap_circuit(overwrite=False, prob=1e-4, measure_count=100, identifier_count=10000)
