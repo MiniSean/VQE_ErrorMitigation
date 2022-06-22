@@ -1,7 +1,7 @@
 # Project module requirements
 
 # Basics
-numpy==1.19.1
+numpy==1.22.0
 scipy==1.5.2
 sympy==1.6.2
 jsonpickle==1.4.1
